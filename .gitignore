@@ -1,0 +1,33 @@
+# Node
+node_modules/
+npm-debug.log*
+pnpm-lock.yaml
+yarn.lock
+
+# Build outputs
+dist/
+out/
+tmp/
+temp/
+
+# Angular
+ui/angular/.angular/
+ui/angular/dist/
+
+# Prisma / SQLite
+apps/desktop-shell/dev.db
+apps/desktop-shell/prisma/migrations/
+
+# Env files
+.env
+*.env
+apps/desktop-shell/.env
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# OS crap
+.DS_Store
+Thumbs.db
+EOF

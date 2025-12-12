@@ -1,0 +1,21 @@
+{
+	"name": "my-chess-opening-desktop-shell",
+	"version": "0.1.0",
+	"private": true,
+	"main": "dist/main.js",
+	"scripts": {
+		"build": "tsc -p tsconfig.json",
+		"start": "npm run build && electron dist/main.js",
+		"prisma:generate": "prisma generate",
+		"prisma:migrate": "prisma migrate dev",
+		"prisma:studio": "prisma studio"
+	},
+	"dependencies": {
+		"@prisma/client": "^7.1.0",
+		"my-chess-opening-core": "0.1.0"
+	},
+	"devDependencies": {
+		"electron": "^39.2.4",
+		"prisma": "^7.1.0"
+	}
+}
