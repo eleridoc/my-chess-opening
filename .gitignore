@@ -1,33 +1,53 @@
-# Node
+# --- Node ---
 node_modules/
 npm-debug.log*
+yarn-error.log
 pnpm-lock.yaml
 yarn.lock
 
-# Build outputs
+# --- Build outputs (général) ---
 dist/
 out/
 tmp/
 temp/
 
-# Angular
+# --- Angular spécifique ---
 ui/angular/.angular/
 ui/angular/dist/
+ui/angular/tmp/
+ui/angular/out-tsc/
+ui/angular/bazel-out/
+ui/angular/.angular/cache
 
-# Prisma / SQLite
+# --- Coverage / tests / cache ---
+coverage/
+.sass-cache/
+.connect.lock
+libpeerconnection.log
+testem.log
+typings/
+__screenshots__/
+
+# --- Prisma / SQLite ---
 apps/desktop-shell/dev.db
 apps/desktop-shell/prisma/migrations/
 
-# Env files
+# --- Environments ---
 .env
 *.env
 apps/desktop-shell/.env
 
-# VSCode
+# --- IDEs / Editors ---
 .vscode/
-*.code-workspace
+.idea/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+.history/
 
-# OS crap
+# --- System files ---
 .DS_Store
 Thumbs.db
-EOF
