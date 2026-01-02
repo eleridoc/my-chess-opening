@@ -11,11 +11,11 @@
 		"prisma:studio": "prisma studio"
 	},
 	"dependencies": {
-		"@prisma/client": "^7.1.0",
+		"@prisma/client": "^6.19.1",
 		"my-chess-opening-core": "0.1.0"
 	},
 	"devDependencies": {
 		"electron": "^39.2.4",
-		"prisma": "^7.1.0"
+		"prisma": "^6.19.1"
 	}
 }
