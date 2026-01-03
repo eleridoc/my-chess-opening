@@ -1,19 +1,17 @@
 import { contextBridge, ipcRenderer } from 'electron';
+import type { ElectronApi, SaveAccountsInput } from 'my-chess-opening-shared';
 
-contextBridge.exposeInMainWorld('electron', {
-	ping: async () => {
-		return ipcRenderer.invoke('ping');
-	},
+function invoke<T>(channel: string, ...args: unknown[]): Promise<T> {
+	return ipcRenderer.invoke(channel, ...args) as Promise<T>;
+}
+
+const api: ElectronApi = {
+	ping: () => invoke<{ message: string; core: string }>('ping'),
 
 	setup: {
-		getState: async () => {
-			return ipcRenderer.invoke('setup:getState');
-		},
-		saveAccounts: async (input: {
-			lichessUsername?: string | null;
-			chesscomUsername?: string | null;
-		}) => {
-			return ipcRenderer.invoke('setup:saveAccounts', input);
-		},
+		getState: () => invoke('setup:getState'),
+		saveAccounts: (input: SaveAccountsInput) => invoke('setup:saveAccounts', input),
 	},
-});
+};
+
+contextBridge.exposeInMainWorld('electron', api);

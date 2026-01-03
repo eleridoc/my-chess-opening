@@ -5,6 +5,14 @@ yarn-error.log
 pnpm-lock.yaml
 yarn.lock
 
+# SQLite / Prisma dev databases
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+**/prisma/dev.db
+
 # --- Build outputs (général) ---
 dist/
 out/

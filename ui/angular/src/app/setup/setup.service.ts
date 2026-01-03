@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import type { SetupState, SaveAccountsInput } from 'my-chess-opening-shared';
 
 @Injectable({ providedIn: 'root' })
 export class SetupService {

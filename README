@@ -1,0 +1,11 @@
+// Build all
+npm run build -ws
+
+// Run Angular
+npm run start -w ui/angular
+
+// Run electron
+npm run dev -w apps/desktop-shell
+
+// Run Prisma studio
+npm -w apps/desktop-shell run prisma:studio

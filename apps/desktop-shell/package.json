@@ -12,7 +12,8 @@
 	},
 	"dependencies": {
 		"@prisma/client": "^6.19.1",
-		"my-chess-opening-core": "0.1.0"
+		"my-chess-opening-core": "*",
+		"my-chess-opening-shared": "*"
 	},
 	"devDependencies": {
 		"electron": "^39.2.4",

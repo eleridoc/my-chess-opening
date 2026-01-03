@@ -1,27 +1,28 @@
 {
-  "name": "my-chess-opening",
-  "version": "0.1.0",
-  "private": true,
-  "workspaces": [
-    "core",
-    "apps/*",
-    "ui/*"
-  ],
-  "scripts": {
-    "build": "npm run build:core && npm run build:desktop-shell",
-    "build:core": "npm --workspace core run build",
-    "build:desktop-shell": "npm --workspace apps/desktop-shell run build",
-	"format": "prettier --write \"**/*.{ts,js,tsx,jsx,html,scss,json,md}\""
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
-  "dependencies": {
-    "@types/node": "^24.10.1",
-    "typescript": "^5.9.3"
-  },
-  "devDependencies": {
-    "prettier": "^3.7.3"
-  }
+	"name": "my-chess-opening",
+	"version": "0.1.0",
+	"private": true,
+	"workspaces": [
+		"core",
+		"apps/*",
+		"ui/*",
+		"shared"
+	],
+	"scripts": {
+		"build": "npm run build:core && npm run build:desktop-shell",
+		"build:core": "npm --workspace core run build",
+		"build:desktop-shell": "npm --workspace apps/desktop-shell run build",
+		"format": "prettier --write \"**/*.{ts,js,tsx,jsx,html,scss,json,md}\""
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"description": "",
+	"dependencies": {
+		"@types/node": "^24.10.1",
+		"typescript": "^5.9.3"
+	},
+	"devDependencies": {
+		"prettier": "^3.7.3"
+	}
 }
