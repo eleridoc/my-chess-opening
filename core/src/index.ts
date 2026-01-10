@@ -4,7 +4,6 @@
 export * from './ipc';
 
 export { ImportOrchestrator } from './import/ImportOrchestrator';
-
 export { LichessImporter } from './import/importers/lichess/LichessImporter';
 export { ChessComImporter } from './import/importers/chesscom/ChessComImporter';
 

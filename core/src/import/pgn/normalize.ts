@@ -1,5 +1,6 @@
 import { ExternalSite, GameSpeed, ImportedGamePlayer, ImportedGameRaw } from '../types';
 import { ParsedPgnGame } from './parsePgn';
+import { enrichMovesWithFenAndHash } from './enrichMovesWithFen';
 
 function parseTimeControl(tc: string): { initialSeconds: number; incrementSeconds: number } {
 	// "900+10"
@@ -102,11 +103,20 @@ export function normalizeParsedGame(params: {
 
 	const players = parsePlayers(h);
 
+	const debugId = `${site}:${externalId}`;
+
+	const moves = parsed.moves
+		? enrichMovesWithFenAndHash({
+				headers: h,
+				moves: parsed.moves,
+				debugId,
+			})
+		: undefined;
+
 	return {
 		site,
 		externalId,
 		siteUrl,
-
 		playedAt,
 		rated,
 		variant,
@@ -114,14 +124,12 @@ export function normalizeParsedGame(params: {
 		timeControl,
 		initialSeconds,
 		incrementSeconds,
-
 		result: h['Result'] || '*',
 		termination: h['Termination'],
 		eco: h['ECO'],
 		opening: h['Opening'],
-
 		pgn: rawPgn,
 		players,
-		moves: parsed.moves,
+		moves,
 	};
 }

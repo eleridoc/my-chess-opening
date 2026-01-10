@@ -24,6 +24,9 @@ export type ImportedGamePlayer = {
 export type ImportedGameMove = {
 	ply: number; // 1,2,3... half-moves
 	san: string; // SAN token
+	uci?: string; // e2e4, g1f3, e7e8q...
+	fen?: string; // FULL FEN AFTER the move
+	positionHash?: string; // sha256(fen)
 	clockMs?: number; // remaining clock after the move
 };
 

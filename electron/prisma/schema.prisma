@@ -118,9 +118,19 @@ model GameMove {
   // 1,2,3... (half-moves / ply)
   ply     Int
   san     String
+
+  // New fields for position matching
+  uci          String?
+  fen          String
+  positionHash String
+
   clockMs Int?
 
   @@unique([gameId, ply])
+
+  // Fast lookup by position
+  @@index([positionHash])
+  @@index([gameId, positionHash])
 }
 
 model ImportRun {
