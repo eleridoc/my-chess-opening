@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import type { ElectronApi, SaveAccountsInput } from 'my-chess-opening-shared';
+import type { ElectronApi, SaveAccountsInput } from 'my-chess-opening-core';
 
 function invoke<T>(channel: string, ...args: unknown[]): Promise<T> {
 	return ipcRenderer.invoke(channel, ...args) as Promise<T>;

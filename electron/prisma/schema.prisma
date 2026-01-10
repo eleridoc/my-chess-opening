@@ -1,0 +1,145 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum ExternalSite {
+  CHESSCOM
+  LICHESS
+}
+
+enum GameSpeed {
+  BULLET
+  BLITZ
+  RAPID
+  CLASSICAL
+}
+
+enum PlayerColor {
+  WHITE
+  BLACK
+}
+
+enum ImportStatus {
+  SUCCESS
+  FAILED
+  PARTIAL
+}
+
+model AccountConfig {
+  id        String       @id @default(cuid())
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  site      ExternalSite
+  username  String
+  isEnabled Boolean      @default(true)
+  lastSyncAt DateTime?
+
+  games     Game[]
+  importRuns ImportRun[]
+
+  @@unique([site, username])
+}
+
+model Game {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Owner account (we only store games where this account is a player)
+  accountConfigId String
+  accountConfig   AccountConfig @relation(fields: [accountConfigId], references: [id], onDelete: Cascade)
+
+  // External identity / anti-duplicates
+  site       ExternalSite
+  externalId String
+  siteUrl    String?
+
+  // Metadata
+  playedAt   DateTime
+  rated      Boolean
+  variant    String
+  speed      GameSpeed
+  timeControl      String
+  initialSeconds   Int
+  incrementSeconds Int
+
+  result      String
+  termination String?
+  eco         String?
+  opening     String?
+
+  // Raw data
+  pgn     String
+  pgnHash String?
+
+  players GamePlayer[]
+  moves   GameMove[]
+
+  @@unique([site, externalId])
+  @@index([accountConfigId, playedAt])
+  @@index([playedAt])
+  @@index([eco])
+}
+
+model GamePlayer {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  gameId String
+  game   Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  color      PlayerColor
+  username   String
+  elo        Int?
+  ratingDiff Int?
+
+  @@unique([gameId, color])
+  @@index([username])
+}
+
+model GameMove {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  gameId String
+  game   Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  // 1,2,3... (half-moves / ply)
+  ply     Int
+  san     String
+  clockMs Int?
+
+  @@unique([gameId, ply])
+}
+
+model ImportRun {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  accountConfigId String
+  accountConfig   AccountConfig @relation(fields: [accountConfigId], references: [id], onDelete: Cascade)
+
+  startedAt  DateTime @default(now())
+  finishedAt DateTime?
+  status     ImportStatus @default(SUCCESS)
+
+  errorMessage String?
+
+  gamesFound    Int @default(0)
+  gamesInserted Int @default(0)
+  gamesSkipped  Int @default(0)
+
+  @@index([accountConfigId, startedAt])
+}

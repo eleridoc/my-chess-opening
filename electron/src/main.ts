@@ -1,19 +1,19 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
 import * as path from 'node:path';
-import { PrismaClient, Prisma } from '@prisma/client'; // 👈 nouveau
+import { PrismaClient, Prisma, ExternalSite } from '@prisma/client';
 import { coreIsReady } from 'my-chess-opening-core';
+import { testImportSinceYesterday } from './dev/testImport';
 
-const prisma = new PrismaClient(); // 👈 instance globale
+const prisma = new PrismaClient();
 
 let mainWindow: BrowserWindow | null = null;
 
 async function getSetupState() {
-	const accountsCount = await prisma.externalAccount.count();
-	const config = await prisma.appConfig.findUnique({ where: { id: 1 } });
+	const accountsCount = await prisma.accountConfig.count();
 
 	return {
 		hasAccounts: accountsCount > 0,
-		hasCompletedSetup: config?.hasCompletedSetup ?? false,
+		hasCompletedSetup: accountsCount > 0,
 	};
 }
 
@@ -31,32 +31,28 @@ async function saveAccounts(input: SaveAccountsInput) {
 	}
 
 	await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-		// on s'assure d'avoir une AppConfig (id = 1)
-		const config = await tx.appConfig.upsert({
-			where: { id: 1 },
-			update: { hasCompletedSetup: true },
-			create: { hasCompletedSetup: true },
-		});
+		// Initial setup strategy (2 fields):
+		// - Replace the single configured account for each site.
+		// Later, when you support multiple accounts per site, you'll switch to add/remove by id.
 
-		// stratégie simple pour le setup : on supprime les anciens comptes et on recrée
-		await tx.externalAccount.deleteMany({});
-
+		// Lichess
+		await tx.accountConfig.deleteMany({ where: { site: ExternalSite.LICHESS } });
 		if (lichess) {
-			await tx.externalAccount.create({
+			await tx.accountConfig.create({
 				data: {
-					site: 'LICHESS',
+					site: ExternalSite.LICHESS,
 					username: lichess,
-					config: { connect: { id: config.id } },
 				},
 			});
 		}
 
+		// Chess.com
+		await tx.accountConfig.deleteMany({ where: { site: ExternalSite.CHESSCOM } });
 		if (chesscom) {
-			await tx.externalAccount.create({
+			await tx.accountConfig.create({
 				data: {
-					site: 'CHESSCOM',
+					site: ExternalSite.CHESSCOM,
 					username: chesscom,
-					config: { connect: { id: config.id } },
 				},
 			});
 		}
@@ -78,13 +74,17 @@ function createWindow() {
 
 	mainWindow.loadURL('http://localhost:4200');
 
+	console.error('[TEST IMPORT] start');
+	testImportSinceYesterday().catch((e) => {
+		console.error('[TEST IMPORT] failed', e);
+	});
+
 	mainWindow.on('closed', () => {
 		mainWindow = null;
 	});
 }
 
 app.whenReady().then(() => {
-	// déjà existant
 	ipcMain.handle('ping', async () => {
 		return {
 			message: 'pong from main',
@@ -92,12 +92,10 @@ app.whenReady().then(() => {
 		};
 	});
 
-	// 👇 nouveau : état du setup
 	ipcMain.handle('setup:getState', async () => {
 		return getSetupState();
 	});
 
-	// 👇 nouveau : enregistrement des comptes
 	ipcMain.handle('setup:saveAccounts', async (_event, input: SaveAccountsInput) => {
 		await saveAccounts(input);
 		return { ok: true };

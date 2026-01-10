@@ -37,13 +37,13 @@ typings/
 __screenshots__/
 
 # --- Prisma / SQLite ---
-apps/desktop-shell/dev.db
-apps/desktop-shell/prisma/migrations/
+electron/prisma/dev.db
+
 
 # --- Environments ---
 .env
 *.env
-apps/desktop-shell/.env
+electron/.env
 
 # --- IDEs / Editors ---
 .vscode/

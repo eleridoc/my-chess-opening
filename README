@@ -1,11 +1,37 @@
-// Build all
+# Build all
+
 npm run build -ws
 
-// Run Angular
+# Run Angular
+
 npm run start -w ui/angular
 
-// Run electron
-npm run dev -w apps/desktop-shell
+# Run electron
 
-// Run Prisma studio
-npm -w apps/desktop-shell run prisma:studio
+npm run -w electron start
+
+# Build all and run electron
+
+npm run build:run:electron
+
+# Reset and migrate DB
+
+npm -w electron run prisma:reset
+
+# Run Prisma studio
+
+npm -w electron run prisma:studio
+
+# Full Reset DB
+
+cd ~/dev/my-chess-opening/electron
+rm -rf prisma/migrations
+rm -f dev.db
+rm -f prisma/dev.db
+npx prisma migrate dev --name init
+npx prisma generate
+npx prisma studio
+
+npm -w electron run prisma:migrate -- --name xxx_xxx_xxx
+npm -w electron run prisma:generate
+npm -w electron run prisma:studio

@@ -4,14 +4,14 @@
 	"private": true,
 	"workspaces": [
 		"core",
-		"apps/*",
-		"ui/*",
-		"shared"
+		"electron",
+		"ui/*"
 	],
 	"scripts": {
-		"build": "npm run build:core && npm run build:desktop-shell",
+		"build": "npm run build:core && npm run build:electron",
 		"build:core": "npm --workspace core run build",
-		"build:desktop-shell": "npm --workspace apps/desktop-shell run build",
+		"build:electron": "npm --workspace electron run build",
+		"build:run:electron": "npm run build -ws && npm run -w electron start",
 		"format": "prettier --write \"**/*.{ts,js,tsx,jsx,html,scss,json,md}\""
 	},
 	"keywords": [],

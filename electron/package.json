@@ -1,5 +1,5 @@
 {
-	"name": "my-chess-opening-desktop-shell",
+	"name": "my-chess-opening-electron",
 	"version": "0.1.0",
 	"private": true,
 	"main": "dist/main.js",
@@ -8,6 +8,7 @@
 		"start": "npm run build && electron dist/main.js",
 		"prisma:generate": "prisma generate",
 		"prisma:migrate": "prisma migrate dev",
+		"prisma:reset": "prisma migrate reset",
 		"prisma:studio": "prisma studio"
 	},
 	"dependencies": {
