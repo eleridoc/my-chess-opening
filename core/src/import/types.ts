@@ -27,6 +27,8 @@ export type ImportedGameMove = {
 	uci?: string; // e2e4, g1f3, e7e8q...
 	fen?: string; // FULL FEN AFTER the move
 	positionHash?: string; // sha256(fen)
+	positionHashBefore?: string;
+	fenBefore?: string; // optional
 	clockMs?: number; // remaining clock after the move
 };
 
@@ -44,6 +46,7 @@ export type ImportedGameRaw = {
 	incrementSeconds: number;
 
 	result: string; // "1-0" / "0-1" / "1/2-1/2"
+	resultKey: 1 | 0 | -1;
 	termination?: string;
 	eco?: string;
 	opening?: string;

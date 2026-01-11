@@ -79,6 +79,12 @@ function parsePlayers(headers: Record<string, string>): [ImportedGamePlayer, Imp
 	return [white, black];
 }
 
+function resultKeyFromResult(result: string): 1 | 0 | -1 {
+	if (result === '1-0') return 1;
+	if (result === '0-1') return -1;
+	return 0; // "1/2-1/2" or "*"
+}
+
 export function normalizeParsedGame(params: {
 	site: ExternalSite;
 	parsed: ParsedPgnGame;
@@ -113,6 +119,9 @@ export function normalizeParsedGame(params: {
 			})
 		: undefined;
 
+	const result = h['Result'] || '*';
+	const resultKey = resultKeyFromResult(result);
+
 	return {
 		site,
 		externalId,
@@ -125,6 +134,7 @@ export function normalizeParsedGame(params: {
 		initialSeconds,
 		incrementSeconds,
 		result: h['Result'] || '*',
+		resultKey: resultKey,
 		termination: h['Termination'],
 		eco: h['ECO'],
 		opening: h['Opening'],

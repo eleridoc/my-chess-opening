@@ -77,6 +77,10 @@ model Game {
   eco         String?
   opening     String?
 
+  // Result as numeric key for fast aggregation:
+  //  1 = white win, 0 = draw, -1 = black win
+  resultKey Int
+
   // Raw data
   pgn     String
   pgnHash String?
@@ -88,6 +92,7 @@ model Game {
   @@index([accountConfigId, playedAt])
   @@index([playedAt])
   @@index([eco])
+  @@index([resultKey])
 }
 
 model GamePlayer {
@@ -124,6 +129,12 @@ model GameMove {
   fen          String
   positionHash String
 
+  // BEFORE (position from which this move was played)
+  positionHashBefore String
+
+  // Optional debug field (not required for queries)
+  fenBefore String?
+
   clockMs Int?
 
   @@unique([gameId, ply])
@@ -131,6 +142,8 @@ model GameMove {
   // Fast lookup by position
   @@index([positionHash])
   @@index([gameId, positionHash])
+  @@index([positionHashBefore])
+  @@index([positionHashBefore, uci])
 }
 
 model ImportRun {

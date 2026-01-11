@@ -7,8 +7,8 @@ function sha256Hex(input: string): string {
 }
 
 function sanitizeSan(san: string): string {
-	// chess.js doesn't like "!" / "?" suffixes (e.g. "Nf3!")
-	// Keep "+" and "#" because they are part of SAN.
+	// chess.js can reject SAN suffixes like "!" / "?" (e.g. "Nf3!")
+	// We keep "+" and "#" because they are meaningful in SAN.
 	return san.replace(/[!?]+$/g, '');
 }
 
@@ -19,9 +19,15 @@ function toUci(m: Move): string {
 
 /**
  * Enrich moves with:
- * - fen AFTER each move (full FEN)
- * - positionHash = sha256(fen)
- * - uci
+ * - positionHashBefore: sha256(full FEN BEFORE the move)
+ * - fen (AFTER): full FEN AFTER the move
+ * - positionHash (AFTER): sha256(full FEN AFTER the move)
+ * - uci: stable move identifier (e2e4, g1f3, e7e8q...)
+ *
+ * Why we store BEFORE + AFTER:
+ * - The UI shows a position (FEN). To list "next moves played from this position",
+ *   we filter moves by positionHashBefore == sha256(FEN_shown).
+ * - We still keep the AFTER FEN/hash as the resulting position after the move.
  *
  * Supports non-standard initial position if headers contain "FEN".
  */
@@ -38,25 +44,38 @@ export function enrichMovesWithFenAndHash(params: {
 	const enriched: ImportedGameMove[] = [];
 
 	for (const mv of moves) {
+		// BEFORE (position from which this move is played)
+		const fenBefore = chess.fen();
+		const positionHashBefore = sha256Hex(fenBefore);
+
 		const san = sanitizeSan(mv.san);
 
+		// Apply move: try strict SAN parsing first, then fallback to a more permissive mode.
 		let applied = chess.move(san, { strict: true });
 		if (!applied) applied = chess.move(san, { strict: false });
+
 		if (!applied) {
 			throw new Error(
 				`[enrichMovesWithFenAndHash] Illegal/unparsed move: ${debugId} ply=${mv.ply} san="${mv.san}"`,
 			);
 		}
 
-		const fen = chess.fen();
-		const positionHash = sha256Hex(fen);
+		// AFTER (resulting position after the move)
+		const fenAfter = chess.fen();
+		const positionHashAfter = sha256Hex(fenAfter);
 
 		enriched.push({
 			...mv,
 			san, // keep sanitized SAN
 			uci: toUci(applied),
-			fen,
-			positionHash,
+
+			// AFTER (what you show on the board after playing the move)
+			fen: fenAfter,
+			positionHash: positionHashAfter,
+
+			// BEFORE (what you use to query "next moves" from a displayed position)
+			positionHashBefore,
+			fenBefore, // optional: enable if you want to store/debug the full BEFORE FEN
 		});
 	}
 
