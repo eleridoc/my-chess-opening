@@ -8,13 +8,7 @@ export { LichessImporter } from './import/importers/lichess/LichessImporter';
 export { ChessComImporter } from './import/importers/chesscom/ChessComImporter';
 
 export { ExternalSite } from './import/types';
-export type {
-	ImportOptions,
-	ImportedGameRaw,
-	ImportedGameMove,
-	ImportedGamePlayer,
-	GameSpeed,
-} from './import/types';
+export * from './import/types';
 
 export function coreIsReady(): string {
 	return 'core layer is ready';

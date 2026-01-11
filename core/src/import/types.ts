@@ -12,6 +12,7 @@ export type ImportOptions = {
 	ratedOnly?: boolean; // default true
 	speeds?: GameSpeed[]; // default ["bullet","blitz","rapid"]
 	includeMoves?: boolean; // default true
+	maxGames?: number; // dev/test: stop after N games (limits API usage)
 };
 
 export type ImportedGamePlayer = {

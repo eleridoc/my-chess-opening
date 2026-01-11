@@ -115,7 +115,8 @@ model Game {
   myRatingDiff       Int?
   opponentRatingDiff Int?
 
-  @@unique([site, externalId])
+  @@unique([accountConfigId, site, externalId])
+  @@index([site, externalId])
   @@index([accountConfigId, playedAt])
   @@index([accountConfigId, myColor])
   @@index([playedAt])

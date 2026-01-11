@@ -3,6 +3,7 @@ import { ExternalSite, ImportOptions, ImportedGameRaw, GameSpeed } from '../../t
 import { parsePgnGame } from '../../pgn/parsePgn';
 import { normalizeParsedGame } from '../../pgn/normalize';
 import { applyOwnerPerspective } from '../../perspective/applyOwnerPerspective';
+import { fetchWithRetry } from '../../http/fetchWithRetry';
 
 type ChessComArchivesResponse = {
 	archives: string[];
@@ -46,11 +47,12 @@ export class ChessComImporter implements GameImporter {
 			ratedOnly = true,
 			speeds = ['bullet', 'blitz', 'rapid'],
 			includeMoves = true,
+			maxGames,
 		} = options;
 
 		const archivesUrl = `https://api.chess.com/pub/player/${encodeURIComponent(username)}/games/archives`;
 		console.log('archivesUrl: ' + archivesUrl);
-		const archivesRes = await fetch(archivesUrl);
+		const archivesRes = await fetchWithRetry(archivesUrl, { minDelayMs: 300 });
 		if (!archivesRes.ok) {
 			const txt = await archivesRes.text().catch(() => '');
 			throw new Error(
@@ -66,14 +68,18 @@ export class ChessComImporter implements GameImporter {
 
 		const out: ImportedGameRaw[] = [];
 		const seen = new Set<string>();
+		const reachedLimit = () =>
+			typeof maxGames === 'number' && maxGames > 0 && out.length >= maxGames;
 
 		for (const monthUrl of archives) {
+			if (reachedLimit()) break;
+
 			if (since) {
 				const monthEnd = monthEndFromArchiveUrl(monthUrl);
 				if (monthEnd && monthEnd < since) break; // older than since => can stop (archives are descending)
 			}
 
-			const monthRes = await fetch(monthUrl);
+			const monthRes = await fetchWithRetry(monthUrl, { minDelayMs: 300 });
 			if (!monthRes.ok) {
 				const txt = await monthRes.text().catch(() => '');
 				throw new Error(
@@ -87,6 +93,8 @@ export class ChessComImporter implements GameImporter {
 			let maxPlayedAtInThisMonth = 0;
 
 			for (const g of games) {
+				if (reachedLimit()) break;
+
 				// Pre-filters from JSON
 				if (g.rules && g.rules !== 'chess') continue;
 				if (ratedOnly && g.rated === false) continue;
@@ -140,6 +148,11 @@ export class ChessComImporter implements GameImporter {
 		}
 
 		out.sort((a, b) => b.playedAt.getTime() - a.playedAt.getTime());
+
+		if (typeof maxGames === 'number' && maxGames > 0) {
+			out.splice(maxGames); // keep only first N (newest after sort)
+		}
+
 		return out;
 	}
 }

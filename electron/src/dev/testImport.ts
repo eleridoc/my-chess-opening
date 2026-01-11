@@ -5,6 +5,60 @@ import {
 	ExternalSite,
 } from 'my-chess-opening-core';
 
+import { prisma } from '../db/prisma';
+import { importAllAccounts } from '../import/importAllAccounts';
+
+export async function testImportAllAccountsMax5() {
+	// Run a safe import (API-friendly): at most 5 games per enabled account
+	await importAllAccounts({ maxGamesPerAccount: 5 });
+
+	// Read the latest import runs to confirm the run happened and to get a quick summary.
+	// We take a bit more than the expected count to be safe.
+	const runs = await prisma.importRun.findMany({
+		orderBy: { startedAt: 'desc' },
+		take: 20,
+		include: {
+			accountConfig: true,
+		},
+	});
+
+	console.log('====================');
+	console.log('[TEST importAllAccounts max=5] Latest ImportRuns');
+	console.log('====================');
+
+	for (const r of runs) {
+		console.log(
+			`[RUN] ${r.accountConfig.site}:${r.accountConfig.username} ` +
+				`status=${r.status} startedAt=${r.startedAt.toISOString()} ` +
+				`found=${r.gamesFound} inserted=${r.gamesInserted} skipped=${r.gamesSkipped} failed=${r.gamesFailed}`,
+		);
+
+		// In test mode, the importer should never insert more than 5 games per account.
+		if (r.gamesInserted > 5) {
+			throw new Error(
+				`Expected gamesInserted <= 5 for ${r.accountConfig.site}:${r.accountConfig.username}, got ${r.gamesInserted}`,
+			);
+		}
+	}
+
+	// Optional: read the most recent log entries to ensure logs are being written
+	const logs = await prisma.importLogEntry.findMany({
+		orderBy: { createdAt: 'desc' },
+		take: 50,
+	});
+
+	console.log('====================');
+	console.log('[TEST importAllAccounts max=5] Latest ImportLogEntry');
+	console.log('====================');
+
+	for (const l of logs) {
+		console.log(
+			`[LOG] ${l.createdAt.toISOString()} level=${l.level} scope=${l.scope ?? ''} ` +
+				`site=${l.site ?? ''} user=${l.username ?? ''} ext=${l.externalId ?? ''} msg=${l.message}`,
+		);
+	}
+}
+
 export async function testImportSinceYesterday() {
 	const orchestrator = new ImportOrchestrator([new LichessImporter(), new ChessComImporter()]);
 

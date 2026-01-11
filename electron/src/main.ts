@@ -2,7 +2,7 @@ import { app, BrowserWindow, ipcMain } from 'electron';
 import * as path from 'node:path';
 import { PrismaClient, Prisma, ExternalSite } from '@prisma/client';
 import { coreIsReady } from 'my-chess-opening-core';
-import { testImportSinceYesterday } from './dev/testImport';
+import { testImportSinceYesterday, testImportAllAccountsMax5 } from './dev/testImport';
 
 const prisma = new PrismaClient();
 
@@ -74,9 +74,17 @@ function createWindow() {
 
 	mainWindow.loadURL('http://localhost:4200');
 
-	console.error('[TEST IMPORT] start');
-	testImportSinceYesterday().catch((e) => {
-		console.error('[TEST IMPORT] failed', e);
+	// console.error('[TEST IMPORT] start');
+	// testImportSinceYesterday().catch((e) => {
+	// 	console.error('[TEST IMPORT] failed', e);
+	// });
+
+	(async () => {
+		await testImportAllAccountsMax5();
+		process.exit(0);
+	})().catch((e) => {
+		console.error(e);
+		process.exit(1);
 	});
 
 	mainWindow.on('closed', () => {
