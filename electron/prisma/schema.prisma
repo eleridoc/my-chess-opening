@@ -33,6 +33,16 @@ enum ImportStatus {
   PARTIAL
 }
 
+//
+// Minimal persistent logging for imports.
+// We intentionally keep it lightweight (no per-game "OK" logs in DB).
+//
+enum ImportLogLevel {
+  INFO
+  WARN
+  ERROR
+}
+
 model AccountConfig {
   id        String       @id @default(cuid())
   createdAt DateTime     @default(now())
@@ -43,7 +53,7 @@ model AccountConfig {
   isEnabled Boolean      @default(true)
   lastSyncAt DateTime?
 
-  games     Game[]
+  games      Game[]
   importRuns ImportRun[]
 
   @@unique([site, username])
@@ -105,7 +115,6 @@ model Game {
   myRatingDiff       Int?
   opponentRatingDiff Int?
 
-
   @@unique([site, externalId])
   @@index([accountConfigId, playedAt])
   @@index([accountConfigId, myColor])
@@ -140,18 +149,18 @@ model GameMove {
   game   Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
 
   // 1,2,3... (half-moves / ply)
-  ply     Int
-  san     String
+  ply Int
+  san String
 
-  // New fields for position matching
+  // Position matching (AFTER)
   uci          String?
   fen          String
   positionHash String
 
-  // BEFORE (position from which this move was played)
+  // Position matching (BEFORE): "moves played from this position"
   positionHashBefore String
 
-  // Optional debug field (not required for queries)
+  // Optional debug field
   fenBefore String?
 
   clockMs Int?
@@ -170,6 +179,7 @@ model ImportRun {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // One ImportRun is tied to one AccountConfig (per-account run).
   accountConfigId String
   accountConfig   AccountConfig @relation(fields: [accountConfigId], references: [id], onDelete: Cascade)
 
@@ -177,11 +187,40 @@ model ImportRun {
   finishedAt DateTime?
   status     ImportStatus @default(SUCCESS)
 
+  // Minimal error summary (full details go to ImportLogEntry.data)
   errorMessage String?
 
+  // Minimal counters for UI (per-account)
   gamesFound    Int @default(0)
   gamesInserted Int @default(0)
   gamesSkipped  Int @default(0)
+  gamesFailed   Int @default(0)
+
+  logs ImportLogEntry[]
 
   @@index([accountConfigId, startedAt])
+}
+
+model ImportLogEntry {
+  id        String         @id @default(cuid())
+  createdAt DateTime       @default(now())
+
+  importRunId String
+  importRun   ImportRun    @relation(fields: [importRunId], references: [id], onDelete: Cascade)
+
+  level   ImportLogLevel @default(INFO)
+  message String
+
+  // Optional context (helps diagnose without being too verbose)
+  scope     String?       // "RUN" | "FETCH" | "PARSE" | "PERSIST" | ...
+  site      ExternalSite?
+  username  String?
+  externalId String?
+  url       String?
+
+  // Optional extra details as JSON string (error stack, http status, etc.)
+  data String?
+
+  @@index([importRunId, createdAt])
+  @@index([level, createdAt])
 }
