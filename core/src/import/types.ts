@@ -64,7 +64,7 @@ export type ImportedGameRaw = {
 	blackRatingDiff?: number;
 
 	// Owner perspective (relative to the imported account username)
-	myColor?: 'white' | 'black';
+	myColor?: PlayerColor;
 	myUsername?: string;
 	opponentUsername?: string;
 	myElo?: number;
