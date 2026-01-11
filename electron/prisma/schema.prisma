@@ -88,8 +88,27 @@ model Game {
   players GamePlayer[]
   moves   GameMove[]
 
+  // Players snapshot (objective, from PGN)
+  whiteUsername   String
+  blackUsername   String
+  whiteElo        Int?
+  blackElo        Int?
+  whiteRatingDiff Int?
+  blackRatingDiff Int?
+
+  // Import owner perspective (relative to AccountConfig.username)
+  myColor            PlayerColor
+  myUsername         String
+  opponentUsername   String
+  myElo              Int?
+  opponentElo        Int?
+  myRatingDiff       Int?
+  opponentRatingDiff Int?
+
+
   @@unique([site, externalId])
   @@index([accountConfigId, playedAt])
+  @@index([accountConfigId, myColor])
   @@index([playedAt])
   @@index([eco])
   @@index([resultKey])

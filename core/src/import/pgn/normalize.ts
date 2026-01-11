@@ -3,7 +3,7 @@ import { ParsedPgnGame } from './parsePgn';
 import { enrichMovesWithFenAndHash } from './enrichMovesWithFen';
 
 function parseTimeControl(tc: string): { initialSeconds: number; incrementSeconds: number } {
-	// "900+10"
+	// Example: "900+10"
 	const m = tc.trim().match(/^(\d+)\+(\d+)$/);
 	if (!m) return { initialSeconds: 0, incrementSeconds: 0 };
 	return { initialSeconds: Number(m[1]), incrementSeconds: Number(m[2]) };
@@ -63,19 +63,29 @@ function extractExternalIdentity(
 	return { externalId, siteUrl: link };
 }
 
+function toNumberOrUndefined(v: string | undefined): number | undefined {
+	if (!v) return undefined;
+	const n = Number(v.trim());
+	return Number.isFinite(n) ? n : undefined;
+}
+
 function parsePlayers(headers: Record<string, string>): [ImportedGamePlayer, ImportedGamePlayer] {
+	// We keep players as a normalized structure, but we will also denormalize
+	// white/black info into ImportedGameRaw for faster persistence and queries.
 	const white: ImportedGamePlayer = {
 		color: 'white',
-		username: headers['White'] || '',
-		elo: headers['WhiteElo'] ? Number(headers['WhiteElo']) : undefined,
-		ratingDiff: headers['WhiteRatingDiff'] ? Number(headers['WhiteRatingDiff']) : undefined,
+		username: (headers['White'] || '').trim(),
+		elo: toNumberOrUndefined(headers['WhiteElo']),
+		ratingDiff: toNumberOrUndefined(headers['WhiteRatingDiff']),
 	};
+
 	const black: ImportedGamePlayer = {
 		color: 'black',
-		username: headers['Black'] || '',
-		elo: headers['BlackElo'] ? Number(headers['BlackElo']) : undefined,
-		ratingDiff: headers['BlackRatingDiff'] ? Number(headers['BlackRatingDiff']) : undefined,
+		username: (headers['Black'] || '').trim(),
+		elo: toNumberOrUndefined(headers['BlackElo']),
+		ratingDiff: toNumberOrUndefined(headers['BlackRatingDiff']),
 	};
+
 	return [white, black];
 }
 
@@ -105,9 +115,11 @@ export function normalizeParsedGame(params: {
 	const speed: GameSpeed = speedFromInitial(initialSeconds);
 
 	const variant = h['Variant'] || variantHint || 'Standard';
-	const rated = typeof ratedHint === 'boolean' ? ratedHint : true; // Lichess endpoint will already filter rated in our usage.
+	const rated = typeof ratedHint === 'boolean' ? ratedHint : true;
 
 	const players = parsePlayers(h);
+	const white = players[0];
+	const black = players[1];
 
 	const debugId = `${site}:${externalId}`;
 
@@ -133,13 +145,28 @@ export function normalizeParsedGame(params: {
 		timeControl,
 		initialSeconds,
 		incrementSeconds,
-		result: h['Result'] || '*',
-		resultKey: resultKey,
+
+		// Result info (use resultKey for fast aggregations)
+		result,
+		resultKey,
+
 		termination: h['Termination'],
 		eco: h['ECO'],
 		opening: h['Opening'],
 		pgn: rawPgn,
+
+		// Players as parsed from PGN
 		players,
+
+		// Denormalized snapshot (objective, from PGN headers)
+		whiteUsername: white.username,
+		blackUsername: black.username,
+		whiteElo: white.elo,
+		blackElo: black.elo,
+		whiteRatingDiff: white.ratingDiff,
+		blackRatingDiff: black.ratingDiff,
+
+		// Moves enriched with FEN/hash/uci + positionHashBefore
 		moves,
 	};
 }

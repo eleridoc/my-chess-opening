@@ -3,6 +3,7 @@ import { ExternalSite, ImportOptions, ImportedGameRaw } from '../../types';
 import { splitMultiPgn } from '../../pgn/splitMultiPgn';
 import { parsePgnGame } from '../../pgn/parsePgn';
 import { normalizeParsedGame } from '../../pgn/normalize';
+import { applyOwnerPerspective } from '../../perspective/applyOwnerPerspective';
 
 function toUnixMs(date: Date): number {
 	return date.getTime();
@@ -50,6 +51,7 @@ export class LichessImporter implements GameImporter {
 
 		for (const pgn of pgns) {
 			const parsed = parsePgnGame(pgn, includeMoves);
+
 			const normalized = normalizeParsedGame({
 				site: ExternalSite.LICHESS,
 				parsed,
@@ -68,11 +70,14 @@ export class LichessImporter implements GameImporter {
 			if (ratedOnly && !normalized.rated) continue;
 			if (!speeds.includes(normalized.speed)) continue;
 
-			const key = `${normalized.site}:${normalized.externalId}`;
+			// Apply owner perspective (myColor / opponentElo / etc.)
+			const withPerspective = applyOwnerPerspective(normalized, username);
+
+			const key = `${withPerspective.site}:${withPerspective.externalId}`;
 			if (seen.has(key)) continue;
 			seen.add(key);
 
-			out.push(normalized);
+			out.push(withPerspective);
 		}
 
 		// Sort newest -> oldest (optional, but convenient)

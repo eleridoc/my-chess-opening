@@ -54,4 +54,21 @@ export type ImportedGameRaw = {
 	pgn: string;
 	players: [ImportedGamePlayer, ImportedGamePlayer]; // [white, black]
 	moves?: ImportedGameMove[];
+
+	// Objective snapshot (from PGN)
+	whiteUsername: string;
+	blackUsername: string;
+	whiteElo?: number;
+	blackElo?: number;
+	whiteRatingDiff?: number;
+	blackRatingDiff?: number;
+
+	// Owner perspective (relative to the imported account username)
+	myColor?: 'white' | 'black';
+	myUsername?: string;
+	opponentUsername?: string;
+	myElo?: number;
+	opponentElo?: number;
+	myRatingDiff?: number;
+	opponentRatingDiff?: number;
 };

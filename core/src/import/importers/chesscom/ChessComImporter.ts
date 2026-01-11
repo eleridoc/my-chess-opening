@@ -2,6 +2,7 @@ import { GameImporter } from '../GameImporter';
 import { ExternalSite, ImportOptions, ImportedGameRaw, GameSpeed } from '../../types';
 import { parsePgnGame } from '../../pgn/parsePgn';
 import { normalizeParsedGame } from '../../pgn/normalize';
+import { applyOwnerPerspective } from '../../perspective/applyOwnerPerspective';
 
 type ChessComArchivesResponse = {
 	archives: string[];
@@ -97,6 +98,7 @@ export class ChessComImporter implements GameImporter {
 				if (!pgn) continue;
 
 				const parsed = parsePgnGame(pgn, includeMoves);
+
 				const normalized = normalizeParsedGame({
 					site: ExternalSite.CHESSCOM,
 					parsed,
@@ -105,7 +107,7 @@ export class ChessComImporter implements GameImporter {
 					variantHint: 'Standard',
 				});
 
-				// Ensure the account is a player
+				// Ensure the account is a player (case-insensitive)
 				const u = username.toLowerCase();
 				const isPlayer =
 					normalized.players[0].username.toLowerCase() === u ||
@@ -116,16 +118,19 @@ export class ChessComImporter implements GameImporter {
 				if (ratedOnly && !normalized.rated) continue;
 				if (!speeds.includes(normalized.speed)) continue;
 
+				// Apply owner perspective (myColor / opponentElo / etc.)
+				const withPerspective = applyOwnerPerspective(normalized, username);
+
 				maxPlayedAtInThisMonth = Math.max(
 					maxPlayedAtInThisMonth,
-					normalized.playedAt.getTime(),
+					withPerspective.playedAt.getTime(),
 				);
 
-				const key = `${normalized.site}:${normalized.externalId}`;
+				const key = `${withPerspective.site}:${withPerspective.externalId}`;
 				if (seen.has(key)) continue;
 				seen.add(key);
 
-				out.push(normalized);
+				out.push(withPerspective);
 			}
 
 			// Extra stop condition: if everything we saw in this month is older than since, next months will be older too.
