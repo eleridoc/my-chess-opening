@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { setupCompletedGuard } from './setup/setup.guard';
 import { SetupComponent } from './setup/setup.component';
-import { MainShellComponent } from './main-shell/main-shell.component';
+import { AppLayoutComponent } from './app-layout/app-layout.component';
 
 export const routes: Routes = [
 	{
@@ -10,7 +10,7 @@ export const routes: Routes = [
 	},
 	{
 		path: '',
-		component: MainShellComponent,
+		component: AppLayoutComponent,
 		canMatch: [setupCompletedGuard],
 	},
 	{

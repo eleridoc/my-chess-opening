@@ -4,12 +4,12 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 
 @Component({
-	selector: 'app-main-shell',
+	selector: 'app-app-layout',
 	standalone: true,
 	imports: [RouterOutlet, MatToolbarModule, MatButtonModule],
-	templateUrl: './main-shell.component.html',
-	styleUrl: './main-shell.component.scss',
+	templateUrl: './app-layout.component.html',
+	styleUrl: './app-layout.component.scss',
 })
-export class MainShellComponent {
+export class AppLayoutComponent {
 	// Placeholder for future main application shell
 }
