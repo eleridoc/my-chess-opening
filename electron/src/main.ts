@@ -79,13 +79,13 @@ function createWindow() {
 	// 	console.error('[TEST IMPORT] failed', e);
 	// });
 
-	(async () => {
-		await testImportAllAccountsMax5();
-		process.exit(0);
-	})().catch((e) => {
-		console.error(e);
-		process.exit(1);
-	});
+	// (async () => {
+	// 	await testImportAllAccountsMax5();
+	// 	process.exit(0);
+	// })().catch((e) => {
+	// 	console.error(e);
+	// 	process.exit(1);
+	// });
 
 	mainWindow.on('closed', () => {
 		mainWindow = null;
