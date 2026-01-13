@@ -1,1 +1,310 @@
-<p>logs-page works!</p>
+<mat-sidenav-container class="logs-container" [class.drawer-open]="detailsOpen()">
+	<!-- Details drawer -->
+	<mat-sidenav mode="side" position="end" [opened]="detailsOpen()" class="details-drawer">
+		<div class="drawer-header">
+			<div class="drawer-title">Log details</div>
+			<button mat-icon-button (click)="closeDetails()" aria-label="Close details">
+				<mat-icon>close</mat-icon>
+			</button>
+		</div>
+
+		<div class="drawer-body">
+			<div *ngIf="detailsLoading()" class="drawer-loading">
+				<mat-spinner diameter="28"></mat-spinner>
+				<span>Loading…</span>
+			</div>
+
+			<ng-container *ngIf="!detailsLoading() && selectedDetails() as d">
+				<div class="drawer-section">
+					<div class="kv">
+						<span>ID</span><code>{{ d.id }}</code>
+					</div>
+					<div class="kv">
+						<span>Created</span><code>{{ d.createdAtIso }}</code>
+					</div>
+					<div class="kv">
+						<span>Level</span><code>{{ d.level }}</code>
+					</div>
+					<div class="kv">
+						<span>Scope</span><code>{{ d.scope ?? '(empty)' }}</code>
+					</div>
+					<div class="kv">
+						<span>Site</span><code>{{ d.site ?? '(empty)' }}</code>
+					</div>
+					<div class="kv">
+						<span>Username</span><code>{{ d.username ?? '(empty)' }}</code>
+					</div>
+					<div class="kv">
+						<span>ExternalId</span><code>{{ d.externalId ?? '(empty)' }}</code>
+					</div>
+
+					<div class="kv">
+						<span>URL</span>
+						<ng-container *ngIf="d.url; else noUrl">
+							<a class="drawer-link" (click)="openUrl(d.url)">{{ d.url }}</a>
+						</ng-container>
+						<ng-template #noUrl><code>(empty)</code></ng-template>
+					</div>
+
+					<div class="kv">
+						<span>Run</span><code>{{ d.importRunId }}</code>
+					</div>
+
+					<div class="drawer-actions">
+						<button mat-stroked-button (click)="copyToClipboard(d.message)">
+							<mat-icon>content_copy</mat-icon>
+							Copy message
+						</button>
+
+						<button mat-stroked-button *ngIf="d.data" (click)="copyToClipboard(d.data!)">
+							<mat-icon>content_copy</mat-icon>
+							Copy data
+						</button>
+
+						<button mat-flat-button (click)="viewRun(d.importRunId)">
+							<mat-icon>filter_alt</mat-icon>
+							View run
+						</button>
+					</div>
+				</div>
+
+				<div class="drawer-section">
+					<div class="drawer-subtitle">Message</div>
+					<pre class="pre">{{ d.message }}</pre>
+				</div>
+
+				<div class="drawer-section" *ngIf="d.data">
+					<div class="drawer-subtitle">Data</div>
+					<pre class="pre">{{ formatDataPretty(d.data) }}</pre>
+				</div>
+			</ng-container>
+
+			<ng-container *ngIf="!detailsLoading() && !selectedDetails()">
+				<div class="drawer-empty">No details.</div>
+			</ng-container>
+		</div>
+	</mat-sidenav>
+
+	<!-- Main content -->
+	<mat-sidenav-content class="logs-content">
+		<div class="app-page">
+			<!-- Filters -->
+			<div class="app-filters">
+				<!-- Row 1: main filters + single toggle button -->
+				<div class="app-filters__main">
+					<mat-form-field appearance="outline" class="logs-search">
+						<mat-label>Search</mat-label>
+						<input
+							matInput
+							[ngModel]="search()"
+							(ngModelChange)="search.set($event)"
+							placeholder="message or data…"
+						/>
+					</mat-form-field>
+
+					<mat-form-field appearance="outline" class="logs-level">
+						<mat-label>Level</mat-label>
+						<mat-select multiple [ngModel]="levels()" (ngModelChange)="levels.set($event)">
+							<mat-option [value]="'INFO'">INFO</mat-option>
+							<mat-option [value]="'WARN'">WARN</mat-option>
+							<mat-option [value]="'ERROR'">ERROR</mat-option>
+						</mat-select>
+					</mat-form-field>
+
+					<mat-form-field appearance="outline" class="logs-time">
+						<mat-label>Time</mat-label>
+						<mat-select [ngModel]="timePreset()" (ngModelChange)="timePreset.set($event)">
+							<mat-option [value]="'none'">All</mat-option>
+							<mat-option [value]="'1h'">Last 1h</mat-option>
+							<mat-option [value]="'24h'">Last 24h</mat-option>
+							<mat-option [value]="'7d'">Last 7d</mat-option>
+						</mat-select>
+					</mat-form-field>
+
+					<button
+						mat-stroked-button
+						class="logs-advanced-toggle"
+						(click)="toggleAdvanced()"
+						[attr.aria-expanded]="advancedOpen()"
+						aria-label="Toggle advanced filters"
+					>
+						<mat-icon>tune</mat-icon>
+						<span>{{ advancedOpen() ? 'Hide filters' : 'More filters' }}</span>
+					</button>
+				</div>
+
+				<!-- Row 2: advanced filters (collapsible) -->
+				<div class="app-filters__advanced" *ngIf="advancedOpen()">
+					<div class="app-filters__advanced-grid">
+						<mat-form-field appearance="outline">
+							<mat-label>Site</mat-label>
+							<mat-select multiple [ngModel]="sites()" (ngModelChange)="sites.set($event)">
+								<mat-option [value]="'CHESSCOM'">CHESSCOM</mat-option>
+								<mat-option [value]="'LICHESS'">LICHESS</mat-option>
+							</mat-select>
+						</mat-form-field>
+
+						<mat-form-field appearance="outline">
+							<mat-label>Scope</mat-label>
+							<mat-select
+								multiple
+								[ngModel]="selectedScopes()"
+								(ngModelChange)="selectedScopes.set($event)"
+							>
+								<mat-option [value]="null">(empty)</mat-option>
+								<mat-option *ngFor="let s of scopes()" [value]="s">{{ s }}</mat-option>
+							</mat-select>
+						</mat-form-field>
+
+						<mat-form-field appearance="outline">
+							<mat-label>Username</mat-label>
+							<input
+								matInput
+								[ngModel]="username()"
+								(ngModelChange)="username.set($event)"
+								placeholder="contains…"
+							/>
+						</mat-form-field>
+
+						<mat-form-field appearance="outline">
+							<mat-label>Run ID</mat-label>
+							<input
+								matInput
+								[ngModel]="importRunId()"
+								(ngModelChange)="importRunId.set($event)"
+								placeholder="optional…"
+							/>
+						</mat-form-field>
+					</div>
+				</div>
+
+				<!-- Row 3: quick filters (buttons only) -->
+				<div class="app-filters__quick">
+					<div class="app-filters__quick-buttons">
+						<button mat-stroked-button (click)="setErrorsOnly()">Errors only</button>
+						<button mat-stroked-button (click)="setWarningsAndErrors()">Warn + Error</button>
+						<button mat-stroked-button (click)="clearFilters()">Clear</button>
+					</div>
+
+					<div class="app-filters__spacer"></div>
+
+					<div class="app-filters__loading" *ngIf="loading()">
+						<mat-spinner diameter="18"></mat-spinner>
+						<span>Loading…</span>
+					</div>
+				</div>
+
+				<!-- Active filter chips -->
+				<mat-chip-listbox *ngIf="chips().length" class="app-filters__chips">
+					<mat-chip-option *ngFor="let c of chips()" (removed)="removeChip(c.key)" removable="true">
+						{{ c.label }}
+						<mat-icon matChipRemove>cancel</mat-icon>
+					</mat-chip-option>
+				</mat-chip-listbox>
+
+				<!-- Run context -->
+				<div *ngIf="runContext() as rc" class="app-card logs-run-context">
+					<div class="rc-title">Run context</div>
+					<div class="rc-grid">
+						<div><b>User</b>: {{ rc.username }} ({{ rc.site }})</div>
+						<div><b>Status</b>: {{ rc.status }}</div>
+						<div><b>Started</b>: {{ rc.startedAtIso }}</div>
+						<div><b>Finished</b>: {{ rc.finishedAtIso ?? '(running/unknown)' }}</div>
+						<div><b>Found</b>: {{ rc.gamesFound }}</div>
+						<div><b>Inserted</b>: {{ rc.gamesInserted }}</div>
+						<div><b>Skipped</b>: {{ rc.gamesSkipped }}</div>
+						<div><b>Failed</b>: {{ rc.gamesFailed }}</div>
+					</div>
+					<div *ngIf="rc.errorMessage" class="rc-error">
+						{{ rc.errorMessage }}
+					</div>
+				</div>
+			</div>
+
+			<!-- Table card -->
+			<div class="app-table-card">
+				<div class="app-table-card__scroll">
+					<table mat-table [dataSource]="items()" class="logs-table">
+						<ng-container matColumnDef="createdAt">
+							<th mat-header-cell *matHeaderCellDef>Date</th>
+							<td mat-cell *matCellDef="let row">
+								{{ row.createdAtIso | date: 'yyyy-MM-dd HH:mm:ss' }}
+							</td>
+						</ng-container>
+
+						<ng-container matColumnDef="level">
+							<th mat-header-cell *matHeaderCellDef>Level</th>
+							<td mat-cell *matCellDef="let row">
+								<span
+									class="app-pill"
+									[class.app-pill--error]="row.level === 'ERROR'"
+									[class.app-pill--warn]="row.level === 'WARN'"
+								>
+									{{ row.level }}
+								</span>
+							</td>
+						</ng-container>
+
+						<ng-container matColumnDef="scope">
+							<th mat-header-cell *matHeaderCellDef>Scope</th>
+							<td mat-cell *matCellDef="let row">{{ row.scope ?? '' }}</td>
+						</ng-container>
+
+						<ng-container matColumnDef="site">
+							<th mat-header-cell *matHeaderCellDef>Site</th>
+							<td mat-cell *matCellDef="let row">{{ row.site ?? '' }}</td>
+						</ng-container>
+
+						<ng-container matColumnDef="username">
+							<th mat-header-cell *matHeaderCellDef>User</th>
+							<td mat-cell *matCellDef="let row">{{ row.username ?? '' }}</td>
+						</ng-container>
+
+						<ng-container matColumnDef="message">
+							<th mat-header-cell *matHeaderCellDef>Message</th>
+							<td mat-cell *matCellDef="let row" class="logs-message" [title]="row.message">
+								{{ row.message }}
+							</td>
+						</ng-container>
+
+						<ng-container matColumnDef="externalId">
+							<th mat-header-cell *matHeaderCellDef>ExternalId</th>
+							<td mat-cell *matCellDef="let row" class="logs-external-id">
+								{{ row.externalId ?? '' }}
+							</td>
+						</ng-container>
+
+						<ng-container matColumnDef="actions">
+							<th mat-header-cell *matHeaderCellDef class="logs-actions-col"></th>
+							<td mat-cell *matCellDef="let row" class="logs-actions">
+								<button mat-icon-button (click)="openDetails(row)" title="Details">
+									<mat-icon>info</mat-icon>
+								</button>
+
+								<button mat-icon-button *ngIf="row.url" (click)="openUrl(row.url)" title="Open URL">
+									<mat-icon>open_in_new</mat-icon>
+								</button>
+
+								<button mat-icon-button (click)="viewRun(row.importRunId)" title="Filter by run">
+									<mat-icon>filter_alt</mat-icon>
+								</button>
+							</td>
+						</ng-container>
+
+						<tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+						<tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+					</table>
+				</div>
+
+				<mat-paginator
+					class="app-table-card__paginator"
+					[length]="total()"
+					[pageSize]="pageSize()"
+					[pageIndex]="page() - 1"
+					[pageSizeOptions]="[25, 50, 100]"
+					(page)="onPage($event)"
+				></mat-paginator>
+			</div>
+		</div>
+	</mat-sidenav-content>
+</mat-sidenav-container>

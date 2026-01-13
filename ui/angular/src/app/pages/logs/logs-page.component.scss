@@ -1,0 +1,259 @@
+/* ==========================================================================
+   Logs page (component-specific)
+   - Most layout/pattern styles are handled globally (app-page, app-filters, etc.)
+   - This file keeps only logs-specific sizing + table + drawer tweaks
+   ========================================================================== */
+
+:host {
+	display: block;
+	height: 100%;
+	min-height: 0;
+}
+
+.logs-container {
+	height: 100%;
+	min-height: 0;
+	background: transparent;
+}
+
+.logs-content {
+	height: 100%;
+	min-height: 0;
+}
+
+/* ==========================================================================
+   FIX: Main filters first row
+   - Override global .mat-mdc-form-field { width: 100%; } for inline rows
+   - Give the fields explicit flex behavior
+   ========================================================================== */
+
+.app-filters__main {
+	/* The global pattern already sets display:flex etc.
+	   Here we only ensure form-fields can shrink in the row. */
+	> mat-form-field {
+		width: auto;
+	}
+}
+
+/* Search should grow and take remaining space */
+.logs-search {
+	flex: 1 1 560px;
+	min-width: 320px;
+}
+
+/* Level + Time are fixed-width controls */
+.logs-level,
+.logs-time {
+	flex: 0 0 200px;
+	width: 200px;
+}
+
+/* Toggle button should visually match the outline field height */
+.logs-advanced-toggle {
+	height: 48px; /* Material outline field height with your density */
+	align-self: stretch;
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 0 14px;
+}
+
+.logs-advanced-toggle mat-icon {
+	margin: 0;
+}
+
+/* ==========================================================================
+   Table (logs-specific table look)
+   ========================================================================== */
+
+.logs-table {
+	width: 100%;
+}
+
+:host ::ng-deep .logs-table .mat-mdc-header-row {
+	background: rgba(0, 0, 0, 0.18);
+}
+
+:host ::ng-deep .logs-table .mat-mdc-header-cell,
+:host ::ng-deep .logs-table .mat-mdc-cell {
+	padding: 10px 12px;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+	vertical-align: middle;
+}
+
+:host ::ng-deep .logs-table .mat-mdc-row:hover .mat-mdc-cell {
+	background: rgba(255, 255, 255, 0.03);
+}
+
+.actions-col {
+	width: 132px;
+}
+
+.actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 4px;
+}
+
+/* These classes are used in your HTML */
+.app-table__message {
+	max-width: 720px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.app-table__external-id {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 220px;
+}
+
+/* ==========================================================================
+   Details drawer (logs-specific)
+   ========================================================================== */
+
+.details-drawer {
+	margin-top: 8px;
+	margin-bottom: 12px;
+	margin-right: 8px;
+	margin-left: 12px; /* spacing between table and drawer */
+
+	height: calc(100% - 8px - 12px);
+	border-radius: 14px;
+	overflow: hidden;
+}
+
+.drawer-header {
+	position: sticky;
+	top: 0;
+	z-index: 2;
+
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+
+	padding: 12px 12px;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+	background: rgba(0, 0, 0, 0.22);
+}
+
+.drawer-title {
+	font-weight: 700;
+	letter-spacing: 0.2px;
+}
+
+.drawer-body {
+	padding: 12px;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	max-height: calc(100% - 56px);
+	overflow: auto;
+}
+
+.drawer-loading {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	opacity: 0.9;
+}
+
+.drawer-empty {
+	opacity: 0.8;
+}
+
+.drawer-section {
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: 12px;
+	padding: 10px 10px;
+	background: rgba(0, 0, 0, 0.1);
+}
+
+.drawer-subtitle {
+	font-weight: 600;
+	margin-bottom: 6px;
+	opacity: 0.95;
+}
+
+.kv {
+	display: grid;
+	grid-template-columns: 90px 1fr;
+	gap: 8px;
+	padding: 4px 0;
+}
+
+.kv > span {
+	opacity: 0.8;
+	font-size: 12px;
+	line-height: 18px;
+}
+
+.kv code {
+	white-space: normal;
+	word-break: break-word;
+	overflow-wrap: anywhere;
+	font-size: 12px;
+	line-height: 18px;
+}
+
+.drawer-link {
+	cursor: pointer;
+	text-decoration: underline;
+	overflow-wrap: anywhere;
+}
+
+.drawer-actions {
+	margin-top: 10px;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.pre {
+	margin: 0;
+	padding: 10px;
+	border-radius: 10px;
+	background: rgba(0, 0, 0, 0.22);
+	border: 1px solid rgba(255, 255, 255, 0.06);
+
+	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+	font-size: 12px;
+	line-height: 16px;
+
+	white-space: pre-wrap;
+	word-break: break-word;
+	overflow: auto;
+	max-height: 260px;
+}
+
+/* Optional: keep your previous behavior */
+.logs-container.drawer-open .logs-content {
+	padding-right: 12px;
+}
+
+/* ==========================================================================
+   Responsive
+   ========================================================================== */
+
+@media (max-width: 700px) {
+	.logs-level,
+	.logs-time {
+		flex: 1 1 100%;
+		width: 100%;
+	}
+
+	.logs-advanced-toggle {
+		width: 100%;
+	}
+
+	.details-drawer {
+		width: 360px;
+		max-width: 85vw;
+	}
+
+	.app-table__message {
+		max-width: 420px;
+	}
+}

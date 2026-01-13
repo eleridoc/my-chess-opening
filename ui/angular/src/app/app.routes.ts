@@ -29,7 +29,11 @@ export const routes: Routes = [
 			{ path: 'explorer', component: ExplorerPageComponent },
 			{ path: 'import', component: ImportPageComponent },
 
-			{ path: 'logs', component: LogsPageComponent },
+			{
+				path: 'logs',
+				loadComponent: () =>
+					import('./pages/logs/logs-page.component').then((m) => m.LogsPageComponent),
+			},
 			{ path: 'settings', component: SettingsPageComponent },
 
 			{ path: 'about', component: AboutPageComponent },

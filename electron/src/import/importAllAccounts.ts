@@ -95,6 +95,8 @@ async function persistGame(params: {
 
 	const pgnHash = sha256Hex(game.pgn);
 
+	console.log('[IMPORT] inserting game', game.externalId);
+
 	try {
 		await prisma.$transaction(async (tx) => {
 			const created = await tx.game.create({
@@ -185,12 +187,15 @@ async function persistGame(params: {
 			}
 		});
 
+		console.log('[IMPORT] persist inserted', game.site, game.externalId);
 		return { inserted: true };
 	} catch (e: any) {
 		// Prisma unique constraint error code (P2002) => duplicate
 		if (e?.code === 'P2002') {
+			console.log('[IMPORT] persist skipped (duplicate)', game.site, game.externalId);
 			return { inserted: false };
 		}
+		console.log('[IMPORT] persist failed', game.site, game.externalId, e?.message ?? e);
 		throw e;
 	}
 }
@@ -200,6 +205,8 @@ export async function importAllAccounts(params?: {
 	maxGamesPerAccount?: number | null;
 }) {
 	const maxGamesPerAccount = params?.maxGamesPerAccount ?? null;
+
+	console.log('[IMPORT] maxGamesPerAccount:', maxGamesPerAccount);
 	const isLimitedRun = typeof maxGamesPerAccount === 'number' && maxGamesPerAccount > 0;
 
 	const sinceOverride = params?.sinceOverride ?? null;
@@ -255,6 +262,8 @@ export async function importAllAccounts(params?: {
 
 			const games = await importService.importGames(mapSite(account.site), options);
 			gamesFound = games.length;
+
+			console.log('[IMPORT] fetched games:', games.length);
 
 			await prisma.importRun.update({
 				where: { id: run.id },
@@ -378,4 +387,6 @@ export async function importAllAccounts(params?: {
 			});
 		}
 	}
+
+	console.log('[IMPORT] all accounts finished');
 }

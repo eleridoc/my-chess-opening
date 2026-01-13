@@ -1,9 +1,36 @@
 @use '@angular/material' as mat;
 
+@use './app/styles/app-theme';
+@use './app/styles/app-patterns';
+
 :root {
+	/* Existing app variables */
 	--app-bg: #181818;
 	--app-card: #1f1f1f;
 	--app-divider: #2b2b2b;
+
+	/* ✅ Map old vars to new pattern tokens (dark defaults) */
+	--app-border: rgba(255, 255, 255, 0.08);
+	--app-sep: rgba(255, 255, 255, 0.06);
+	--app-hover: rgba(255, 255, 255, 0.03);
+
+	/* Surfaces used by patterns */
+	--app-surface-1: rgba(0, 0, 0, 0.1);
+	--app-surface-2: rgba(0, 0, 0, 0.12);
+	--app-surface-3: rgba(0, 0, 0, 0.18);
+	--app-surface-4: rgba(0, 0, 0, 0.22);
+
+	/* App pattern tokens (used by app-patterns + pages) */
+	--app-radius-md: 12px;
+	--app-radius-lg: 14px;
+
+	--app-shadow-panel: 0 1px 0 rgba(255, 255, 255, 0.04), 0 12px 28px rgba(0, 0, 0, 0.25);
+
+	/* If you want to keep it consistent everywhere */
+	--app-page-pad-x: 8px;
+	--app-page-pad-top: 8px;
+	--app-page-pad-bottom: 12px;
+	--app-page-gap: 12px;
 }
 
 html {
@@ -25,9 +52,14 @@ html {
 	);
 }
 
+html,
 body {
+	height: 100%;
 	margin: 0;
-	min-height: 100vh;
+	overflow: hidden; // prevent global scrollbar
+}
+
+body {
 	font: var(--mat-sys-body-medium);
 	color: var(--mat-sys-on-surface);
 

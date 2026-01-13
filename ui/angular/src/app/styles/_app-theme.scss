@@ -1,0 +1,52 @@
+/* ==========================================================================
+   App theme tokens (dark/light friendly)
+   ========================================================================== */
+
+:root {
+	/* Spacing */
+	--app-page-pad-x: 8px;
+	--app-page-pad-top: 8px;
+	--app-page-pad-bottom: 12px;
+	--app-page-gap: 12px;
+
+	/* Surfaces (dark defaults, will be overridden in light theme if needed) */
+	--app-surface-0: transparent;
+	--app-surface-1: rgba(0, 0, 0, 0.1);
+	--app-surface-2: rgba(0, 0, 0, 0.12);
+	--app-surface-3: rgba(0, 0, 0, 0.18);
+	--app-surface-4: rgba(0, 0, 0, 0.22);
+
+	/* Borders / separators */
+	--app-border: rgba(255, 255, 255, 0.08);
+	--app-sep: rgba(255, 255, 255, 0.06);
+
+	/* Hover */
+	--app-hover: rgba(255, 255, 255, 0.03);
+
+	/* Accent states */
+	--app-warn-border: rgba(255, 193, 7, 0.35);
+	--app-warn-bg: rgba(255, 193, 7, 0.1);
+
+	--app-error-border: rgba(244, 67, 54, 0.35);
+	--app-error-bg: rgba(244, 67, 54, 0.12);
+
+	/* Radius */
+	--app-radius-md: 12px;
+	--app-radius-lg: 14px;
+
+	/* Shadows */
+	--app-shadow-panel: 0 12px 32px rgba(0, 0, 0, 0.35);
+}
+
+/* Optional: Light theme overrides (hook it later to your app theme switch)
+   Example: add a class on body like .theme-light */
+body.theme-light {
+	--app-surface-1: rgba(255, 255, 255, 0.55);
+	--app-surface-2: rgba(255, 255, 255, 0.72);
+	--app-surface-3: rgba(255, 255, 255, 0.82);
+	--app-surface-4: rgba(255, 255, 255, 0.92);
+
+	--app-border: rgba(0, 0, 0, 0.1);
+	--app-sep: rgba(0, 0, 0, 0.08);
+	--app-hover: rgba(0, 0, 0, 0.03);
+}

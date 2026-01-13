@@ -3,6 +3,10 @@ import * as path from 'node:path';
 import { PrismaClient, Prisma, ExternalSite } from '@prisma/client';
 import { coreIsReady } from 'my-chess-opening-core';
 import { testImportSinceYesterday, testImportAllAccountsMax5 } from './dev/testImport';
+import { importAllAccounts } from './import/importAllAccounts';
+import { registerLogsIpc } from './logs/logsIpc';
+
+let isImportRunning = false;
 
 app.setName('My Chess Opening');
 app.setAppUserModelId('com.eleridoc.my-chess-opening');
@@ -135,6 +139,44 @@ app.whenReady().then(() => {
 		await saveAccounts(input);
 		return { ok: true };
 	});
+
+	ipcMain.handle(
+		'import:runNow',
+		async (
+			_event,
+			input?: { sinceOverrideIso?: string | null; maxGamesPerAccount?: number | null },
+		) => {
+			if (isImportRunning) {
+				return { ok: true, message: 'Import already running' };
+			}
+
+			isImportRunning = true;
+
+			try {
+				const sinceOverride = input?.sinceOverrideIso
+					? new Date(input.sinceOverrideIso)
+					: null;
+
+				const maxGamesPerAccount =
+					typeof input?.maxGamesPerAccount === 'number' ? input.maxGamesPerAccount : null;
+
+				console.log('[IPC] import:runNow start', input);
+
+				await importAllAccounts({
+					sinceOverride,
+					maxGamesPerAccount,
+				});
+
+				console.log('[IPC] import:runNow end');
+
+				return { ok: true, message: 'Import completed' };
+			} finally {
+				isImportRunning = false;
+			}
+		},
+	);
+
+	registerLogsIpc();
 
 	createWindow();
 

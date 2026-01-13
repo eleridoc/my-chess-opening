@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { signal } from '@angular/core';
 
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTabsModule } from '@angular/material/tabs';
@@ -37,8 +38,18 @@ export class AppLayoutComponent {
 		{ label: 'Import', path: '/import' },
 	];
 
-	onImportNowClick(): void {
-		// Task later: wire IPC call to Electron import
-		console.log('[UI] Import now clicked');
+	isImporting = signal(false);
+
+	async onImportNowClick(): Promise<void> {
+		if (!window.electron) return;
+		if (this.isImporting()) return;
+
+		this.isImporting.set(true);
+		try {
+			const res = await window.electron.import.runNow({ maxGamesPerAccount: 1 });
+			console.log('[UI] Import result:', res);
+		} finally {
+			this.isImporting.set(false);
+		}
 	}
 }
