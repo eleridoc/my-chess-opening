@@ -1,6 +1,59 @@
-<div class="app-layout">
-	<!-- Top bar here -->
-	<main class="app-layout__content">
+<mat-toolbar class="app-topbar" role="banner">
+	<a class="app-topbar__title" routerLink="/dashboard">My Chess Opening</a>
+
+	<nav
+		mat-tab-nav-bar
+		class="app-topbar__nav"
+		aria-label="Primary navigation"
+		[tabPanel]="tabPanel"
+	>
+		@for (item of topNav; track item.path) {
+			<a
+				mat-tab-link
+				[routerLink]="item.path"
+				routerLinkActive
+				#rla="routerLinkActive"
+				[active]="rla.isActive"
+			>
+				{{ item.label }}
+			</a>
+		}
+	</nav>
+
+	<span class="app-topbar__spacer"></span>
+
+	<button mat-button type="button" (click)="onImportNowClick()">
+		<mat-icon aria-hidden="true">sync</mat-icon>
+		Import now
+	</button>
+
+	<a mat-icon-button routerLink="/settings" aria-label="Settings">
+		<mat-icon aria-hidden="true">settings</mat-icon>
+	</a>
+
+	<button mat-icon-button [matMenuTriggerFor]="helpMenu" aria-label="Help and more">
+		<mat-icon aria-hidden="true">help_outline</mat-icon>
+	</button>
+
+	<mat-menu #helpMenu="matMenu">
+		<button mat-menu-item routerLink="/logs">
+			<mat-icon aria-hidden="true">receipt_long</mat-icon>
+			<span>Logs</span>
+		</button>
+		<button mat-menu-item routerLink="/about">
+			<mat-icon aria-hidden="true">info</mat-icon>
+			<span>About</span>
+		</button>
+		<button mat-menu-item routerLink="/faq">
+			<mat-icon aria-hidden="true">quiz</mat-icon>
+			<span>FAQ</span>
+		</button>
+	</mat-menu>
+</mat-toolbar>
+
+<!-- This is required by mat-tab-nav-bar in M21 -->
+<mat-tab-nav-panel #tabPanel>
+	<main class="app-content" role="main">
 		<router-outlet />
 	</main>
-</div>
+</mat-tab-nav-panel>

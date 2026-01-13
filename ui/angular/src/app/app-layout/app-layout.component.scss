@@ -1,3 +1,50 @@
-.app-layout__content {
+.app-topbar {
+	/* slightly higher surface to stand out */
+	background: var(--mat-sys-surface-container-high, #222222);
+
+	/* Remove harsh separator line */
+	border-bottom: none;
+
+	box-shadow:
+		0 1px 0 rgba(255, 255, 255, 0.04),
+		0 8px 24px rgba(0, 0, 0, 0.25);
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 0 12px;
+}
+
+.app-topbar__title {
+	text-decoration: none;
+	color: inherit;
+	font-weight: 700;
+	letter-spacing: 0.2px;
+	white-space: nowrap;
+}
+
+/* Prevent the tab bar from adding its own bottom line */
+.app-topbar__nav {
+	min-width: 0;
+}
+
+/* Make tabs look a bit nicer in a toolbar */
+:host ::ng-deep .app-topbar__nav .mdc-tab {
+	height: 48px;
+}
+
+/* Remove any extra separator line some themes add to tab nav */
+:host ::ng-deep .app-topbar__nav .mdc-tab-indicator {
+	/* keep indicator, nothing to do here */
+}
+
+:host ::ng-deep .app-topbar__nav .mdc-tab-bar {
+	border-bottom: none !important;
+}
+
+.app-topbar__spacer {
+	flex: 1 1 auto;
+}
+
+.app-content {
 	padding: 16px;
 }
