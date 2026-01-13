@@ -35,3 +35,8 @@ npx prisma studio
 npm -w electron run prisma:migrate -- --name xxx_xxx_xxx
 npm -w electron run prisma:generate
 npm -w electron run prisma:studio
+
+# Generate app logo
+
+chmod +x tools/generate-icons.sh
+./tools/generate-icons.sh ui/angular/public/app-logo.png

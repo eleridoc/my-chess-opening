@@ -4,9 +4,34 @@ import { PrismaClient, Prisma, ExternalSite } from '@prisma/client';
 import { coreIsReady } from 'my-chess-opening-core';
 import { testImportSinceYesterday, testImportAllAccountsMax5 } from './dev/testImport';
 
+app.setName('My Chess Opening');
+app.setAppUserModelId('com.eleridoc.my-chess-opening');
+
 const prisma = new PrismaClient();
 
 let mainWindow: BrowserWindow | null = null;
+
+function getAssetsDir(): string {
+	// In dev, __dirname points to compiled output (usually electron/dist).
+	// In packaged apps, use process.resourcesPath.
+	return app.isPackaged
+		? path.join(process.resourcesPath, 'assets')
+		: path.join(__dirname, '../assets');
+}
+
+function getIconPath(): string {
+	const assetsDir = getAssetsDir();
+
+	if (process.platform === 'win32') {
+		return path.join(assetsDir, 'icon.ico');
+	}
+
+	if (process.platform === 'darwin') {
+		return path.join(assetsDir, 'icon.icns');
+	}
+
+	return path.join(assetsDir, 'icon.png'); // linux
+}
 
 async function getSetupState() {
 	const accountsCount = await prisma.accountConfig.count();
@@ -65,6 +90,8 @@ function createWindow() {
 	mainWindow = new BrowserWindow({
 		width: 1000,
 		height: 700,
+		title: 'My Chess Opening',
+		icon: getIconPath(),
 		webPreferences: {
 			nodeIntegration: false,
 			contextIsolation: true,
