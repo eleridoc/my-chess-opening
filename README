@@ -44,3 +44,4 @@ chmod +x tools/generate-icons.sh
 # Test core v0.1 explorer
 
 npx tsx core/dev/test_version_0_1.ts
+npx tsx core/dev/test_version_0_2.ts

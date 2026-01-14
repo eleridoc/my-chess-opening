@@ -24,17 +24,39 @@ import type {
 	ExplorerError,
 	ExplorerErrorCode,
 	ExplorerMoveAttempt,
+	ExplorerSessionSource,
+	ExplorerPgnMeta,
+	ExplorerResult,
 	PromotionPiece,
 	PromotionRequiredDetails,
+	ExplorerDbGameMeta,
 } from './types';
+
+import { parse } from '@mliebelt/pgn-parser';
 
 import type { ExplorerNodeId } from './ids';
 import { createExplorerIdFactory, type ExplorerIdFactory } from './ids';
 import type { ExplorerNode, ExplorerMove, ExplorerTree } from './model';
 
+/**
+ * Minimal PGN parser shape (CORE)
+ *
+ * We intentionally define a minimal subset of the parsed PGN structure
+ * to avoid leaking parser-specific types throughout the codebase.
+ */
+type ParsedPgnMove = {
+	notation?: {
+		notation?: string;
+	};
+};
+
+type ParsedPgnGame = {
+	moves?: ParsedPgnMove[];
+};
+
 export class ExplorerSession {
 	private mode: ExplorerMode = 'CASE1_FREE';
-
+	private source: ExplorerSessionSource = { kind: 'FREE' };
 	private idFactory: ExplorerIdFactory = createExplorerIdFactory();
 	private tree: ExplorerTree = { rootId: 'n0', nodesById: {} };
 	private currentNodeId: ExplorerNodeId = 'n0';
@@ -73,6 +95,366 @@ export class ExplorerSession {
 		};
 
 		this.currentNodeId = rootId;
+
+		this.source = { kind: 'FREE' };
+	}
+
+	/**
+	 * Loads the initial (starting) session state.
+	 *
+	 * This is an explicit alias for resetToInitial().
+	 * UI code should prefer calling loadInitial() when the intention is to start a fresh exploration,
+	 * and resetToInitial() when the intention is to force a hard reset.
+	 */
+	loadInitial(): void {
+		this.resetToInitial();
+	}
+
+	/**
+	 * Loads a FEN position into a fresh CASE1 session.
+	 *
+	 * Rules:
+	 * - Only allowed in CASE1_FREE.
+	 * - This performs a hard reset of the current exploration and replaces the root position.
+	 * - The resulting session remains in CASE1_FREE mode.
+	 */
+	loadFenForCase1(fen: string): ExplorerResult {
+		if (this.mode !== 'CASE1_FREE') {
+			return {
+				ok: false,
+				error: this.makeError(
+					'RESET_REQUIRED',
+					'Loading a FEN position is only allowed in CASE1. Please reset the session first.',
+				),
+			};
+		}
+
+		let chess: Chess;
+		try {
+			chess = new Chess(fen);
+		} catch {
+			return {
+				ok: false,
+				error: this.makeError('INVALID_FEN', 'Invalid FEN.', { fen }),
+			};
+		}
+
+		// chess.js normalizes the FEN; use the canonical form to keep consistency.
+		const normalizedFen = chess.fen();
+
+		// Hard reset but keep the session in CASE1.
+		this.idFactory = createExplorerIdFactory();
+
+		const rootId = this.idFactory.nextNodeId();
+
+		const rootNode: ExplorerNode = {
+			id: rootId,
+			ply: 0,
+			fen: normalizedFen,
+			childIds: [],
+		};
+
+		this.tree = {
+			rootId,
+			nodesById: {
+				[rootId]: rootNode,
+			},
+		};
+
+		this.currentNodeId = rootId;
+		this.mode = 'CASE1_FREE';
+		this.source = { kind: 'FEN', fen: normalizedFen };
+
+		return { ok: true };
+	}
+
+	/**
+	 * Loads a PGN into the session (CASE2_PGN).
+	 *
+	 * Rules:
+	 * - Only allowed when the session is in CASE1_FREE.
+	 *   If the session is already in CASE2_DB or CASE2_PGN, callers must reset first.
+	 * - The PGN is loaded as a single mainline (no variations for now).
+	 * - The tree is rebuilt from scratch:
+	 *   root = initial position, then one node per ply.
+	 */
+	loadPgn(pgn: string, meta?: ExplorerPgnMeta): ExplorerResult {
+		if (this.mode !== 'CASE1_FREE') {
+			return {
+				ok: false,
+				error: this.makeError(
+					'RESET_REQUIRED',
+					'Loading a PGN is only allowed from CASE1. Please reset the session first.',
+				),
+			};
+		}
+
+		const trimmed = pgn?.trim() ?? '';
+		if (trimmed.length === 0) {
+			return {
+				ok: false,
+				error: this.makeError('INVALID_PGN', 'PGN is empty.'),
+			};
+		}
+
+		let parsed: unknown;
+		try {
+			parsed = parse(trimmed, { startRule: 'games' });
+		} catch (e) {
+			return {
+				ok: false,
+				error: this.makeError('INVALID_PGN', 'Failed to parse PGN.', {
+					reason: e instanceof Error ? e.message : String(e),
+				}),
+			};
+		}
+
+		const extracted = this.extractSanMovesFromParsedPgn(parsed);
+		if (!extracted.ok) {
+			return { ok: false, error: extracted.error };
+		}
+
+		const movesSan = extracted.moves;
+
+		// Build a fresh tree from the initial position.
+		this.idFactory = createExplorerIdFactory();
+		const chess = new Chess(); // initial position
+
+		const rootId = this.idFactory.nextNodeId();
+		const rootNode: ExplorerNode = {
+			id: rootId,
+			ply: 0,
+			fen: chess.fen(),
+			childIds: [],
+		};
+
+		this.tree = {
+			rootId,
+			nodesById: {
+				[rootId]: rootNode,
+			},
+		};
+
+		let parentId = rootId;
+
+		for (const san of movesSan) {
+			const moveResult = chess.move(san);
+
+			if (!moveResult) {
+				// The PGN was parsed, but a move cannot be applied => treat as invalid PGN.
+				this.resetToInitial();
+				return {
+					ok: false,
+					error: this.makeError('INVALID_PGN', 'PGN contains an illegal move.', { san }),
+				};
+			}
+
+			const from = (moveResult as any).from as string;
+			const to = (moveResult as any).to as string;
+
+			const promotionRaw = (
+				(moveResult as any).promotion as string | undefined
+			)?.toLowerCase();
+			const promotion =
+				promotionRaw === 'q' ||
+				promotionRaw === 'r' ||
+				promotionRaw === 'b' ||
+				promotionRaw === 'n'
+					? (promotionRaw as PromotionPiece)
+					: undefined;
+
+			const uci = this.buildUci(from, to, promotion);
+
+			const newId = this.idFactory.nextNodeId();
+			const parent = this.tree.nodesById[parentId];
+
+			this.tree.nodesById[newId] = {
+				id: newId,
+				parentId,
+				ply: this.tree.nodesById[parentId].ply + 1,
+				fen: chess.fen(),
+				incomingMove: {
+					uci,
+					san: (moveResult as any).san as string,
+					from,
+					to,
+					promotion,
+				},
+				childIds: [],
+			};
+
+			parent.childIds.push(newId);
+			parent.activeChildId = newId;
+
+			parentId = newId;
+		}
+
+		this.currentNodeId = parentId;
+		this.mode = 'CASE2_PGN';
+		this.source = { kind: 'PGN', name: meta?.name };
+
+		return { ok: true };
+	}
+
+	/**
+	 * Loads a game from a list of SAN moves (CASE2_DB).
+	 *
+	 * This is the "DB loading" equivalent of loadPgn(), but the moves are provided directly
+	 * (e.g. coming from Prisma/Electron).
+	 *
+	 * Rules:
+	 * - Only allowed when the session is in CASE1_FREE.
+	 * - The game is loaded as a single mainline (no variations for now).
+	 * - The tree is rebuilt from scratch:
+	 *   root = initial position, then one node per ply.
+	 */
+	loadGameMovesSan(movesSan: string[], meta: ExplorerDbGameMeta): ExplorerResult {
+		if (this.mode !== 'CASE1_FREE') {
+			return {
+				ok: false,
+				error: this.makeError(
+					'RESET_REQUIRED',
+					'Loading a DB game is only allowed from CASE1. Please reset the session first.',
+				),
+			};
+		}
+
+		if (!meta?.gameId || meta.gameId.trim().length === 0) {
+			return {
+				ok: false,
+				error: this.makeError('INTERNAL_ERROR', 'Missing gameId for DB load.'),
+			};
+		}
+
+		if (!Array.isArray(movesSan) || movesSan.length === 0) {
+			return {
+				ok: false,
+				error: this.makeError('INVALID_PGN', 'DB game contains no moves.'),
+			};
+		}
+
+		// Fresh tree from the initial position.
+		this.idFactory = createExplorerIdFactory();
+		const chess = new Chess();
+
+		const rootId = this.idFactory.nextNodeId();
+		const rootNode: ExplorerNode = {
+			id: rootId,
+			ply: 0,
+			fen: chess.fen(),
+			childIds: [],
+		};
+
+		this.tree = {
+			rootId,
+			nodesById: {
+				[rootId]: rootNode,
+			},
+		};
+
+		let parentId = rootId;
+
+		for (const sanRaw of movesSan) {
+			const san = sanRaw?.trim();
+			if (!san) continue;
+
+			const moveResult = chess.move(san);
+
+			if (!moveResult) {
+				this.resetToInitial();
+				return {
+					ok: false,
+					error: this.makeError('INVALID_PGN', 'DB game contains an illegal move.', {
+						san,
+					}),
+				};
+			}
+
+			const from = (moveResult as any).from as string;
+			const to = (moveResult as any).to as string;
+
+			const promotionRaw = (
+				(moveResult as any).promotion as string | undefined
+			)?.toLowerCase();
+			const promotion =
+				promotionRaw === 'q' ||
+				promotionRaw === 'r' ||
+				promotionRaw === 'b' ||
+				promotionRaw === 'n'
+					? (promotionRaw as PromotionPiece)
+					: undefined;
+
+			const uci = this.buildUci(from, to, promotion);
+
+			const newId = this.idFactory.nextNodeId();
+			const parent = this.tree.nodesById[parentId];
+
+			this.tree.nodesById[newId] = {
+				id: newId,
+				parentId,
+				ply: this.tree.nodesById[parentId].ply + 1,
+				fen: chess.fen(),
+				incomingMove: {
+					uci,
+					san: (moveResult as any).san as string,
+					from,
+					to,
+					promotion,
+				},
+				childIds: [],
+			};
+
+			parent.childIds.push(newId);
+			parent.activeChildId = newId;
+
+			parentId = newId;
+		}
+
+		this.currentNodeId = parentId;
+		this.mode = 'CASE2_DB';
+		this.source = { kind: 'DB', gameId: meta.gameId };
+
+		return { ok: true };
+	}
+
+	private extractSanMovesFromParsedPgn(
+		parsed: unknown,
+	): { ok: true; moves: string[] } | { ok: false; error: ExplorerError } {
+		const games = Array.isArray(parsed) ? (parsed as ParsedPgnGame[]) : [];
+
+		const firstGame = games[0];
+		if (!firstGame) {
+			return {
+				ok: false,
+				error: this.makeError('INVALID_PGN', 'No game found in PGN.'),
+			};
+		}
+
+		const rawMoves = Array.isArray(firstGame.moves) ? firstGame.moves : [];
+		if (rawMoves.length === 0) {
+			return {
+				ok: false,
+				error: this.makeError('INVALID_PGN', 'PGN contains no moves.'),
+			};
+		}
+
+		const movesSan: string[] = [];
+
+		for (const m of rawMoves) {
+			const san = m?.notation?.notation;
+			if (typeof san === 'string' && san.trim().length > 0) {
+				movesSan.push(san.trim());
+			}
+		}
+
+		if (movesSan.length === 0) {
+			return {
+				ok: false,
+				error: this.makeError('INVALID_PGN', 'PGN contains no valid SAN moves.'),
+			};
+		}
+
+		return { ok: true, moves: movesSan };
 	}
 
 	private makeError<TCode extends ExplorerErrorCode, TDetails = unknown>(
@@ -151,6 +533,10 @@ export class ExplorerSession {
 
 	getCurrentPly(): number {
 		return this.getCurrentNode().ply;
+	}
+
+	getSource(): ExplorerSessionSource {
+		return this.source;
 	}
 
 	/**

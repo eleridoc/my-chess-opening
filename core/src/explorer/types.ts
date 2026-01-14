@@ -83,3 +83,48 @@ export type ExplorerApplyMoveFailure = {
 };
 
 export type ExplorerApplyMoveResult = ExplorerApplyMoveSuccess | ExplorerApplyMoveFailure;
+
+/**
+ * Generic result helpers (CORE)
+ *
+ * We use ok/error unions instead of throwing exceptions for domain operations.
+ * This makes UI/Electron integration easier and keeps error handling explicit.
+ */
+export type ExplorerOk = { ok: true };
+
+export type ExplorerFail<E extends ExplorerError = ExplorerError> = {
+	ok: false;
+	error: E;
+};
+
+export type ExplorerResult<E extends ExplorerError = ExplorerError> = ExplorerOk | ExplorerFail<E>;
+
+/**
+ * Explorer session source (CORE)
+ *
+ * This describes *how* the current session was created.
+ * It is informational and helps UI decide which actions are allowed/visible.
+ */
+export type ExplorerSessionSource =
+	| { kind: 'FREE' }
+	| { kind: 'FEN'; fen: string }
+	| { kind: 'PGN'; name?: string }
+	| { kind: 'DB'; gameId: string };
+
+/**
+ * PGN metadata (CORE)
+ *
+ * This is intentionally minimal for now.
+ * We may extend it later with headers, player names, dates, etc.
+ */
+export type ExplorerPgnMeta = {
+	name?: string;
+};
+
+/**
+ * Database-loaded game metadata (CORE)
+ */
+export type ExplorerDbGameMeta = {
+	gameId: string;
+	name?: string;
+};
