@@ -23,6 +23,7 @@
 		"typescript": "^5.9.3"
 	},
 	"devDependencies": {
-		"prettier": "^3.7.3"
+		"prettier": "^3.7.3",
+		"tsx": "^4.21.0"
 	}
 }

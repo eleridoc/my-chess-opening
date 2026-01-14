@@ -2,6 +2,7 @@
 // We'll put PGN parsing, FEN logic, models, etc. here.
 
 export * from './ipc';
+export * from './explorer';
 
 export { ImportOrchestrator } from './import/ImportOrchestrator';
 export { LichessImporter } from './import/importers/lichess/LichessImporter';

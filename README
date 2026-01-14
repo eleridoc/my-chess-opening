@@ -40,3 +40,7 @@ npm -w electron run prisma:studio
 
 chmod +x tools/generate-icons.sh
 ./tools/generate-icons.sh ui/angular/public/app-logo.png
+
+# Test core v0.1 explorer
+
+npx tsx core/dev/test_version_0_1.ts
