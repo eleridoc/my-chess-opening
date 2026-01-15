@@ -3,7 +3,7 @@
 	"version": "0.1.0",
 	"scripts": {
 		"ng": "ng",
-		"start": "npm run build -w my-chess-opening-core && ng serve",
+		"start": "ng serve --prebundle=false --poll=1000",
 		"build": "ng build",
 		"watch": "ng build --watch --configuration development",
 		"test": "ng test"

@@ -4,6 +4,7 @@
 	"private": true,
 	"main": "dist/main.js",
 	"scripts": {
+		"prebuild": "prisma generate",
 		"build": "tsc -p tsconfig.json",
 		"start": "npm run build && electron dist/main.js",
 		"prisma:generate": "prisma generate",

@@ -5,11 +5,23 @@
 	"main": "dist/index.js",
 	"types": "./dist/index.d.ts",
 	"scripts": {
-		"build": "tsc -p tsconfig.json",
-		"clean": "rm -rf dist"
+		"build:cjs": "tsc -p tsconfig.json",
+		"build:esm:explorer": "tsc -p tsconfig.explorer.esm.json",
+		"build": "npm run build:cjs && npm run build:esm:explorer",
+		"clean": "rm -rf dist dist-esm"
 	},
 	"dependencies": {
-		"@mliebelt/pgn-parser": "^1.4.19",
 		"chess.js": "^1.4.0"
+	},
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"require": "./dist/index.js",
+			"default": "./dist/index.js"
+		},
+		"./explorer": {
+			"types": "./dist-esm/explorer/index.d.ts",
+			"default": "./dist-esm/explorer/index.js"
+		}
 	}
 }

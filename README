@@ -1,29 +1,39 @@
-# Build all
 
-npm run build -ws
+# Build everything (ordered)
+npm run build:all
 
-# Run Angular
+# Run Angular dev server
+npm run build:watch:ui:angular
 
-npm run start -w ui/angular
+# Run Electron (after building everything)
+npm run build:all:run:electron
 
-# Run electron
+# Create a migration, then generate Prisma Client, then open Prisma Studio
+npm run prisma:migrate:open -- --name xxx_xxx_xxx
 
-npm run -w electron start
+# Create a migration only
+npm run prisma:migrate -- --name xxx_xxx_xxx
 
-# Build all and run electron
+# Reset and migrate DB (electron workspace)
+npm run prisma:reset
 
-npm run build:run:electron
+# Generate Prisma client
+npm run prisma:generate
 
-# Reset and migrate DB
+# Prisma Studio
+npm run prisma:studio
 
-npm -w electron run prisma:reset
+-------------------------------------------------------------
 
-# Run Prisma studio
+# Generate app logo
+chmod +x tools/generate-icons.sh
+./tools/generate-icons.sh ui/angular/public/app-logo.png
 
-npm -w electron run prisma:studio
+# Core Explorer harness tests
+npx tsx core/dev/test_version_0_1.ts
+npx tsx core/dev/test_version_0_2.ts
 
 # Full Reset DB
-
 cd ~/dev/my-chess-opening/electron
 rm -rf prisma/migrations
 rm -f dev.db
@@ -31,17 +41,3 @@ rm -f prisma/dev.db
 npx prisma migrate dev --name init
 npx prisma generate
 npx prisma studio
-
-npm -w electron run prisma:migrate -- --name xxx_xxx_xxx
-npm -w electron run prisma:generate
-npm -w electron run prisma:studio
-
-# Generate app logo
-
-chmod +x tools/generate-icons.sh
-./tools/generate-icons.sh ui/angular/public/app-logo.png
-
-# Test core v0.1 explorer
-
-npx tsx core/dev/test_version_0_1.ts
-npx tsx core/dev/test_version_0_2.ts

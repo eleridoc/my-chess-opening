@@ -6,14 +6,12 @@
  *
  * Key principles:
  * - UI and Electron must NOT implement chess rules or session state logic.
- * - UI should only call this session (via a facade later) and render derived state.
+ * - UI should only call this session (via an Angular facade) and render derived state.
  * - The session is modeled as a tree of positions (nodes) with variations.
  *
- * In V0.1.3 we only implement:
- * - Session initialization (resetToInitial)
- * - Read-only getters and tree traversal helpers
- *
- * Move application and navigation will be implemented in V0.1.4 / V0.1.5.
+ * This file is intentionally "core-domain" code:
+ * - No Angular, no Electron, no persistence, no UI concerns.
+ * - Only deterministic state transitions and read-only selectors.
  */
 
 import { Chess, type Square } from 'chess.js';
@@ -32,31 +30,18 @@ import type {
 	ExplorerDbGameMeta,
 } from './types';
 
-import { parse } from '@mliebelt/pgn-parser';
-
 import type { ExplorerNodeId } from './ids';
 import { createExplorerIdFactory, type ExplorerIdFactory } from './ids';
 import type { ExplorerNode, ExplorerMove, ExplorerTree } from './model';
 
-/**
- * Minimal PGN parser shape (CORE)
- *
- * We intentionally define a minimal subset of the parsed PGN structure
- * to avoid leaking parser-specific types throughout the codebase.
- */
-type ParsedPgnMove = {
-	notation?: {
-		notation?: string;
-	};
-};
-
-type ParsedPgnGame = {
-	moves?: ParsedPgnMove[];
-};
-
 export class ExplorerSession {
+	// ---------------------------------------------------------------------------
+	// Internal state
+	// ---------------------------------------------------------------------------
+
 	private mode: ExplorerMode = 'CASE1_FREE';
 	private source: ExplorerSessionSource = { kind: 'FREE' };
+
 	private idFactory: ExplorerIdFactory = createExplorerIdFactory();
 	private tree: ExplorerTree = { rootId: 'n0', nodesById: {} };
 	private currentNodeId: ExplorerNodeId = 'n0';
@@ -65,21 +50,27 @@ export class ExplorerSession {
 		this.resetToInitial();
 	}
 
+	// ---------------------------------------------------------------------------
+	// Public API - Lifecycle / Loaders
+	// ---------------------------------------------------------------------------
+
 	/**
-	 * Resets the session to the initial state (CASE1).
-	 * This creates a brand new tree with a fresh root node.
+	 * Hard reset to an empty CASE1 session using the canonical initial position.
+	 *
+	 * This method:
+	 * - recreates a new node id factory (stable ids per session)
+	 * - recreates a new tree with a fresh root node
+	 * - resets cursor to root
+	 * - resets source to FREE
 	 */
 	resetToInitial(): void {
 		this.mode = 'CASE1_FREE';
+		this.source = { kind: 'FREE' };
 
-		// Recreate the ID factory so ids are stable and session-scoped.
 		this.idFactory = createExplorerIdFactory();
-
-		// Use chess.js to obtain the canonical initial FEN.
 		const initialFen = new Chess().fen();
 
 		const rootId = this.idFactory.nextNodeId();
-
 		const rootNode: ExplorerNode = {
 			id: rootId,
 			ply: 0,
@@ -87,24 +78,13 @@ export class ExplorerSession {
 			childIds: [],
 		};
 
-		this.tree = {
-			rootId,
-			nodesById: {
-				[rootId]: rootNode,
-			},
-		};
-
+		this.tree = { rootId, nodesById: { [rootId]: rootNode } };
 		this.currentNodeId = rootId;
-
-		this.source = { kind: 'FREE' };
 	}
 
 	/**
-	 * Loads the initial (starting) session state.
-	 *
-	 * This is an explicit alias for resetToInitial().
-	 * UI code should prefer calling loadInitial() when the intention is to start a fresh exploration,
-	 * and resetToInitial() when the intention is to force a hard reset.
+	 * Semantic alias for resetToInitial().
+	 * Use this when the intent is “start a new exploration”.
 	 */
 	loadInitial(): void {
 		this.resetToInitial();
@@ -114,9 +94,9 @@ export class ExplorerSession {
 	 * Loads a FEN position into a fresh CASE1 session.
 	 *
 	 * Rules:
-	 * - Only allowed in CASE1_FREE.
-	 * - This performs a hard reset of the current exploration and replaces the root position.
-	 * - The resulting session remains in CASE1_FREE mode.
+	 * - Only allowed in CASE1_FREE
+	 * - Replaces the root position (hard reset)
+	 * - Keeps the session in CASE1_FREE
 	 */
 	loadFenForCase1(fen: string): ExplorerResult {
 		if (this.mode !== 'CASE1_FREE') {
@@ -133,35 +113,13 @@ export class ExplorerSession {
 		try {
 			chess = new Chess(fen);
 		} catch {
-			return {
-				ok: false,
-				error: this.makeError('INVALID_FEN', 'Invalid FEN.', { fen }),
-			};
+			return { ok: false, error: this.makeError('INVALID_FEN', 'Invalid FEN.', { fen }) };
 		}
 
-		// chess.js normalizes the FEN; use the canonical form to keep consistency.
+		// chess.js normalizes FEN; store the canonical representation.
 		const normalizedFen = chess.fen();
 
-		// Hard reset but keep the session in CASE1.
-		this.idFactory = createExplorerIdFactory();
-
-		const rootId = this.idFactory.nextNodeId();
-
-		const rootNode: ExplorerNode = {
-			id: rootId,
-			ply: 0,
-			fen: normalizedFen,
-			childIds: [],
-		};
-
-		this.tree = {
-			rootId,
-			nodesById: {
-				[rootId]: rootNode,
-			},
-		};
-
-		this.currentNodeId = rootId;
+		this.hardResetToRootFen(normalizedFen);
 		this.mode = 'CASE1_FREE';
 		this.source = { kind: 'FEN', fen: normalizedFen };
 
@@ -171,12 +129,12 @@ export class ExplorerSession {
 	/**
 	 * Loads a PGN into the session (CASE2_PGN).
 	 *
+	 * Notes:
+	 * - We intentionally rely on chess.js parsing to remain browser-friendly.
+	 * - We only keep the SAN mainline for now (no PGN variations/comments import).
+	 *
 	 * Rules:
-	 * - Only allowed when the session is in CASE1_FREE.
-	 *   If the session is already in CASE2_DB or CASE2_PGN, callers must reset first.
-	 * - The PGN is loaded as a single mainline (no variations for now).
-	 * - The tree is rebuilt from scratch:
-	 *   root = initial position, then one node per ply.
+	 * - Only allowed from CASE1_FREE (otherwise RESET_REQUIRED)
 	 */
 	loadPgn(pgn: string, meta?: ExplorerPgnMeta): ExplorerResult {
 		if (this.mode !== 'CASE1_FREE') {
@@ -189,107 +147,34 @@ export class ExplorerSession {
 			};
 		}
 
-		const trimmed = pgn?.trim() ?? '';
+		const trimmed = (pgn ?? '').trim();
 		if (trimmed.length === 0) {
-			return {
-				ok: false,
-				error: this.makeError('INVALID_PGN', 'PGN is empty.'),
-			};
+			return { ok: false, error: this.makeError('INVALID_PGN', 'PGN is empty.') };
 		}
 
-		let parsed: unknown;
-		try {
-			parsed = parse(trimmed, { startRule: 'games' });
-		} catch (e) {
+		const normalized = this.normalizePgnText(trimmed);
+
+		const chessForParsing = new Chess();
+		const loadAttempt = this.tryLoadPgn(chessForParsing, normalized);
+
+		if (!loadAttempt.ok) {
 			return {
 				ok: false,
 				error: this.makeError('INVALID_PGN', 'Failed to parse PGN.', {
-					reason: e instanceof Error ? e.message : String(e),
+					reason: loadAttempt.reason,
+					preview: normalized.slice(0, 200),
 				}),
 			};
 		}
 
-		const extracted = this.extractSanMovesFromParsedPgn(parsed);
-		if (!extracted.ok) {
-			return { ok: false, error: extracted.error };
+		const movesSan = chessForParsing.history(); // SAN list
+		if (!Array.isArray(movesSan) || movesSan.length === 0) {
+			return { ok: false, error: this.makeError('INVALID_PGN', 'PGN contains no moves.') };
 		}
 
-		const movesSan = extracted.moves;
+		const rebuild = this.rebuildTreeFromSanMoves(movesSan);
+		if (!rebuild.ok) return rebuild;
 
-		// Build a fresh tree from the initial position.
-		this.idFactory = createExplorerIdFactory();
-		const chess = new Chess(); // initial position
-
-		const rootId = this.idFactory.nextNodeId();
-		const rootNode: ExplorerNode = {
-			id: rootId,
-			ply: 0,
-			fen: chess.fen(),
-			childIds: [],
-		};
-
-		this.tree = {
-			rootId,
-			nodesById: {
-				[rootId]: rootNode,
-			},
-		};
-
-		let parentId = rootId;
-
-		for (const san of movesSan) {
-			const moveResult = chess.move(san);
-
-			if (!moveResult) {
-				// The PGN was parsed, but a move cannot be applied => treat as invalid PGN.
-				this.resetToInitial();
-				return {
-					ok: false,
-					error: this.makeError('INVALID_PGN', 'PGN contains an illegal move.', { san }),
-				};
-			}
-
-			const from = (moveResult as any).from as string;
-			const to = (moveResult as any).to as string;
-
-			const promotionRaw = (
-				(moveResult as any).promotion as string | undefined
-			)?.toLowerCase();
-			const promotion =
-				promotionRaw === 'q' ||
-				promotionRaw === 'r' ||
-				promotionRaw === 'b' ||
-				promotionRaw === 'n'
-					? (promotionRaw as PromotionPiece)
-					: undefined;
-
-			const uci = this.buildUci(from, to, promotion);
-
-			const newId = this.idFactory.nextNodeId();
-			const parent = this.tree.nodesById[parentId];
-
-			this.tree.nodesById[newId] = {
-				id: newId,
-				parentId,
-				ply: this.tree.nodesById[parentId].ply + 1,
-				fen: chess.fen(),
-				incomingMove: {
-					uci,
-					san: (moveResult as any).san as string,
-					from,
-					to,
-					promotion,
-				},
-				childIds: [],
-			};
-
-			parent.childIds.push(newId);
-			parent.activeChildId = newId;
-
-			parentId = newId;
-		}
-
-		this.currentNodeId = parentId;
 		this.mode = 'CASE2_PGN';
 		this.source = { kind: 'PGN', name: meta?.name };
 
@@ -299,14 +184,11 @@ export class ExplorerSession {
 	/**
 	 * Loads a game from a list of SAN moves (CASE2_DB).
 	 *
-	 * This is the "DB loading" equivalent of loadPgn(), but the moves are provided directly
-	 * (e.g. coming from Prisma/Electron).
+	 * This is the DB-equivalent of loadPgn(), except the SAN list is already provided.
 	 *
 	 * Rules:
-	 * - Only allowed when the session is in CASE1_FREE.
-	 * - The game is loaded as a single mainline (no variations for now).
-	 * - The tree is rebuilt from scratch:
-	 *   root = initial position, then one node per ply.
+	 * - Only allowed from CASE1_FREE (otherwise RESET_REQUIRED)
+	 * - Requires meta.gameId (for traceability)
 	 */
 	loadGameMovesSan(movesSan: string[], meta: ExplorerDbGameMeta): ExplorerResult {
 		if (this.mode !== 'CASE1_FREE') {
@@ -333,242 +215,30 @@ export class ExplorerSession {
 			};
 		}
 
-		// Fresh tree from the initial position.
-		this.idFactory = createExplorerIdFactory();
-		const chess = new Chess();
+		const rebuild = this.rebuildTreeFromSanMoves(movesSan);
+		if (!rebuild.ok) return rebuild;
 
-		const rootId = this.idFactory.nextNodeId();
-		const rootNode: ExplorerNode = {
-			id: rootId,
-			ply: 0,
-			fen: chess.fen(),
-			childIds: [],
-		};
-
-		this.tree = {
-			rootId,
-			nodesById: {
-				[rootId]: rootNode,
-			},
-		};
-
-		let parentId = rootId;
-
-		for (const sanRaw of movesSan) {
-			const san = sanRaw?.trim();
-			if (!san) continue;
-
-			const moveResult = chess.move(san);
-
-			if (!moveResult) {
-				this.resetToInitial();
-				return {
-					ok: false,
-					error: this.makeError('INVALID_PGN', 'DB game contains an illegal move.', {
-						san,
-					}),
-				};
-			}
-
-			const from = (moveResult as any).from as string;
-			const to = (moveResult as any).to as string;
-
-			const promotionRaw = (
-				(moveResult as any).promotion as string | undefined
-			)?.toLowerCase();
-			const promotion =
-				promotionRaw === 'q' ||
-				promotionRaw === 'r' ||
-				promotionRaw === 'b' ||
-				promotionRaw === 'n'
-					? (promotionRaw as PromotionPiece)
-					: undefined;
-
-			const uci = this.buildUci(from, to, promotion);
-
-			const newId = this.idFactory.nextNodeId();
-			const parent = this.tree.nodesById[parentId];
-
-			this.tree.nodesById[newId] = {
-				id: newId,
-				parentId,
-				ply: this.tree.nodesById[parentId].ply + 1,
-				fen: chess.fen(),
-				incomingMove: {
-					uci,
-					san: (moveResult as any).san as string,
-					from,
-					to,
-					promotion,
-				},
-				childIds: [],
-			};
-
-			parent.childIds.push(newId);
-			parent.activeChildId = newId;
-
-			parentId = newId;
-		}
-
-		this.currentNodeId = parentId;
 		this.mode = 'CASE2_DB';
 		this.source = { kind: 'DB', gameId: meta.gameId };
 
 		return { ok: true };
 	}
 
-	private extractSanMovesFromParsedPgn(
-		parsed: unknown,
-	): { ok: true; moves: string[] } | { ok: false; error: ExplorerError } {
-		const games = Array.isArray(parsed) ? (parsed as ParsedPgnGame[]) : [];
-
-		const firstGame = games[0];
-		if (!firstGame) {
-			return {
-				ok: false,
-				error: this.makeError('INVALID_PGN', 'No game found in PGN.'),
-			};
-		}
-
-		const rawMoves = Array.isArray(firstGame.moves) ? firstGame.moves : [];
-		if (rawMoves.length === 0) {
-			return {
-				ok: false,
-				error: this.makeError('INVALID_PGN', 'PGN contains no moves.'),
-			};
-		}
-
-		const movesSan: string[] = [];
-
-		for (const m of rawMoves) {
-			const san = m?.notation?.notation;
-			if (typeof san === 'string' && san.trim().length > 0) {
-				movesSan.push(san.trim());
-			}
-		}
-
-		if (movesSan.length === 0) {
-			return {
-				ok: false,
-				error: this.makeError('INVALID_PGN', 'PGN contains no valid SAN moves.'),
-			};
-		}
-
-		return { ok: true, moves: movesSan };
-	}
-
-	private makeError<TCode extends ExplorerErrorCode, TDetails = unknown>(
-		code: TCode,
-		message: string,
-		details?: TDetails,
-	): ExplorerError<TDetails> & { code: TCode } {
-		return { code, message, details };
-	}
-
-	private buildUci(from: string, to: string, promotion?: PromotionPiece): string {
-		return promotion ? `${from}${to}${promotion}` : `${from}${to}`;
-	}
-
-	private getPromotionOptions(chess: Chess, from: Square, to: Square): PromotionPiece[] | null {
-		// We rely on verbose legal moves to detect promotion possibilities.
-		// chess.js returns 4 separate promotion moves (q/r/b/n) in most versions.
-		type VerboseMove = {
-			from: string;
-			to: string;
-			promotion?: string;
-			flags?: string;
-		};
-
-		const moves = chess.moves({ square: from, verbose: true }) as VerboseMove[];
-
-		const candidates = moves.filter((m) => m.from === from && m.to === to);
-
-		if (candidates.length === 0) return null;
-
-		const promoMoves = candidates.filter(
-			(m) =>
-				typeof m.promotion === 'string' ||
-				(typeof m.flags === 'string' && m.flags.includes('p')),
-		);
-
-		if (promoMoves.length === 0) return [];
-
-		const options = new Set<PromotionPiece>();
-
-		for (const m of promoMoves) {
-			const p = (m.promotion ?? '').toLowerCase();
-			if (p === 'q' || p === 'r' || p === 'b' || p === 'n') options.add(p);
-		}
-
-		// Fallback: if promotion is detected but specific pieces are not reported,
-		// expose the standard four options.
-		if (options.size === 0) return ['q', 'r', 'b', 'n'];
-
-		return Array.from(options);
-	}
-
-	private isSquare(value: string): value is Square {
-		return /^[a-h][1-8]$/.test(value);
-	}
-
 	// ---------------------------------------------------------------------------
-	// Basic getters (public API)
+	// Public API - Move application
 	// ---------------------------------------------------------------------------
 
-	getMode(): ExplorerMode {
-		return this.mode;
-	}
-
-	getCurrentNodeId(): ExplorerNodeId {
-		return this.currentNodeId;
-	}
-
-	getCurrentNode(): ExplorerNode {
-		return this.getNode(this.currentNodeId);
-	}
-
-	getCurrentFen(): string {
-		return this.getCurrentNode().fen;
-	}
-
-	getCurrentPly(): number {
-		return this.getCurrentNode().ply;
-	}
-
-	getSource(): ExplorerSessionSource {
-		return this.source;
-	}
-
 	/**
-	 * Returns a readonly snapshot of the internal tree.
-	 * NOTE: This is not a deep freeze. Do not mutate the returned object.
-	 */
-	getTreeSnapshot(): Readonly<ExplorerTree> {
-		return this.tree;
-	}
-
-	getRootId(): ExplorerNodeId {
-		return this.tree.rootId;
-	}
-
-	getNode(id: ExplorerNodeId): ExplorerNode {
-		const node = this.tree.nodesById[id];
-		if (!node) {
-			throw new Error(`ExplorerSession invariant violated: missing node "${id}".`);
-		}
-		return node;
-	}
-
-	/**
-	 * Applies a user move attempt from the current position.
+	 * Applies a user move attempt from the current cursor position.
 	 *
 	 * Behavior:
-	 * - If the move is illegal => returns { ok:false, error: ILLEGAL_MOVE }
-	 * - If the move is a promotion and no promotion is provided => PROMOTION_REQUIRED
-	 * - If the move is legal:
-	 *   - Reuse an existing child node if the same UCI move already exists
-	 *   - Otherwise create a new child node (variation)
-	 *   - Update parent's activeChildId and currentNodeId
+	 * - Invalid coordinates => ILLEGAL_MOVE
+	 * - Illegal move => ILLEGAL_MOVE
+	 * - Promotion required but missing => PROMOTION_REQUIRED (+ details)
+	 * - Legal move:
+	 *   - Reuse an existing child node if same UCI already exists (variation reuse)
+	 *   - Otherwise create a new node as a new variation
+	 *   - Update activeChildId and move cursor to the resulting node
 	 */
 	applyMoveUci(attempt: ExplorerMoveAttempt): ExplorerApplyMoveResult {
 		const from = attempt.from.toLowerCase();
@@ -596,7 +266,7 @@ export class ExplorerSession {
 			};
 		}
 
-		// Detect whether this (from -> to) requires promotion.
+		// Promotion detection (before applying the move).
 		const promotionOptions = this.getPromotionOptions(chess, from, to);
 		if (promotionOptions === null) {
 			return {
@@ -608,12 +278,7 @@ export class ExplorerSession {
 		const requiresPromotion = promotionOptions.length > 0;
 
 		if (requiresPromotion && !promotion) {
-			const details: PromotionRequiredDetails = {
-				from,
-				to,
-				options: promotionOptions,
-			};
-
+			const details: PromotionRequiredDetails = { from, to, options: promotionOptions };
 			return {
 				ok: false,
 				error: this.makeError(
@@ -636,9 +301,8 @@ export class ExplorerSession {
 			};
 		}
 
-		// Apply the move to chess.js
-		const moveResult = chess.move({ from, to, promotion }) as { san: string } | null;
-
+		// Apply the move.
+		const moveResult = chess.move({ from, to, promotion });
 		if (!moveResult) {
 			return {
 				ok: false,
@@ -650,14 +314,12 @@ export class ExplorerSession {
 		const uci = this.buildUci(from, to, promotion);
 		const fenAfter = chess.fen();
 
-		// Tree update: reuse or create a child node for this move.
+		// Reuse-or-create child node for this exact UCI.
 		const parent = this.getCurrentNode();
 
-		const existingChildId = parent.childIds.find((id) => {
-			const child = this.tree.nodesById[id];
-			return child?.incomingMove?.uci === uci;
-		});
-
+		const existingChildId = parent.childIds.find(
+			(id) => this.tree.nodesById[id]?.incomingMove?.uci === uci,
+		);
 		if (existingChildId) {
 			parent.activeChildId = existingChildId;
 			this.currentNodeId = existingChildId;
@@ -679,13 +341,7 @@ export class ExplorerSession {
 			parentId: parent.id,
 			ply: parent.ply + 1,
 			fen: fenAfter,
-			incomingMove: {
-				uci,
-				san,
-				from,
-				to,
-				promotion,
-			},
+			incomingMove: { uci, san, from, to, promotion },
 			childIds: [],
 		};
 
@@ -693,26 +349,121 @@ export class ExplorerSession {
 		parent.activeChildId = newId;
 		this.currentNodeId = newId;
 
-		return {
-			ok: true,
-			newNodeId: newId,
-			fen: fenAfter,
-			san,
-			uci,
-		};
+		return { ok: true, newNodeId: newId, fen: fenAfter, san, uci };
 	}
 
 	// ---------------------------------------------------------------------------
-	// Derived getters (useful for UI)
+	// Public API - Navigation
 	// ---------------------------------------------------------------------------
 
 	/**
-	 * Returns the moves of the active line (root excluded).
+	 * True when the cursor is not at root.
+	 */
+	canGoPrev(): boolean {
+		return this.currentNodeId !== this.tree.rootId;
+	}
+
+	/**
+	 * True when current node has an active continuation.
+	 */
+	canGoNext(): boolean {
+		return Boolean(this.getCurrentNode().activeChildId);
+	}
+
+	/**
+	 * Moves cursor to root (ply 0).
+	 */
+	goStart(): void {
+		this.currentNodeId = this.tree.rootId;
+	}
+
+	/**
+	 * Moves cursor to the last node on the active line.
+	 */
+	goEnd(): void {
+		const line = this.getActiveLineNodeIds();
+		this.currentNodeId = line[line.length - 1] ?? this.tree.rootId;
+	}
+
+	/**
+	 * Moves cursor to parent node (no-op at root).
+	 */
+	goPrev(): void {
+		const node = this.getCurrentNode();
+		if (!node.parentId) return;
+		this.currentNodeId = node.parentId;
+	}
+
+	/**
+	 * Moves cursor to active child (no-op if none).
+	 */
+	goNext(): void {
+		const node = this.getCurrentNode();
+		if (!node.activeChildId) return;
+		this.currentNodeId = node.activeChildId;
+	}
+
+	/**
+	 * Moves the cursor to a given ply on the active line.
+	 *
+	 * Ply semantics:
+	 * - ply 0 => root
+	 * - ply 1 => after White's first move
+	 * - ply 2 => after Black's first move
+	 */
+	goToPly(ply: number): void {
+		const safePly = Number.isFinite(ply) ? Math.max(0, Math.floor(ply)) : 0;
+		const line = this.getActiveLineNodeIds();
+		const targetIndex = Math.min(safePly, line.length - 1);
+		this.currentNodeId = line[targetIndex] ?? this.tree.rootId;
+	}
+
+	// ---------------------------------------------------------------------------
+	// Public API - Read-only selectors
+	// ---------------------------------------------------------------------------
+
+	getMode(): ExplorerMode {
+		return this.mode;
+	}
+
+	getSource(): ExplorerSessionSource {
+		return this.source;
+	}
+
+	getCurrentNodeId(): ExplorerNodeId {
+		return this.currentNodeId;
+	}
+
+	getCurrentNode(): ExplorerNode {
+		return this.getNode(this.currentNodeId);
+	}
+
+	getCurrentFen(): string {
+		return this.getCurrentNode().fen;
+	}
+
+	getCurrentPly(): number {
+		return this.getCurrentNode().ply;
+	}
+
+	getRootId(): ExplorerNodeId {
+		return this.tree.rootId;
+	}
+
+	/**
+	 * Returns a readonly snapshot of the internal tree.
+	 * NOTE: This is not a deep freeze. Do not mutate the returned object.
+	 */
+	getTreeSnapshot(): Readonly<ExplorerTree> {
+		return this.tree;
+	}
+
+	/**
+	 * Returns active line moves (root excluded).
 	 * Index 0 corresponds to ply 1.
 	 */
 	getActiveLineMoves(): ExplorerMove[] {
 		const ids = this.getActiveLineNodeIds();
-		// ids[0] is root => skip it
 		return ids
 			.slice(1)
 			.map((id) => this.getNode(id).incomingMove)
@@ -731,73 +482,9 @@ export class ExplorerSession {
 			.filter((m): m is ExplorerMove => Boolean(m));
 	}
 
-	// ---------------------------------------------------------------------------
-	// Navigation helpers
-	// ---------------------------------------------------------------------------
-
-	canGoPrev(): boolean {
-		return this.currentNodeId !== this.tree.rootId;
-	}
-
-	canGoNext(): boolean {
-		const node = this.getCurrentNode();
-		return Boolean(node.activeChildId);
-	}
-
-	goStart(): void {
-		this.currentNodeId = this.tree.rootId;
-	}
-
-	goEnd(): void {
-		const line = this.getActiveLineNodeIds();
-		this.currentNodeId = line[line.length - 1] ?? this.tree.rootId;
-	}
-
 	/**
-	 * Moves the cursor to the parent node.
-	 * Does nothing if already at root.
-	 */
-	goPrev(): void {
-		const node = this.getCurrentNode();
-		if (!node.parentId) return;
-		this.currentNodeId = node.parentId;
-	}
-
-	/**
-	 * Moves the cursor forward following activeChildId.
-	 * Does nothing if there is no active continuation.
-	 */
-	goNext(): void {
-		const node = this.getCurrentNode();
-		if (!node.activeChildId) return;
-		this.currentNodeId = node.activeChildId;
-	}
-
-	/**
-	 * Moves the cursor to a given ply on the active line.
-	 *
-	 * Ply semantics:
-	 * - ply 0 => root position
-	 * - ply 1 => after White's first move
-	 * - ply 2 => after Black's first move
-	 */
-	goToPly(ply: number): void {
-		const safePly = Number.isFinite(ply) ? Math.max(0, Math.floor(ply)) : 0;
-
-		const line = this.getActiveLineNodeIds();
-		// line[0] is ply 0, line[1] is ply 1, etc.
-		const targetIndex = Math.min(safePly, line.length - 1);
-
-		this.currentNodeId = line[targetIndex] ?? this.tree.rootId;
-	}
-
-	// ---------------------------------------------------------------------------
-	// Tree traversal helpers (used by UI and by upcoming navigation tasks)
-	// ---------------------------------------------------------------------------
-
-	/**
-	 * Returns the path from the root to the current node (inclusive).
-	 * This is the canonical "cursor path" even when the current node is inside a variation.
+	 * Returns the path from root to current node (inclusive).
+	 * This is the canonical "cursor path" even inside variations.
 	 */
 	getCurrentPathNodeIds(): ExplorerNodeId[] {
 		const path: ExplorerNodeId[] = [];
@@ -808,12 +495,12 @@ export class ExplorerSession {
 			cursor = this.tree.nodesById[cursor]?.parentId;
 		}
 
-		path.reverse(); // root -> current
+		path.reverse();
 		return path;
 	}
 
 	/**
-	 * Returns the "active line" node ids, starting at the root and following activeChildId.
+	 * Returns the "active line" node ids, starting at root and following activeChildId.
 	 * This represents the currently selected mainline for linear navigation.
 	 */
 	getActiveLineNodeIds(): ExplorerNodeId[] {
@@ -822,10 +509,216 @@ export class ExplorerSession {
 
 		while (cursor) {
 			line.push(cursor);
-			const node = this.getNode(cursor);
-			cursor = node.activeChildId;
+			cursor = this.getNode(cursor).activeChildId;
 		}
 
 		return line;
+	}
+
+	// ---------------------------------------------------------------------------
+	// Private helpers - Tree building / resets
+	// ---------------------------------------------------------------------------
+
+	/**
+	 * Hard resets the tree so that the provided FEN becomes the new root.
+	 * This does NOT change mode/source by itself (callers decide).
+	 */
+	private hardResetToRootFen(rootFen: string): void {
+		this.idFactory = createExplorerIdFactory();
+
+		const rootId = this.idFactory.nextNodeId();
+		const rootNode: ExplorerNode = { id: rootId, ply: 0, fen: rootFen, childIds: [] };
+
+		this.tree = { rootId, nodesById: { [rootId]: rootNode } };
+		this.currentNodeId = rootId;
+	}
+
+	/**
+	 * Rebuilds the whole tree from an initial position and a SAN mainline.
+	 *
+	 * This is shared by:
+	 * - loadPgn()
+	 * - loadGameMovesSan()
+	 *
+	 * On any illegal move, we reset to initial to keep invariants simple.
+	 */
+	private rebuildTreeFromSanMoves(movesSan: string[]): ExplorerResult {
+		this.idFactory = createExplorerIdFactory();
+
+		const chess = new Chess(); // initial position
+		const rootId = this.idFactory.nextNodeId();
+
+		this.tree = {
+			rootId,
+			nodesById: {
+				[rootId]: { id: rootId, ply: 0, fen: chess.fen(), childIds: [] },
+			},
+		};
+
+		let parentId = rootId;
+
+		for (const sanRaw of movesSan) {
+			const san = (sanRaw ?? '').trim();
+			if (!san) continue;
+
+			const moveResult = chess.move(san);
+			if (!moveResult) {
+				this.resetToInitial();
+				return {
+					ok: false,
+					error: this.makeError('INVALID_PGN', 'Game contains an illegal move.', { san }),
+				};
+			}
+
+			const from = moveResult.from;
+			const to = moveResult.to;
+
+			const promotionRaw = moveResult.promotion?.toLowerCase();
+			const promotion =
+				promotionRaw === 'q' ||
+				promotionRaw === 'r' ||
+				promotionRaw === 'b' ||
+				promotionRaw === 'n'
+					? (promotionRaw as PromotionPiece)
+					: undefined;
+
+			const uci = this.buildUci(from, to, promotion);
+
+			const newId = this.idFactory.nextNodeId();
+			const parent = this.tree.nodesById[parentId];
+
+			this.tree.nodesById[newId] = {
+				id: newId,
+				parentId,
+				ply: this.tree.nodesById[parentId].ply + 1,
+				fen: chess.fen(),
+				incomingMove: { uci, san: moveResult.san, from, to, promotion },
+				childIds: [],
+			};
+
+			parent.childIds.push(newId);
+			parent.activeChildId = newId;
+
+			parentId = newId;
+		}
+
+		this.currentNodeId = parentId;
+		return { ok: true };
+	}
+
+	// ---------------------------------------------------------------------------
+	// Private helpers - PGN loading (chess.js)
+	// ---------------------------------------------------------------------------
+
+	/**
+	 * Normalizes PGN text for chess.js:
+	 * - normalize newlines
+	 * - ensure blank line between headers and movetext
+	 * - ensure trailing newline (some builds parse more reliably)
+	 */
+	private normalizePgnText(pgn: string): string {
+		let text = (pgn ?? '').replace(/\r\n/g, '\n').trim();
+
+		// If headers exist, ensure there is a blank line before movetext.
+		if (text.startsWith('[')) {
+			const lines = text.split('\n');
+			let i = 0;
+			while (i < lines.length && lines[i].startsWith('[')) i++;
+
+			if (i < lines.length && lines[i] !== '') lines.splice(i, 0, '');
+			text = lines.join('\n');
+		}
+
+		return `${text}\n`;
+	}
+
+	/**
+	 * Tries to load PGN using chess.js, supporting different method names depending on versions.
+	 */
+	private tryLoadPgn(chess: Chess, pgn: string): { ok: true } | { ok: false; reason: string } {
+		const anyChess = chess as any;
+		const loadFn: unknown = anyChess.loadPgn ?? anyChess.load_pgn;
+
+		if (typeof loadFn !== 'function') {
+			return {
+				ok: false,
+				reason: 'No PGN loader method found (expected loadPgn or load_pgn).',
+			};
+		}
+
+		try {
+			// Some chess.js versions return boolean, others throw on error (and return void).
+			const res = loadFn.call(chess, pgn, { strict: false, newlineChar: '\n' });
+
+			if (typeof res === 'boolean' && res === false) {
+				return { ok: false, reason: 'PGN loader returned false.' };
+			}
+
+			return { ok: true };
+		} catch (e) {
+			return { ok: false, reason: e instanceof Error ? e.message : String(e) };
+		}
+	}
+
+	// ---------------------------------------------------------------------------
+	// Private helpers - Chess / ids / errors
+	// ---------------------------------------------------------------------------
+
+	private getNode(id: ExplorerNodeId): ExplorerNode {
+		const node = this.tree.nodesById[id];
+		if (!node) {
+			throw new Error(`ExplorerSession invariant violated: missing node "${id}".`);
+		}
+		return node;
+	}
+
+	private makeError<TCode extends ExplorerErrorCode, TDetails = unknown>(
+		code: TCode,
+		message: string,
+		details?: TDetails,
+	): ExplorerError<TDetails> & { code: TCode } {
+		return { code, message, details };
+	}
+
+	private buildUci(from: string, to: string, promotion?: PromotionPiece): string {
+		return promotion ? `${from}${to}${promotion}` : `${from}${to}`;
+	}
+
+	private isSquare(value: string): value is Square {
+		return /^[a-h][1-8]$/.test(value);
+	}
+
+	/**
+	 * Returns:
+	 * - null if (from -> to) is not a legal move
+	 * - [] if legal and NOT a promotion
+	 * - ['q','r','b','n'] (or subset) if legal AND promotion is available
+	 */
+	private getPromotionOptions(chess: Chess, from: Square, to: Square): PromotionPiece[] | null {
+		type VerboseMove = { from: string; to: string; promotion?: string; flags?: string };
+
+		const moves = chess.moves({ square: from, verbose: true }) as VerboseMove[];
+		const candidates = moves.filter((m) => m.from === from && m.to === to);
+
+		if (candidates.length === 0) return null;
+
+		const promoMoves = candidates.filter(
+			(m) =>
+				typeof m.promotion === 'string' ||
+				(typeof m.flags === 'string' && m.flags.includes('p')),
+		);
+
+		if (promoMoves.length === 0) return [];
+
+		const options = new Set<PromotionPiece>();
+		for (const m of promoMoves) {
+			const p = (m.promotion ?? '').toLowerCase();
+			if (p === 'q' || p === 'r' || p === 'b' || p === 'n') options.add(p);
+		}
+
+		// Fallback: if promotion is detected but pieces are not reported, expose standard options.
+		if (options.size === 0) return ['q', 'r', 'b', 'n'];
+
+		return Array.from(options);
 	}
 }

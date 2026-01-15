@@ -8,11 +8,19 @@
 		"ui/*"
 	],
 	"scripts": {
-		"build": "npm run build:core && npm run build:electron",
-		"build:core": "npm --workspace core run build",
-		"build:electron": "npm --workspace electron run build",
-		"build:run:electron": "npm run build -ws && npm run -w electron start",
-		"format": "prettier --write \"**/*.{ts,js,tsx,jsx,html,scss,json,md}\""
+		"build": "npm run build:all",
+		"build:all": "npm run build:core && npm run build:electron && npm run build:ui:angular",
+		"build:core": "npm -w core run build",
+		"build:electron": "npm -w electron run build",
+		"build:ui:angular": "npm -w ui/angular run build",
+		"build:all:run:electron": "npm run build:all && npm -w electron start",
+		"build:watch:ui:angular": "npm -w ui/angular start",
+		"format": "prettier --write \"**/*.{ts,js,tsx,jsx,html,scss,json,md}\"",
+		"prisma:reset": "npm -w electron run prisma:reset",
+		"prisma:migrate": "npm -w electron run prisma:migrate --",
+		"prisma:migrate:open": "npm run prisma:migrate -- && npm run prisma:generate && npm run prisma:studio",
+		"prisma:generate": "npm -w electron run prisma:generate",
+		"prisma:studio": "npm -w electron run prisma:studio"
 	},
 	"keywords": [],
 	"author": "",

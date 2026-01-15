@@ -15,6 +15,7 @@ yarn.lock
 
 # --- Build outputs (général) ---
 dist/
+dist-esm/
 out/
 tmp/
 temp/
