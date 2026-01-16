@@ -12,6 +12,8 @@ import { SettingsPageComponent } from './pages/settings/settings-page.component'
 import { AboutPageComponent } from './pages/about/about-page.component';
 import { FaqPageComponent } from './pages/faq/faq-page.component';
 
+import { TestExploPageComponent } from './pages/test/test-explo/test-explo-page.component';
+
 export const routes: Routes = [
 	{
 		path: 'setup',
@@ -38,6 +40,8 @@ export const routes: Routes = [
 
 			{ path: 'about', component: AboutPageComponent },
 			{ path: 'faq', component: FaqPageComponent },
+
+			{ path: 'test-explo', component: TestExploPageComponent },
 		],
 	},
 	{

@@ -1,0 +1,9 @@
+chess-board.component.scss :host {
+	display: block;
+}
+
+.board-host {
+	width: 100%;
+	max-width: var(--mco-board-max-width, 520px);
+	aspect-ratio: 1 / 1;
+}

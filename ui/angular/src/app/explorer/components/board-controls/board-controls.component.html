@@ -1,0 +1,28 @@
+<div class="controls">
+	<button mat-stroked-button (click)="onStartClick()" [disabled]="!canStart">
+		<mat-icon aria-hidden="true">first_page</mat-icon>
+		<span>Start</span>
+	</button>
+
+	<button mat-stroked-button (click)="onPrevClick()" [disabled]="!canPrev">
+		<mat-icon aria-hidden="true">chevron_left</mat-icon>
+		<span>Prev</span>
+	</button>
+
+	<button mat-stroked-button (click)="onNextClick()" [disabled]="!canNext">
+		<mat-icon aria-hidden="true">chevron_right</mat-icon>
+		<span>Next</span>
+	</button>
+
+	<button mat-stroked-button (click)="onEndClick()" [disabled]="!canEnd">
+		<mat-icon aria-hidden="true">last_page</mat-icon>
+		<span>End</span>
+	</button>
+
+	<span class="spacer"></span>
+
+	<button mat-stroked-button (click)="onResetClick()">
+		<mat-icon aria-hidden="true">restart_alt</mat-icon>
+		<span>Reset</span>
+	</button>
+</div>

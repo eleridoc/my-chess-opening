@@ -1,149 +1,43 @@
-<div class="page">
-	<header class="header">
-		<div class="chip">Session: {{ facade.debugSessionId() }}</div>
-		<div class="chip">Mode: {{ facade.mode() }}</div>
-		<div class="chip">Ply: {{ facade.ply() }}</div>
+<div class="explorer">
+	<header class="explorer__header">
+		<app-board-controls
+			[canStart]="facade.canStart()"
+			[canPrev]="facade.canPrev()"
+			[canNext]="facade.canNext()"
+			[canEnd]="facade.canEnd()"
+			(reset)="onReset()"
+			(start)="onStart()"
+			(prev)="onPrev()"
+			(next)="onNext()"
+			(end)="onEnd()"
+		/>
 
-		<span class="spacer"></span>
-
-		<button mat-stroked-button (click)="reset()">Reset</button>
+		<mat-chip-set class="explorer__meta" aria-label="Explorer session info">
+			<mat-chip>Mode: {{ facade.mode() }}</mat-chip>
+			<mat-chip>Source: {{ facade.source().kind }}</mat-chip>
+			<mat-chip>Ply: {{ facade.ply() }}</mat-chip>
+		</mat-chip-set>
 	</header>
 
-	<section class="fen">
-		<div class="label">FEN</div>
-		<div class="mono">{{ facade.fen() }}</div>
+	<div class="explorer__error" *ngIf="facade.lastError() as err">
+		<span class="explorer__error-code">{{ err.code }}</span>
+		<span class="explorer__error-message">{{ err.message }}</span>
+	</div>
+
+	<section class="explorer__board">
+		<app-chess-board
+			[fen]="facade.fen()"
+			[inputEnabled]="inputEnabled()"
+			[validateMoveAttempt]="validateMoveAttempt"
+			[lastMoveSquares]="facade.lastMoveSquares()"
+		/>
 	</section>
 
-	<section class="row controls">
-		<button mat-stroked-button (click)="facade.goStart()" [disabled]="!facade.canStart()">
-			Start
-		</button>
-		<button mat-stroked-button (click)="facade.goPrev()" [disabled]="!facade.canPrev()">
-			Prev
-		</button>
-		<button mat-stroked-button (click)="facade.goNext()" [disabled]="!facade.canNext()">
-			Next
-		</button>
-		<button mat-stroked-button (click)="facade.goEnd()" [disabled]="!facade.canEnd()">End</button>
-
-		<span class="spacer"></span>
-
-		<mat-form-field appearance="outline" subscriptSizing="dynamic" class="tiny">
-			<mat-label>From</mat-label>
-			<input matInput [(ngModel)]="from" />
-		</mat-form-field>
-
-		<mat-form-field appearance="outline" subscriptSizing="dynamic" class="tiny">
-			<mat-label>To</mat-label>
-			<input matInput [(ngModel)]="to" />
-		</mat-form-field>
-
-		<button mat-raised-button (click)="play()">Play</button>
-	</section>
-
-	<section class="grid">
-		<div class="moves">
-			<div class="label">Active line</div>
-
-			<div class="moves-list" *ngIf="facade.moves().length; else emptyMoves">
-				<button
-					*ngFor="let m of facade.moves(); let i = index"
-					mat-button
-					class="move"
-					(click)="facade.goToPly(i + 1)"
-				>
-					<span class="idx">{{ i + 1 }}.</span>
-					<span class="san">{{ m.san }}</span>
-					<span class="uci mono">{{ m.uci }}</span>
-				</button>
-			</div>
-
-			<ng-template #emptyMoves>
-				<div class="muted">No moves yet.</div>
-			</ng-template>
-		</div>
-
-		<div class="debug">
-			<div class="label">Debug loaders</div>
-
-			<div class="row">
-				<mat-form-field appearance="outline" subscriptSizing="dynamic" class="wide">
-					<mat-label>FEN</mat-label>
-					<input matInput [(ngModel)]="fenToLoad" />
-				</mat-form-field>
-
-				<button mat-stroked-button (click)="loadFen()">Load FEN</button>
-				<button mat-stroked-button (click)="loadPromoFen()">Promo FEN</button>
-			</div>
-
-			<div class="row">
-				<mat-form-field appearance="outline" subscriptSizing="dynamic" class="wide">
-					<mat-label>PGN name (optional)</mat-label>
-					<input matInput [(ngModel)]="pgnName" />
-				</mat-form-field>
-			</div>
-
-			<mat-form-field appearance="outline" subscriptSizing="dynamic" class="pgn">
-				<mat-label>PGN</mat-label>
-				<textarea matInput [(ngModel)]="pgnToLoad" rows="5"></textarea>
-			</mat-form-field>
-
-			<div class="row">
-				<button mat-stroked-button (click)="loadPgn()">Load PGN</button>
-			</div>
-
-			<!-- Error -->
-			<div *ngIf="facade.lastError() as err">
-				<strong>Error:</strong> {{ err.code }} — {{ err.message }}
-				<div *ngIf="err.details as d" style="margin-top: 4px; font-size: 12px; opacity: 0.8">
-					<pre style="margin: 0">{{ d | json }}</pre>
-				</div>
-			</div>
-
-			<!-- Promotion -->
-			<div *ngIf="facade.promotionPending() as promo" class="promo">
-				<div><strong>Promotion required</strong></div>
-				<div class="row">
-					<button
-						*ngFor="let p of promo.options"
-						mat-stroked-button
-						(click)="facade.confirmPromotion(p)"
-					>
-						{{ p.toUpperCase() }}
-					</button>
-				</div>
-			</div>
-		</div>
-	</section>
-
-	<section style="margin-top: 12px">
-		<div style="font-weight: 600; margin-bottom: 6px">Load DB game (CASE2_DB)</div>
-
-		<div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap">
-			<mat-form-field appearance="outline" subscriptSizing="dynamic" style="width: 180px">
-				<mat-label>gameId</mat-label>
-				<input matInput [(ngModel)]="dbGameId" />
-			</mat-form-field>
-
-			<mat-form-field
-				appearance="outline"
-				subscriptSizing="dynamic"
-				style="flex: 1; min-width: 320px"
-			>
-				<mat-label>Moves (SAN tokens)</mat-label>
-				<textarea
-					matInput
-					[(ngModel)]="dbMovesSanText"
-					rows="2"
-					placeholder="e4 e5 Nf3 Nc6"
-				></textarea>
-			</mat-form-field>
-
-			<button mat-raised-button (click)="loadDbGame()">Load DB</button>
-		</div>
-
-		<div style="font-size: 12px; opacity: 0.75; margin-top: 4px">
-			Expected: a list of SAN moves only (space/newline separated). No headers, no move numbers.
-		</div>
-	</section>
+	<aside class="explorer__side">
+		<app-move-list
+			[moves]="facade.moves()"
+			[currentPly]="facade.ply()"
+			(plySelected)="onPlySelected($event)"
+		/>
+	</aside>
 </div>

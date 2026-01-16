@@ -45,6 +45,8 @@ type PromotionPending = {
 	options: PromotionPiece[];
 };
 
+type LastMoveSquares = { from: string; to: string };
+
 @Injectable({ providedIn: 'root' })
 export class ExplorerFacade {
 	// ---------------------------------------------------------------------------
@@ -87,6 +89,8 @@ export class ExplorerFacade {
 	/** Promotion workflow state (set when PROMOTION_REQUIRED occurs). */
 	private readonly _promotionPending = signal<PromotionPending | null>(null);
 
+	private readonly _lastMoveSquares = signal<{ from: string; to: string } | null>(null);
+
 	// ---------------------------------------------------------------------------
 	// Public readonly signals (what the UI should use)
 	// ---------------------------------------------------------------------------
@@ -108,6 +112,8 @@ export class ExplorerFacade {
 
 	readonly lastError = this._lastError.asReadonly();
 	readonly promotionPending = this._promotionPending.asReadonly();
+
+	readonly lastMoveSquares = this._lastMoveSquares.asReadonly();
 
 	/**
 	 * Stable snapshot mainly for debug (avoid using it for real UI logic).
@@ -232,6 +238,10 @@ export class ExplorerFacade {
 	/**
 	 * Attempt a move from the current position.
 	 *
+	 * Returns:
+	 * - true  -> move was applied by the core (board can accept it visually)
+	 * - false -> move was rejected or requires promotion (board must snap back)
+	 *
 	 * Success:
 	 * - core state changes -> refresh signals
 	 *
@@ -239,14 +249,14 @@ export class ExplorerFacade {
 	 * - PROMOTION_REQUIRED -> populate `promotionPending` (UI must call confirmPromotion)
 	 * - otherwise -> populate `lastError`
 	 */
-	attemptMove(attempt: ExplorerMoveAttempt): void {
+	attemptMove(attempt: ExplorerMoveAttempt): boolean {
 		this.clearTransientUiState();
 
 		const result = this.session.applyMoveUci(attempt);
 
 		if (result.ok) {
 			this.refreshFromCore();
-			return;
+			return true;
 		}
 
 		if (result.error.code === 'PROMOTION_REQUIRED') {
@@ -258,7 +268,7 @@ export class ExplorerFacade {
 					code: 'INTERNAL_ERROR',
 					message: 'Promotion required but missing details.',
 				});
-				return;
+				return false;
 			}
 
 			this._promotionPending.set({
@@ -266,10 +276,11 @@ export class ExplorerFacade {
 				to: details.to,
 				options: details.options,
 			});
-			return;
+			return false;
 		}
 
 		this._lastError.set(result.error);
+		return false;
 	}
 
 	/**
@@ -311,5 +322,8 @@ export class ExplorerFacade {
 
 		this._canPrev.set(this.session.canGoPrev());
 		this._canNext.set(this.session.canGoNext());
+
+		const incoming = this.session.getCurrentNode().incomingMove;
+		this._lastMoveSquares.set(incoming ? { from: incoming.from, to: incoming.to } : null);
 	}
 }

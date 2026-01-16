@@ -41,3 +41,16 @@ rm -f prisma/dev.db
 npx prisma migrate dev --name init
 npx prisma generate
 npx prisma studio
+
+
+
+
+npx ng g c dashboard-page --path src/app/pages/dashboard --flat --standalone --skip-tests --type=component
+npx ng g c games-page     --path src/app/pages/games     --flat --standalone --skip-tests --type=component
+npx ng g c explorer-page  --path src/app/pages/explorer  --flat --standalone --skip-tests --type=component
+npx ng g c import-page    --path src/app/pages/import    --flat --standalone --skip-tests --type=component
+npx ng g c logs-page      --path src/app/pages/logs      --flat --standalone --skip-tests --type=component
+npx ng g c settings-page  --path src/app/pages/settings  --flat --standalone --skip-tests --type=component
+npx ng g c about-page     --path src/app/pages/about     --flat --standalone --skip-tests --type=component
+npx ng g c faq-page       --path src/app/pages/faq       --flat --standalone --skip-tests --type=component
+npx ng g c test-explo-page  --path src/app/pages/test/test-explo  --flat --standalone --skip-tests --type=component

@@ -35,6 +35,7 @@ export class AppLayoutComponent {
 		{ label: 'Dashboard', path: '/dashboard' },
 		{ label: 'Games', path: '/games' },
 		{ label: 'Explorer', path: '/explorer' },
+		{ label: 'TestEx', path: '/test-explo' },
 		{ label: 'Import', path: '/import' },
 	];
 

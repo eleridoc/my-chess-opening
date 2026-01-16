@@ -1,0 +1,31 @@
+<div class="move-list">
+	<div class="header">Moves</div>
+
+	<div class="empty" *ngIf="!rows.length">No moves yet.</div>
+
+	<div class="rows" *ngIf="rows.length">
+		<div class="row" *ngFor="let row of rows">
+			<div class="num">{{ row.moveNumber }}.</div>
+
+			<button
+				mat-button
+				class="ply"
+				[class.active]="row.whitePly === currentPly"
+				(click)="row.whitePly && selectPly(row.whitePly)"
+				*ngIf="row.white"
+			>
+				{{ row.white.san }}
+			</button>
+
+			<button
+				mat-button
+				class="ply"
+				[class.active]="row.blackPly === currentPly"
+				(click)="row.blackPly && selectPly(row.blackPly)"
+				*ngIf="row.black"
+			>
+				{{ row.black.san }}
+			</button>
+		</div>
+	</div>
+</div>
