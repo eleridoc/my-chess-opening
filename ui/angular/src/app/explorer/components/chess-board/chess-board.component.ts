@@ -24,15 +24,16 @@ import {
 import type { BoardLastMoveSquares } from '../../board/board-adapter';
 
 /**
- * UI chessboard component.
+ * ChessBoardComponent (UI)
  *
  * Responsibilities:
  * - Render a chessboard using the injected adapter implementation.
- * - Keep the board in sync with the input FEN.
+ * - Keep the board in sync with the input FEN and UI state (input enabled / last move).
+ * - Emit move attempts as UI intents (the core remains authoritative).
  *
  * Non-responsibilities:
  * - No chess rules here.
- * - No move legality, no promotion logic here (handled by the core via the facade).
+ * - No legality / promotion logic here (handled by the core via the facade).
  */
 @Component({
 	selector: 'app-chess-board',
@@ -41,6 +42,10 @@ import type { BoardLastMoveSquares } from '../../board/board-adapter';
 	styleUrl: './chess-board.component.scss',
 })
 export class ChessBoardComponent implements AfterViewInit, OnDestroy, OnChanges {
+	// -------------------------------------------------------------------------
+	// Inputs / Outputs
+	// -------------------------------------------------------------------------
+
 	/** Current position to display (full FEN). */
 	@Input({ required: true }) fen!: string;
 
@@ -50,75 +55,85 @@ export class ChessBoardComponent implements AfterViewInit, OnDestroy, OnChanges 
 	/** Allows the parent UI to disable move input (promotion pending, read-only mode, etc.). */
 	@Input() inputEnabled = true;
 
-	/**
-	 * Fired when the user attempts a move (DnD/click) on the board.
-	 * V1.2.1: not emitted yet (board is read-only for now).
-	 */
-	@Output() moveAttempt = new EventEmitter<ExplorerMoveAttempt>();
+	/** Last move squares highlight (null clears the highlight). */
+	@Input() lastMoveSquares: BoardLastMoveSquares = null;
 
 	/**
-	 * When provided, the board will use this callback to validate a move attempt
-	 * synchronously (true = accept, false = reject/snapback).
+	 * Optional synchronous validator used by the adapter:
+	 * - true => accept the move immediately (no snapback / no flicker)
+	 * - false => reject (snapback)
+	 *
+	 * If not provided, the component will emit moveAttempt and the board will stay authoritative.
 	 */
 	@Input() validateMoveAttempt?: (attempt: ExplorerMoveAttempt) => boolean;
 
-	@Input() lastMoveSquares: BoardLastMoveSquares = null;
+	/**
+	 * Optional move-hints provider for the board:
+	 * - restrict selectable pieces (must have at least one legal move)
+	 * - display dots + hover highlights
+	 *
+	 * Must be synchronous and read-only.
+	 */
+	@Input() getLegalDestinationsFrom?: (from: string) => string[];
+
+	/**
+	 * Optional capture-hints provider for the board (ring markers on capture squares).
+	 * Must be synchronous and read-only.
+	 */
+	@Input() getLegalCaptureDestinationsFrom?: (from: string) => string[];
+
+	/**
+	 * Emitted when the user attempts a move (drag&drop or click-to-move).
+	 * The parent is expected to forward this attempt to the core/facade.
+	 */
+	@Output() moveAttempt = new EventEmitter<ExplorerMoveAttempt>();
 
 	@ViewChild('host', { static: true }) host!: ElementRef<HTMLElement>;
 
+	// -------------------------------------------------------------------------
+	// Internal state
+	// -------------------------------------------------------------------------
+
 	private adapter: ChessBoardAdapter | null = null;
 	private lastFenApplied: string | null = null;
+
 	private isDestroyed = false;
 	private resizeObserver: ResizeObserver | null = null;
-
-	private getSideToMoveFromFen(fen: string): BoardOrientation | null {
-		const parts = fen.trim().split(/\s+/);
-		if (parts.length < 2) return null;
-		return parts[1] === 'w' ? 'white' : parts[1] === 'b' ? 'black' : null;
-	}
 
 	constructor(
 		@Inject(CHESS_BOARD_ADAPTER_FACTORY) private readonly factory: ChessBoardAdapterFactory,
 	) {}
 
+	// -------------------------------------------------------------------------
+	// Angular lifecycle
+	// -------------------------------------------------------------------------
+
 	ngAfterViewInit(): void {
-		this.adapter = this.factory.create({
-			element: this.host.nativeElement,
-			fen: this.fen,
-			orientation: this.orientation,
-			assetsUrl: 'assets/cm-chessboard/',
-			onMoveAttempt: (attempt) => {
-				// Keep the output contract stable for the rest of the app.
-				this.moveAttempt.emit({ from: attempt.from, to: attempt.to });
-			},
-			validateMoveAttempt: (attempt) => {
-				// If the parent provided a synchronous validator, use it.
-				if (this.validateMoveAttempt) {
-					return this.validateMoveAttempt({ from: attempt.from, to: attempt.to });
-				}
-
-				// Otherwise fallback to emit (old behavior).
-				this.moveAttempt.emit({ from: attempt.from, to: attempt.to });
-				return false;
-			},
-		});
-
-		this.adapter.setLastMoveSquares?.(this.lastMoveSquares);
-		//this.adapter.setLastMoveHighlight(this.lastMoveSquares);
-		this.adapter.setMoveInputEnabled(this.inputEnabled);
-		//this.adapter.setMoveInputEnabled(true);
-		this.adapter.setMoveInputAllowedColor(this.getSideToMoveFromFen(this.fen));
+		this.createAdapter();
+		this.applyAllStateToAdapter();
 
 		this.lastFenApplied = this.fen;
+		this.setupResizeObserver();
+	}
 
-		// Observe host size changes to support responsive layouts and future board libs.
-		this.resizeObserver = new ResizeObserver(() => {
-			if (this.isDestroyed) return;
-			// Avoid calling into the board during layout calculation.
-			requestAnimationFrame(() => this.adapter?.onHostResize?.());
-		});
+	ngOnChanges(changes: SimpleChanges): void {
+		if (this.isDestroyed) return;
+		if (!this.adapter) return;
 
-		this.resizeObserver.observe(this.host.nativeElement);
+		if (changes['fen']) {
+			this.applyFenIfChanged();
+		}
+
+		if (changes['inputEnabled']) {
+			this.adapter.setMoveInputEnabled(this.inputEnabled);
+		}
+
+		if (changes['lastMoveSquares']) {
+			this.adapter.setLastMoveSquares?.(this.lastMoveSquares);
+		}
+
+		// Note: orientation changes are intentionally ignored for now.
+		// If needed later, we can recreate the adapter or add an adapter method.
 	}
 
 	ngOnDestroy(): void {
@@ -129,30 +144,105 @@ export class ChessBoardComponent implements AfterViewInit, OnDestroy, OnChanges 
 
 		this.adapter?.destroy();
 		this.adapter = null;
+
 		this.lastFenApplied = null;
 	}
 
-	ngOnChanges(changes: SimpleChanges): void {
-		if (this.isDestroyed) return;
-		// Only react to FEN changes once the adapter is created.
+	// -------------------------------------------------------------------------
+	// Adapter wiring
+	// -------------------------------------------------------------------------
+
+	private createAdapter(): void {
+		const init = this.buildAdapterInit();
+
+		this.adapter = this.factory.create(init);
+	}
+
+	private buildAdapterInit() {
+		const init: any = {
+			element: this.host.nativeElement,
+			fen: this.fen,
+			orientation: this.orientation,
+			assetsUrl: 'assets/cm-chessboard/',
+			onMoveAttempt: (attempt: { from: string; to: string }) => {
+				// Keep the output contract stable for the rest of the UI.
+				this.moveAttempt.emit({ from: attempt.from, to: attempt.to });
+			},
+			validateMoveAttempt: (attempt: { from: string; to: string }) => {
+				// If the parent provided a synchronous validator, use it.
+				if (this.validateMoveAttempt) {
+					return this.validateMoveAttempt({ from: attempt.from, to: attempt.to });
+				}
+
+				// Otherwise fallback to emitting the attempt and let the core update via FEN.
+				this.moveAttempt.emit({ from: attempt.from, to: attempt.to });
+				return false;
+			},
+		};
+
+		// Optional hint callbacks (synchronous + read-only)
+		if (this.getLegalDestinationsFrom) {
+			init.getLegalDestinationsFrom = (from: string) => this.getLegalDestinationsFrom!(from);
+		}
+
+		if (this.getLegalCaptureDestinationsFrom) {
+			init.getLegalCaptureDestinationsFrom = (from: string) =>
+				this.getLegalCaptureDestinationsFrom!(from);
+		}
+
+		return init;
+	}
+
+	/**
+	 * Applies the initial UI state to the adapter after creation.
+	 */
+	private applyAllStateToAdapter(): void {
 		if (!this.adapter) return;
 
-		if (changes['fen']) {
-			const nextFen = this.fen;
-			if (nextFen && nextFen !== this.lastFenApplied) {
-				this.lastFenApplied = nextFen;
-				this.adapter.setFen(nextFen);
-				this.adapter.setMoveInputAllowedColor(this.getSideToMoveFromFen(nextFen));
-			}
-		}
+		this.adapter.setLastMoveSquares?.(this.lastMoveSquares);
+		this.adapter.setMoveInputEnabled(this.inputEnabled);
+		this.adapter.setMoveInputAllowedColor(this.getSideToMoveFromFen(this.fen));
+	}
 
-		if (changes['inputEnabled']) {
-			this.adapter.setMoveInputEnabled(this.inputEnabled);
-		}
+	/**
+	 * Applies a FEN update only if it differs from the last applied value.
+	 * This avoids unnecessary board rerenders and event churn.
+	 */
+	private applyFenIfChanged(): void {
+		if (!this.adapter) return;
 
-		if (changes['lastMoveSquares']) {
-			this.adapter.setLastMoveSquares?.(this.lastMoveSquares);
-		}
-		// Orientation changes are ignored for now (we can implement later if needed).
+		const nextFen = this.fen;
+		if (!nextFen || nextFen === this.lastFenApplied) return;
+
+		this.lastFenApplied = nextFen;
+
+		this.adapter.setFen(nextFen);
+		this.adapter.setMoveInputAllowedColor(this.getSideToMoveFromFen(nextFen));
+	}
+
+	// -------------------------------------------------------------------------
+	// Helpers
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Derives the side-to-move from the FEN active color field.
+	 * Returns null if the FEN is invalid or incomplete.
+	 */
+	private getSideToMoveFromFen(fen: string): BoardOrientation | null {
+		const parts = (fen ?? '').trim().split(/\s+/);
+		if (parts.length < 2) return null;
+		return parts[1] === 'w' ? 'white' : parts[1] === 'b' ? 'black' : null;
+	}
+
+	private setupResizeObserver(): void {
+		// Observe host size changes to support responsive layouts and future board libs.
+		this.resizeObserver = new ResizeObserver(() => {
+			if (this.isDestroyed) return;
+
+			// Avoid calling into the board during layout calculation.
+			requestAnimationFrame(() => this.adapter?.onHostResize?.());
+		});
+
+		this.resizeObserver.observe(this.host.nativeElement);
 	}
 }

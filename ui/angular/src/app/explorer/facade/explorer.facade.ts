@@ -11,18 +11,11 @@
  *
  * Design notes:
  * - The facade MUST NOT contain chess rules or domain logic.
- *   All rules live in core (ExplorerSession).
- * - The facade is responsible for mapping core results to UI state:
+ *   All rules live in the core (ExplorerSession).
+ * - The facade maps core results to UI state:
  *   - refresh derived signals after each successful action
  *   - capture errors in `lastError`
- *   - handle promotion flow using `promotionPending`
- *
- * V0.3 scope covered:
- * - Signals: mode/source/fen/ply/moves/canPrev/canNext (+ canStart/canEnd computed)
- * - Actions: reset/loadInitial/loadFenForCase1/loadPgn/loadGameMovesSan
- * - Navigation: goStart/goEnd/goPrev/goNext/goToPly
- * - Move workflow: attemptMove + confirmPromotion
- * - Lifetime: providedIn root (app-level singleton)
+ *   - manage promotion flow via `promotionPending`
  */
 
 import { Injectable, computed, signal } from '@angular/core';
@@ -30,13 +23,13 @@ import { Injectable, computed, signal } from '@angular/core';
 import { ExplorerSession } from 'my-chess-opening-core/explorer';
 
 import type {
+	ExplorerDbGameMeta,
+	ExplorerError,
 	ExplorerMode,
 	ExplorerMove,
-	ExplorerSessionSource,
 	ExplorerMoveAttempt,
+	ExplorerSessionSource,
 	PromotionPiece,
-	ExplorerError,
-	ExplorerDbGameMeta,
 } from 'my-chess-opening-core/explorer';
 
 type PromotionPending = {
@@ -45,7 +38,7 @@ type PromotionPending = {
 	options: PromotionPiece[];
 };
 
-type LastMoveSquares = { from: string; to: string };
+type LastMoveSquares = { from: string; to: string } | null;
 
 @Injectable({ providedIn: 'root' })
 export class ExplorerFacade {
@@ -89,10 +82,11 @@ export class ExplorerFacade {
 	/** Promotion workflow state (set when PROMOTION_REQUIRED occurs). */
 	private readonly _promotionPending = signal<PromotionPending | null>(null);
 
-	private readonly _lastMoveSquares = signal<{ from: string; to: string } | null>(null);
+	/** Squares of the last applied move (used by the board adapter for highlighting). */
+	private readonly _lastMoveSquares = signal<LastMoveSquares>(null);
 
 	// ---------------------------------------------------------------------------
-	// Public readonly signals (what the UI should use)
+	// Public readonly signals (what the UI should consume)
 	// ---------------------------------------------------------------------------
 
 	readonly debugSessionId = this._debugSessionId.asReadonly();
@@ -129,6 +123,7 @@ export class ExplorerFacade {
 		canNext: this._canNext(),
 		lastError: this._lastError(),
 		promotionPending: this._promotionPending(),
+		lastMoveSquares: this._lastMoveSquares(),
 	}));
 
 	constructor() {
@@ -143,6 +138,7 @@ export class ExplorerFacade {
 	/** Hard reset to initial CASE1 state. */
 	reset(): void {
 		this.clearTransientUiState();
+
 		this.session.resetToInitial();
 		this.refreshFromCore();
 	}
@@ -150,12 +146,13 @@ export class ExplorerFacade {
 	/** Alias for starting a fresh exploration. */
 	loadInitial(): void {
 		this.clearTransientUiState();
+
 		this.session.loadInitial();
 		this.refreshFromCore();
 	}
 
 	/**
-	 * Load a FEN into CASE1 (only allowed in CASE1_FREE).
+	 * Loads a FEN into CASE1 (only allowed in CASE1_FREE).
 	 * On failure, sets `lastError`.
 	 */
 	loadFenForCase1(fen: string): void {
@@ -171,7 +168,7 @@ export class ExplorerFacade {
 	}
 
 	/**
-	 * Load a PGN into CASE2_PGN (only allowed in CASE1_FREE).
+	 * Loads a PGN into CASE2_PGN (only allowed in CASE1_FREE).
 	 * On failure, sets `lastError`.
 	 */
 	loadPgn(pgn: string, meta?: { name?: string }): void {
@@ -187,7 +184,7 @@ export class ExplorerFacade {
 	}
 
 	/**
-	 * Load a DB game into CASE2_DB (only allowed in CASE1_FREE).
+	 * Loads a DB game into CASE2_DB (only allowed in CASE1_FREE).
 	 * On failure, sets `lastError`.
 	 */
 	loadGameMovesSan(movesSan: string[], meta: ExplorerDbGameMeta): void {
@@ -232,20 +229,17 @@ export class ExplorerFacade {
 	}
 
 	// ---------------------------------------------------------------------------
-	// Public API — move attempt + promotion workflow
+	// Public API — move attempts + promotion workflow
 	// ---------------------------------------------------------------------------
 
 	/**
-	 * Attempt a move from the current position.
+	 * Attempts a move from the current cursor position.
 	 *
 	 * Returns:
-	 * - true  -> move was applied by the core (board can accept it visually)
+	 * - true  -> move was applied by the core (board may accept it visually)
 	 * - false -> move was rejected or requires promotion (board must snap back)
 	 *
-	 * Success:
-	 * - core state changes -> refresh signals
-	 *
-	 * Failure:
+	 * Failure mapping:
 	 * - PROMOTION_REQUIRED -> populate `promotionPending` (UI must call confirmPromotion)
 	 * - otherwise -> populate `lastError`
 	 */
@@ -284,7 +278,7 @@ export class ExplorerFacade {
 	}
 
 	/**
-	 * Resolve a pending promotion by replaying the last (from/to) attempt
+	 * Resolves a pending promotion by replaying the last (from/to) attempt
 	 * with the chosen promotion piece.
 	 */
 	confirmPromotion(piece: PromotionPiece): void {
@@ -299,17 +293,39 @@ export class ExplorerFacade {
 	}
 
 	// ---------------------------------------------------------------------------
+	// Public API — read-only helpers for board hinting (V1.2.5)
+	// ---------------------------------------------------------------------------
+
+	/**
+	 * Read-only helper for UI move hints (dots/hover/selection).
+	 * Returns legal destination squares for the side to move in the current position.
+	 */
+	getLegalDestinationsFrom(from: string): string[] {
+		return this.session.getLegalDestinationsFrom(from);
+	}
+
+	/**
+	 * Read-only helper for UI hinting: capture destinations (ring marker).
+	 */
+	getLegalCaptureDestinationsFrom(from: string): string[] {
+		return this.session.getLegalCaptureDestinationsFrom(from);
+	}
+
+	// ---------------------------------------------------------------------------
 	// Internal helpers
 	// ---------------------------------------------------------------------------
 
-	/** Clears UI-only transient state (errors, promotion prompt). */
+	/**
+	 * Clears UI-only transient state (errors and promotion prompt).
+	 * This must NOT mutate core state.
+	 */
 	private clearTransientUiState(): void {
 		this._lastError.set(null);
 		this._promotionPending.set(null);
 	}
 
 	/**
-	 * Pull fresh state from the core session into signals.
+	 * Pulls fresh state from the core session into signals.
 	 * Must be called after any successful action that mutates the core.
 	 */
 	private refreshFromCore(): void {
@@ -323,6 +339,8 @@ export class ExplorerFacade {
 		this._canPrev.set(this.session.canGoPrev());
 		this._canNext.set(this.session.canGoNext());
 
+		// Derive last move squares from the current node incoming move.
+		// When at root, there is no incoming move -> clear the highlight.
 		const incoming = this.session.getCurrentNode().incomingMove;
 		this._lastMoveSquares.set(incoming ? { from: incoming.from, to: incoming.to } : null);
 	}

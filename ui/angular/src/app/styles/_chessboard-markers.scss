@@ -1,0 +1,67 @@
+/* cm-chessboard markers styling
+   Board-agnostic neutral tokens (white/gray).
+   No frames/outlines: no strokes for square/dot markers. */
+
+:root {
+	/* Last move highlight (no border) - stronger */
+
+	--mco-marker-last-from: color-mix(in oklab, var(--mat-sys-primary) 25%, transparent);
+	--mco-marker-last-to: color-mix(in oklab, var(--mat-sys-primary) 35%, transparent);
+
+	// --mco-marker-last-from: rgba(255, 255, 255, 0.34);
+	// --mco-marker-last-to: rgba(255, 255, 255, 0.52);
+	--mco-marker-last-glow: rgba(255, 255, 255, 0.38);
+
+	/* Selection / hover (no border) - stronger, hover clearly visible */
+	--mco-marker-hint-selected: rgba(255, 255, 255, 0.22);
+	--mco-marker-hint-hover: rgba(255, 255, 255, 0.18);
+	--mco-marker-hint-glow: rgba(255, 255, 255, 0.3);
+
+	/* Dot (keep as-is or slightly stronger if you want) */
+	--mco-marker-dot-fill: rgba(255, 255, 255, 0.76);
+	--mco-marker-dot-glow-dark: rgba(0, 0, 0, 0.6);
+	--mco-marker-dot-glow-light: rgba(255, 255, 255, 0.24);
+
+	/* Capture ring (unchanged) */
+	--mco-marker-capture-stroke: rgba(255, 255, 255, 0.86);
+	--mco-marker-capture-stroke-width: 2.3px;
+	--mco-marker-capture-shadow: rgba(0, 0, 0, 0.7);
+}
+
+/* Last move highlight (persistent) - no border */
+.mco-last-move-from {
+	fill: var(--mco-marker-last-from);
+	filter: drop-shadow(0 0 3.2px var(--mco-marker-last-glow));
+}
+
+.mco-last-move-to {
+	fill: var(--mco-marker-last-to);
+	filter: drop-shadow(0 0 3.8px var(--mco-marker-last-glow));
+}
+
+.mco-hint-selected-from {
+	fill: var(--mco-marker-hint-selected);
+	filter: drop-shadow(0 0 2.4px var(--mco-marker-hint-glow));
+}
+
+.mco-hint-hover-to {
+	fill: var(--mco-marker-hint-hover);
+	filter: drop-shadow(0 0 2px var(--mco-marker-hint-glow));
+}
+
+/* Legal dot - no border, high contrast via dual glow */
+.mco-hint-legal-dot {
+	fill: var(--mco-marker-dot-fill);
+	/* Two shadows: dark for light squares + light for dark squares */
+	filter: drop-shadow(0 0 1.4px var(--mco-marker-dot-glow-dark))
+		drop-shadow(0 0 1px var(--mco-marker-dot-glow-light));
+}
+
+/* Capture hint ring (visible around pieces) */
+.mco-hint-capture-circle {
+	fill: transparent;
+	stroke: var(--mco-marker-capture-stroke);
+	stroke-width: var(--mco-marker-capture-stroke-width);
+	vector-effect: non-scaling-stroke;
+	filter: drop-shadow(0 0 1.2px var(--mco-marker-capture-shadow));
+}

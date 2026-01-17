@@ -74,4 +74,9 @@ export class ExplorerPageComponent {
 
 	/** Disable board input while a promotion choice is pending. */
 	readonly inputEnabled = computed(() => this.facade.promotionPending() === null);
+
+	readonly getLegalDestinationsFrom = (from: string) => this.facade.getLegalDestinationsFrom(from);
+
+	readonly getLegalCaptureDestinationsFrom = (from: string) =>
+		this.facade.getLegalCaptureDestinationsFrom(from);
 }

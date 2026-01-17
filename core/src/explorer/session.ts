@@ -2,14 +2,14 @@
  * ExplorerSession (CORE)
  *
  * This class is the backbone of the Explorer feature.
- * It owns the entire exploration state and enforces the domain invariants.
+ * It owns the whole exploration state and enforces domain invariants.
  *
  * Key principles:
- * - UI and Electron must NOT implement chess rules or session state logic.
- * - UI should only call this session (via an Angular facade) and render derived state.
+ * - The UI (Angular) and desktop shell (Electron) must NOT implement chess rules.
+ * - The UI only sends intents (load / move attempt / navigation) and renders derived state.
  * - The session is modeled as a tree of positions (nodes) with variations.
  *
- * This file is intentionally "core-domain" code:
+ * This file intentionally contains core-domain code only:
  * - No Angular, no Electron, no persistence, no UI concerns.
  * - Only deterministic state transitions and read-only selectors.
  */
@@ -130,8 +130,8 @@ export class ExplorerSession {
 	 * Loads a PGN into the session (CASE2_PGN).
 	 *
 	 * Notes:
-	 * - We intentionally rely on chess.js parsing to remain browser-friendly.
-	 * - We only keep the SAN mainline for now (no PGN variations/comments import).
+	 * - We rely on chess.js parsing to remain browser-friendly.
+	 * - For now, we only import the mainline (no variations/comments).
 	 *
 	 * Rules:
 	 * - Only allowed from CASE1_FREE (otherwise RESET_REQUIRED)
@@ -251,12 +251,8 @@ export class ExplorerSession {
 			};
 		}
 
-		const promotion = attempt.promotion;
-
-		let chess: Chess;
-		try {
-			chess = new Chess(this.getCurrentFen());
-		} catch {
+		const chess = this.tryCreateChessFromCurrentFen();
+		if (!chess) {
 			return {
 				ok: false,
 				error: this.makeError(
@@ -276,6 +272,7 @@ export class ExplorerSession {
 		}
 
 		const requiresPromotion = promotionOptions.length > 0;
+		const promotion = attempt.promotion;
 
 		if (requiresPromotion && !promotion) {
 			const details: PromotionRequiredDetails = { from, to, options: promotionOptions };
@@ -320,6 +317,7 @@ export class ExplorerSession {
 		const existingChildId = parent.childIds.find(
 			(id) => this.tree.nodesById[id]?.incomingMove?.uci === uci,
 		);
+
 		if (existingChildId) {
 			parent.activeChildId = existingChildId;
 			this.currentNodeId = existingChildId;
@@ -356,47 +354,35 @@ export class ExplorerSession {
 	// Public API - Navigation
 	// ---------------------------------------------------------------------------
 
-	/**
-	 * True when the cursor is not at root.
-	 */
+	/** True when the cursor is not at root. */
 	canGoPrev(): boolean {
 		return this.currentNodeId !== this.tree.rootId;
 	}
 
-	/**
-	 * True when current node has an active continuation.
-	 */
+	/** True when current node has an active continuation. */
 	canGoNext(): boolean {
 		return Boolean(this.getCurrentNode().activeChildId);
 	}
 
-	/**
-	 * Moves cursor to root (ply 0).
-	 */
+	/** Moves cursor to root (ply 0). */
 	goStart(): void {
 		this.currentNodeId = this.tree.rootId;
 	}
 
-	/**
-	 * Moves cursor to the last node on the active line.
-	 */
+	/** Moves cursor to the last node on the active line. */
 	goEnd(): void {
 		const line = this.getActiveLineNodeIds();
 		this.currentNodeId = line[line.length - 1] ?? this.tree.rootId;
 	}
 
-	/**
-	 * Moves cursor to parent node (no-op at root).
-	 */
+	/** Moves cursor to parent node (no-op at root). */
 	goPrev(): void {
 		const node = this.getCurrentNode();
 		if (!node.parentId) return;
 		this.currentNodeId = node.parentId;
 	}
 
-	/**
-	 * Moves cursor to active child (no-op if none).
-	 */
+	/** Moves cursor to active child (no-op if none). */
 	goNext(): void {
 		const node = this.getCurrentNode();
 		if (!node.activeChildId) return;
@@ -430,6 +416,10 @@ export class ExplorerSession {
 		return this.source;
 	}
 
+	getRootId(): ExplorerNodeId {
+		return this.tree.rootId;
+	}
+
 	getCurrentNodeId(): ExplorerNodeId {
 		return this.currentNodeId;
 	}
@@ -446,8 +436,66 @@ export class ExplorerSession {
 		return this.getCurrentNode().ply;
 	}
 
-	getRootId(): ExplorerNodeId {
-		return this.tree.rootId;
+	/**
+	 * Returns all legal destination squares for a given origin square,
+	 * for the side to move in the current position.
+	 *
+	 * This is a read-only helper meant for UI hinting (dots/hover/selection).
+	 * It MUST NOT mutate the session or the tree.
+	 *
+	 * Rules:
+	 * - Returns [] when "from" is invalid, empty, opponent piece, or has no legal moves.
+	 * - Promotions can generate multiple moves to the same target square; duplicates are removed.
+	 */
+	getLegalDestinationsFrom(fromSquare: string): string[] {
+		const from = (fromSquare ?? '').toLowerCase();
+		if (!this.isSquare(from)) return [];
+
+		const chess = this.tryCreateChessFromCurrentFen();
+		if (!chess) return [];
+
+		type VerboseMove = { to: string };
+		const moves = chess.moves({ square: from, verbose: true }) as VerboseMove[];
+
+		const dests = new Set<string>();
+		for (const m of moves) {
+			const to = (m?.to ?? '').toLowerCase();
+			if (this.isSquare(to)) dests.add(to);
+		}
+
+		// Stable order helps avoid UI flicker when rendering markers.
+		return Array.from(dests).sort();
+	}
+
+	/**
+	 * Returns all legal destination squares from `fromSquare` that are captures.
+	 * This is a read-only helper for UI hinting (capture ring markers).
+	 *
+	 * Notes:
+	 * - Includes en passant captures (target square might be empty in the board representation).
+	 * - Duplicates are removed (e.g. promotion captures may generate multiple moves to same "to").
+	 */
+	getLegalCaptureDestinationsFrom(fromSquare: string): string[] {
+		const from = (fromSquare ?? '').toLowerCase();
+		if (!this.isSquare(from)) return [];
+
+		const chess = this.tryCreateChessFromCurrentFen();
+		if (!chess) return [];
+
+		type VerboseMove = { to: string; flags?: string; captured?: string };
+		const moves = chess.moves({ square: from, verbose: true }) as VerboseMove[];
+
+		const captures = new Set<string>();
+		for (const m of moves) {
+			const flags = typeof m.flags === 'string' ? m.flags : '';
+			const isCapture = !!m.captured || flags.includes('c') || flags.includes('e'); // 'e' = en passant
+			if (!isCapture) continue;
+
+			const to = (m?.to ?? '').toLowerCase();
+			if (this.isSquare(to)) captures.add(to);
+		}
+
+		return Array.from(captures).sort();
 	}
 
 	/**
@@ -663,6 +711,18 @@ export class ExplorerSession {
 	// ---------------------------------------------------------------------------
 	// Private helpers - Chess / ids / errors
 	// ---------------------------------------------------------------------------
+
+	/**
+	 * Creates a chess.js instance from the current cursor FEN.
+	 * Returns null if the FEN is invalid (should never happen if invariants are respected).
+	 */
+	private tryCreateChessFromCurrentFen(): Chess | null {
+		try {
+			return new Chess(this.getCurrentFen());
+		} catch {
+			return null;
+		}
+	}
 
 	private getNode(id: ExplorerNodeId): ExplorerNode {
 		const node = this.tree.nodesById[id];
