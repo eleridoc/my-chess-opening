@@ -93,6 +93,12 @@ export class CmChessboardAdapter implements ChessBoardAdapter {
 			style: {
 				moveFromMarker: undefined,
 				moveToMarker: undefined,
+
+				cssClass: 'chessboard-js',
+				borderType: 'frame',
+				// pieces: {
+				// 	file: 'pieces/staunty.svg',
+				// },
 			},
 		});
 	}
