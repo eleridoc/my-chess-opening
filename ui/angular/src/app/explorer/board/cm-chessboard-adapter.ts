@@ -500,6 +500,7 @@ export class CmChessboardAdapter implements ChessBoardAdapter {
 		// Create a new dialog token and mark dialog open.
 		const requestId = ++this.promotionRequestId;
 		this.promotionDialogOpen = true;
+		this.applyMoveInputState(); // lock input while dialog open
 
 		this.board.showPromotionDialog(to, pieceColor, (result: any) => {
 			// Ignore stale callback or destroyed adapter.
@@ -509,6 +510,7 @@ export class CmChessboardAdapter implements ChessBoardAdapter {
 			// Consume immediately -> callback becomes one-shot (double-fire protection).
 			this.promotionRequestId++;
 			this.promotionDialogOpen = false;
+			this.applyMoveInputState(); // restore input (unless globally disabled)
 
 			// Cancel -> revert to last known position.
 			if (!result || !result.piece) {
@@ -559,7 +561,15 @@ export class CmChessboardAdapter implements ChessBoardAdapter {
 	private applyMoveInputState(): void {
 		if (this.destroyed || !this.board) return;
 
+		// Always disable first
 		this.board.disableMoveInput();
+
+		// IMPORTANT:
+		// While the promotion dialog is open, we keep input disabled.
+		// The current behavior (cancel promotion on external actions via setFen)
+		// stays exactly the same.
+		if (this.promotionDialogOpen) return;
+
 		if (!this.moveInputEnabled) return;
 
 		const cmColor =
