@@ -4,6 +4,8 @@
 @use './app/styles/app-patterns';
 @use './app/styles/chessboard-markers';
 
+@import 'cm-chessboard/assets/extensions/promotion-dialog/promotion-dialog.css';
+
 :root {
 	/* Existing app variables */
 	--app-bg: #181818;

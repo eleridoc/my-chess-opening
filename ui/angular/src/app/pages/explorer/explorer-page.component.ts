@@ -32,6 +32,7 @@ export class ExplorerPageComponent {
 
 	/** Forward a board move attempt to the facade (core validation happens in core). */
 	onMoveAttempt(attempt: ExplorerMoveAttempt): void {
+		console.log('onMoveAttempt :', attempt);
 		this.facade.attemptMove(attempt);
 	}
 
@@ -69,6 +70,7 @@ export class ExplorerPageComponent {
 
 	// Keep it synchronous: core + facade are synchronous today.
 	readonly validateMoveAttempt = (attempt: ExplorerMoveAttempt): boolean => {
+		console.log('validateMoveAttempt :', attempt);
 		return this.facade.attemptMove(attempt); // we will make attemptMove return boolean
 	};
 

@@ -8,14 +8,14 @@
  * - Own a single ExplorerSession instance for the whole application lifetime.
  * - Expose UI-friendly reactive state using Angular signals (mode, source, fen, ply, moves, ...).
  * - Provide an imperative API for UI actions (reset, navigation, loaders, move attempts).
+ * - Translate core results into UI state:
+ *   - refresh signals after successful actions
+ *   - expose lastError when an action fails
+ *   - expose promotionPending when PROMOTION_REQUIRED occurs
  *
- * Design notes:
- * - The facade MUST NOT contain chess rules or domain logic.
- *   All rules live in the core (ExplorerSession).
- * - The facade maps core results to UI state:
- *   - refresh derived signals after each successful action
- *   - capture errors in `lastError`
- *   - manage promotion flow via `promotionPending`
+ * Non-responsibilities:
+ * - No chess rules here (all rules live in ExplorerSession).
+ * - No UI components here (dialogs, toasts, etc. are handled by the page/components).
  */
 
 import { Injectable, computed, signal } from '@angular/core';
@@ -32,12 +32,27 @@ import type {
 	PromotionPiece,
 } from 'my-chess-opening-core/explorer';
 
+/**
+ * PromotionPending
+ *
+ * UI-friendly representation of a "promotion required" situation.
+ * The UI may decide to:
+ * - show a promotion choice UI
+ * - disable input until resolved
+ * - or cancel promotion by navigating elsewhere (depending on adapter strategy)
+ */
 type PromotionPending = {
 	from: string;
 	to: string;
 	options: PromotionPiece[];
 };
 
+/**
+ * LastMoveSquares
+ *
+ * UI hint: squares to highlight for the last applied move in the current path.
+ * This is derived from the current node incoming move.
+ */
 type LastMoveSquares = { from: string; to: string } | null;
 
 @Injectable({ providedIn: 'root' })
@@ -51,11 +66,6 @@ export class ExplorerFacade {
 	// ---------------------------------------------------------------------------
 	// Internal signals (source of truth for UI bindings)
 	// ---------------------------------------------------------------------------
-
-	/** Debug-only session id to verify singleton behavior across routing. */
-	private readonly _debugSessionId = signal<string>(
-		`explorer-${Math.random().toString(16).slice(2)}`,
-	);
 
 	/** Current core mode (CASE1_FREE / CASE2_PGN / CASE2_DB). */
 	private readonly _mode = signal<ExplorerMode>(this.session.getMode());
@@ -89,8 +99,6 @@ export class ExplorerFacade {
 	// Public readonly signals (what the UI should consume)
 	// ---------------------------------------------------------------------------
 
-	readonly debugSessionId = this._debugSessionId.asReadonly();
-
 	readonly mode = this._mode.asReadonly();
 	readonly source = this._source.asReadonly();
 	readonly fen = this._fen.asReadonly();
@@ -106,12 +114,11 @@ export class ExplorerFacade {
 
 	readonly lastError = this._lastError.asReadonly();
 	readonly promotionPending = this._promotionPending.asReadonly();
-
 	readonly lastMoveSquares = this._lastMoveSquares.asReadonly();
 
 	/**
-	 * Stable snapshot mainly for debug (avoid using it for real UI logic).
-	 * Useful when building quick templates during early development.
+	 * Stable snapshot mainly for debug/templates.
+	 * Avoid using this for core UI logic (prefer individual signals).
 	 */
 	readonly snapshot = computed(() => ({
 		mode: this._mode(),
@@ -127,7 +134,6 @@ export class ExplorerFacade {
 	}));
 
 	constructor() {
-		console.log('[ExplorerFacade] created', this._debugSessionId());
 		this.refreshFromCore();
 	}
 
@@ -135,18 +141,21 @@ export class ExplorerFacade {
 	// Public API — lifecycle / loaders (CASE rules enforced by core)
 	// ---------------------------------------------------------------------------
 
-	/** Hard reset to initial CASE1 state. */
+	/**
+	 * Hard reset to initial CASE1 state.
+	 * Clears UI transient state, resets core, then refreshes signals.
+	 */
 	reset(): void {
 		this.clearTransientUiState();
-
 		this.session.resetToInitial();
 		this.refreshFromCore();
 	}
 
-	/** Alias for starting a fresh exploration. */
+	/**
+	 * Alias for starting a fresh exploration.
+	 */
 	loadInitial(): void {
 		this.clearTransientUiState();
-
 		this.session.loadInitial();
 		this.refreshFromCore();
 	}
@@ -203,27 +212,36 @@ export class ExplorerFacade {
 	// Public API — navigation
 	// ---------------------------------------------------------------------------
 
+	/**
+	 * All navigation methods clear UI transient state before moving the core cursor.
+	 * This ensures errors/promotions don't remain visible after unrelated actions.
+	 */
 	goStart(): void {
+		this.clearTransientUiState();
 		this.session.goStart();
 		this.refreshFromCore();
 	}
 
 	goEnd(): void {
+		this.clearTransientUiState();
 		this.session.goEnd();
 		this.refreshFromCore();
 	}
 
 	goPrev(): void {
+		this.clearTransientUiState();
 		this.session.goPrev();
 		this.refreshFromCore();
 	}
 
 	goNext(): void {
+		this.clearTransientUiState();
 		this.session.goNext();
 		this.refreshFromCore();
 	}
 
 	goToPly(ply: number): void {
+		this.clearTransientUiState();
 		this.session.goToPly(ply);
 		this.refreshFromCore();
 	}
@@ -235,12 +253,12 @@ export class ExplorerFacade {
 	/**
 	 * Attempts a move from the current cursor position.
 	 *
-	 * Returns:
-	 * - true  -> move was applied by the core (board may accept it visually)
-	 * - false -> move was rejected or requires promotion (board must snap back)
+	 * Return value:
+	 * - true  -> move was applied by the core (board may keep the piece)
+	 * - false -> move rejected or requires promotion (board should snap back unless it handles promo UI)
 	 *
 	 * Failure mapping:
-	 * - PROMOTION_REQUIRED -> populate `promotionPending` (UI must call confirmPromotion)
+	 * - PROMOTION_REQUIRED -> populate `promotionPending`
 	 * - otherwise -> populate `lastError`
 	 */
 	attemptMove(attempt: ExplorerMoveAttempt): boolean {
@@ -280,6 +298,11 @@ export class ExplorerFacade {
 	/**
 	 * Resolves a pending promotion by replaying the last (from/to) attempt
 	 * with the chosen promotion piece.
+	 *
+	 * Note:
+	 * - This method is optional depending on the UI approach.
+	 * - In the current implementation, cm-chessboard PromotionDialog can directly
+	 *   send promotion in `attemptMove`, so some screens may never call this.
 	 */
 	confirmPromotion(piece: PromotionPiece): void {
 		const pending = this._promotionPending();

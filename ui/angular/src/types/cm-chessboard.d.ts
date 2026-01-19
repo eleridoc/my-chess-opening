@@ -27,9 +27,21 @@ declare module 'cm-chessboard/src/Chessboard.js' {
 
 		addMarker(type: string, square: string): void;
 		removeMarkers(type: string, square?: string): void;
+
+		showPromotionDialog(
+			square: string,
+			pieceColor: 'w' | 'b',
+			callback: (result: { square: string; piece?: string } | null) => void,
+		): void;
 	}
 }
 
 declare module 'cm-chessboard/src/extensions/markers/Markers.js' {
 	export class Markers {}
+}
+
+declare module 'cm-chessboard/src/extensions/promotion-dialog/PromotionDialog.js' {
+	export class PromotionDialog {
+		constructor(...args: any[]);
+	}
 }
