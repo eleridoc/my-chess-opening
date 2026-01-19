@@ -1,5 +1,9 @@
-<div class="explorer">
-	<header class="explorer__header">
+<div class="explorer-layout" [class.explorer-layout--qa-collapsed]="qaCollapsed()">
+	<section class="explorer-col explorer-col--qa">
+		<app-explorer-qa-panel (collapsedChange)="qaCollapsed.set($event)" />
+	</section>
+
+	<section class="explorer-col explorer-col--main">
 		<app-board-controls
 			[canStart]="facade.canStart()"
 			[canPrev]="facade.canPrev()"
@@ -12,34 +16,23 @@
 			(end)="onEnd()"
 		/>
 
-		<mat-chip-set class="explorer__meta" aria-label="Explorer session info">
-			<mat-chip>Mode: {{ facade.mode() }}</mat-chip>
-			<mat-chip>Source: {{ facade.source().kind }}</mat-chip>
-			<mat-chip>Ply: {{ facade.ply() }}</mat-chip>
-		</mat-chip-set>
-	</header>
-
-	<div class="explorer__error" *ngIf="facade.lastError() as err">
-		<span class="explorer__error-code">{{ err.code }}</span>
-		<span class="explorer__error-message">{{ err.message }}</span>
-	</div>
-
-	<section class="explorer__board">
-		<app-chess-board
-			[fen]="facade.fen()"
-			[inputEnabled]="inputEnabled()"
-			[validateMoveAttempt]="validateMoveAttempt"
-			[lastMoveSquares]="facade.lastMoveSquares()"
-			[getLegalDestinationsFrom]="getLegalDestinationsFrom"
-			[getLegalCaptureDestinationsFrom]="getLegalCaptureDestinationsFrom"
-		/>
+		<div class="explorer-board-center">
+			<app-chess-board
+				[fen]="facade.fen()"
+				[inputEnabled]="inputEnabled()"
+				[validateMoveAttempt]="validateMoveAttempt"
+				[lastMoveSquares]="facade.lastMoveSquares()"
+				[getLegalDestinationsFrom]="getLegalDestinationsFrom"
+				[getLegalCaptureDestinationsFrom]="getLegalCaptureDestinationsFrom"
+			/>
+		</div>
 	</section>
 
-	<aside class="explorer__side">
+	<section class="explorer-col explorer-col--right">
 		<app-move-list
 			[moves]="facade.moves()"
 			[currentPly]="facade.ply()"
 			(plySelected)="onPlySelected($event)"
 		/>
-	</aside>
+	</section>
 </div>

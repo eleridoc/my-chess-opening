@@ -83,7 +83,7 @@ body {
 
 /* Cards: exact "top" color + divider line */
 .mat-mdc-card {
-	border-radius: 16px !important;
+	// border-radius: 16px !important;
 	background: var(--app-card) !important;
 	border: 1px solid var(--app-divider);
 	box-shadow: none !important;
@@ -101,7 +101,7 @@ body {
 
 /* Réduit la hauteur perçue des inputs (sans casser MDC) */
 .mat-mdc-form-field .mdc-text-field {
-	border-radius: 12px !important;
+	// border-radius: 12px !important;
 }
 
 /* Outlined inputs: border like your divider */
@@ -132,7 +132,7 @@ body {
 .mat-mdc-button,
 .mat-mdc-text-button,
 .mat-mdc-flat-button {
-	border-radius: 8px !important;
+	border-radius: 0px !important;
 	letter-spacing: 0.2px;
 }
 

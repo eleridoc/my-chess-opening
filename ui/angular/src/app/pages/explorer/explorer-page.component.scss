@@ -2,56 +2,47 @@
 	display: block;
 }
 
-.explorer {
+.explorer-layout {
 	display: grid;
-	grid-template-columns: minmax(320px, 1fr) 420px;
+	grid-template-columns: repeat(3, minmax(0, 1fr)); /* 1/3 - 1/3 - 1/3 */
 	gap: 16px;
 	align-items: start;
 }
 
-.explorer__header {
-	grid-column: 1 / -1;
+.explorer-board-center {
+	width: 100%;
 	display: flex;
-	align-items: center;
+	justify-content: center; /* center horizontally */
+}
+
+/* Board is centered and capped but still responsive */
+.explorer-board-center > app-chess-board {
+	display: block;
+	width: min(100%, 680px); /* Adjust 680px to your taste */
+}
+
+.explorer-col {
+	display: flex;
+	flex-direction: column;
 	gap: 12px;
-	flex-wrap: wrap;
 }
 
-.explorer__meta {
-	margin-left: auto;
-	display: flex;
-	gap: 8px;
-	flex-wrap: wrap;
-	justify-content: flex-end;
+.explorer-col--main app-chess-board {
+	margin-top: 4px;
 }
 
-.explorer__error {
-	grid-column: 1 / -1;
-	padding: 10px 12px;
-	border-radius: 12px;
-	background: rgba(255, 0, 0, 0.08);
-	border: 1px solid rgba(255, 0, 0, 0.18);
-	display: flex;
-	gap: 10px;
-	align-items: baseline;
-	flex-wrap: wrap;
-}
-
-.explorer__error-code {
-	font-weight: 800;
-}
-
-.explorer__error-message {
-	opacity: 0.9;
+@media (max-width: 1200px) {
+	.explorer-layout {
+		grid-template-columns: 320px minmax(420px, 1fr) 380px;
+	}
 }
 
 @media (max-width: 980px) {
-	.explorer {
+	.explorer-layout {
 		grid-template-columns: 1fr;
 	}
 
-	.explorer__meta {
-		margin-left: 0;
-		justify-content: flex-start;
+	.explorer-layout--qa-collapsed {
+		grid-template-columns: 1fr;
 	}
 }

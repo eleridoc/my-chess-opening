@@ -1,0 +1,101 @@
+<ng-container *ngIf="visible()">
+	<div class="qa" [class.qa--collapsed]="collapsed()">
+		<div class="qa__top">
+			<button mat-icon-button (click)="toggleCollapsed()" aria-label="Toggle QA panel">
+				<mat-icon>{{ collapsed() ? 'chevron_right' : 'chevron_left' }}</mat-icon>
+			</button>
+
+			<div class="qa__title" *ngIf="!collapsed()">QA</div>
+
+			<span class="qa__spacer"></span>
+
+			<button mat-icon-button *ngIf="!collapsed()" (click)="clearLogs()" aria-label="Clear logs">
+				<mat-icon>delete</mat-icon>
+			</button>
+		</div>
+
+		<ng-container *ngIf="!collapsed()">
+			<mat-card class="qa__card">
+				<mat-card-title>Session</mat-card-title>
+				<mat-card-content>
+					<mat-chip-set aria-label="Explorer session info">
+						<mat-chip>Mode: {{ facade.mode() }}</mat-chip>
+						<mat-chip>Source: {{ facade.source().kind }}</mat-chip>
+						<mat-chip>Ply: {{ facade.ply() }}</mat-chip>
+						<mat-chip>FEN: {{ fenShort() }}</mat-chip>
+					</mat-chip-set>
+
+					<div class="qa__error" *ngIf="facade.lastError() as err">
+						<div class="qa__error-code">{{ err.code }}</div>
+						<div class="qa__error-msg">{{ err.message }}</div>
+					</div>
+
+					<div class="qa__promo" *ngIf="facade.promotionPending() as p">
+						<div class="qa__promo-title">Promotion pending</div>
+						<div class="qa__promo-row">{{ p.from }} → {{ p.to }}</div>
+						<div class="qa__promo-actions">
+							<button mat-stroked-button (click)="confirmPromotion('q')">Q</button>
+							<button mat-stroked-button (click)="confirmPromotion('r')">R</button>
+							<button mat-stroked-button (click)="confirmPromotion('b')">B</button>
+							<button mat-stroked-button (click)="confirmPromotion('n')">N</button>
+						</div>
+					</div>
+				</mat-card-content>
+			</mat-card>
+
+			<mat-card class="qa__card">
+				<mat-card-title>Scenarios</mat-card-title>
+				<mat-card-content class="qa__btns">
+					<button mat-stroked-button (click)="loadInitial()">Reset / Initial</button>
+					<button mat-stroked-button (click)="loadLongPgn()">Load long PGN</button>
+					<button mat-stroked-button (click)="createVariationAtPly1()">
+						Create variation (ply 1)
+					</button>
+					<button mat-stroked-button (click)="loadInCheckFen()">Load in-check FEN</button>
+					<button mat-stroked-button (click)="tryIllegalMove()">Try illegal move</button>
+					<button mat-stroked-button (click)="loadPromotionFen()">Load promotion FEN</button>
+					<button mat-stroked-button (click)="triggerPromotionAttempt()">Try a7→a8</button>
+				</mat-card-content>
+			</mat-card>
+
+			<mat-card class="qa__card">
+				<mat-card-title>Stress actions</mat-card-title>
+				<mat-card-content class="qa__btns">
+					<button mat-stroked-button (click)="prevSpam()">Prev ×30</button>
+					<button mat-stroked-button (click)="nextSpam()">Next ×30</button>
+
+					<div class="qa__goto">
+						<button mat-stroked-button (click)="goToPly(0)">goToPly(0)</button>
+						<button mat-stroked-button (click)="goToPly(1)">goToPly(1)</button>
+						<button mat-stroked-button (click)="goToPly(2)">goToPly(2)</button>
+						<button mat-stroked-button (click)="goToPly(10)">goToPly(10)</button>
+					</div>
+				</mat-card-content>
+			</mat-card>
+
+			<mat-card class="qa__card">
+				<mat-card-title>Smoke checklist</mat-card-title>
+				<mat-card-content class="qa__checks">
+					<div class="qa__check" *ngFor="let c of checks()">
+						<mat-checkbox [checked]="c.done" (change)="toggleCheck(c.id)">
+							{{ c.label }}
+						</mat-checkbox>
+					</div>
+				</mat-card-content>
+			</mat-card>
+
+			<mat-card class="qa__card">
+				<mat-card-title>Event log</mat-card-title>
+				<mat-card-content class="qa__logs">
+					<div class="qa__log" *ngFor="let l of logs()">
+						<div class="qa__log-meta">
+							<span class="qa__log-level">{{ l.level }}</span>
+							<span class="qa__log-at">{{ l.at }}</span>
+						</div>
+						<div class="qa__log-msg">{{ l.message }}</div>
+					</div>
+				</mat-card-content>
+			</mat-card>
+		</ng-container>
+	</div>
+</ng-container>

@@ -1,0 +1,119 @@
+:host {
+	display: block;
+	height: 100%;
+}
+
+.qa {
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.qa__top {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.qa__title {
+	font-weight: 800;
+	letter-spacing: 0.2px;
+}
+
+.qa__spacer {
+	flex: 1;
+}
+
+.qa__card {
+	border-radius: 0px;
+	padding: 15px;
+}
+
+.qa__btns {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.qa__goto {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 8px;
+}
+
+.qa__error {
+	margin-top: 10px;
+	padding: 10px 12px;
+	border-radius: 0px;
+	background: rgba(255, 0, 0, 0.08);
+	border: 1px solid rgba(255, 0, 0, 0.18);
+	display: grid;
+	gap: 6px;
+}
+
+.qa__error-code {
+	font-weight: 800;
+}
+
+.qa__error-msg {
+	opacity: 0.9;
+}
+
+.qa__promo {
+	margin-top: 10px;
+	padding: 10px 12px;
+	border-radius: 0px;
+	background: rgba(255, 180, 0, 0.1);
+	border: 1px solid rgba(255, 180, 0, 0.22);
+	display: grid;
+	gap: 8px;
+}
+
+.qa__promo-title {
+	font-weight: 800;
+}
+
+.qa__promo-actions {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.qa__checks {
+	display: grid;
+	gap: 6px;
+}
+
+.qa__logs {
+	display: grid;
+	gap: 10px;
+	max-height: 280px;
+	overflow: auto;
+}
+
+.qa__log {
+	padding: 8px 10px;
+	border-radius: 0px;
+	border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.qa__log-meta {
+	display: flex;
+	gap: 10px;
+	opacity: 0.8;
+	font-size: 12px;
+}
+
+.qa__log-level {
+	font-weight: 800;
+}
+
+.qa--collapsed {
+	align-items: center;
+}
+
+.qa--collapsed .qa__card {
+	display: none;
+}

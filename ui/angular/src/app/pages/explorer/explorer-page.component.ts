@@ -1,21 +1,22 @@
-import { Component, computed } from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatChipsModule } from '@angular/material/chips';
+
 import { ExplorerFacade } from '../../explorer/facade/explorer.facade';
 import type { ExplorerMoveAttempt } from 'my-chess-opening-core/explorer';
 import { BoardControlsComponent } from '../../explorer/components/board-controls/board-controls.component';
 import { ChessBoardComponent } from '../../explorer/components/chess-board/chess-board.component';
 import { MoveListComponent } from '../../explorer/components/move-list/move-list.component';
+import { ExplorerQaPanelComponent } from '../../explorer/components/explorer-qa-panel/explorer-qa-panel.component';
 
 @Component({
 	selector: 'app-explorer-page',
 	standalone: true,
 	imports: [
 		CommonModule,
-		MatChipsModule,
 		BoardControlsComponent,
 		ChessBoardComponent,
 		MoveListComponent,
+		ExplorerQaPanelComponent,
 	],
 	templateUrl: './explorer-page.component.html',
 	styleUrl: './explorer-page.component.scss',
@@ -30,11 +31,13 @@ export class ExplorerPageComponent {
 	 */
 	constructor(public readonly facade: ExplorerFacade) {}
 
+	readonly qaCollapsed = signal<boolean>(false);
+
 	/** Forward a board move attempt to the facade (core validation happens in core). */
-	onMoveAttempt(attempt: ExplorerMoveAttempt): void {
-		console.log('onMoveAttempt :', attempt);
-		this.facade.attemptMove(attempt);
-	}
+	// onMoveAttempt(attempt: ExplorerMoveAttempt): void {
+	// 	console.log('onMoveAttempt :', attempt);
+	// 	this.facade.attemptMove(attempt);
+	// }
 
 	/** Navigate to the selected ply from the move list. */
 	onPlySelected(ply: number): void {
@@ -70,8 +73,7 @@ export class ExplorerPageComponent {
 
 	// Keep it synchronous: core + facade are synchronous today.
 	readonly validateMoveAttempt = (attempt: ExplorerMoveAttempt): boolean => {
-		console.log('validateMoveAttempt :', attempt);
-		return this.facade.attemptMove(attempt); // we will make attemptMove return boolean
+		return this.facade.attemptMove(attempt);
 	};
 
 	/** Disable board input while a promotion choice is pending. */
