@@ -1,8 +1,22 @@
+/*
+	QA Panel styles (Explorer / UI)
+
+	Goals:
+	- Keep the QA panel compact, readable and scroll-friendly.
+	- When collapsed: only show the top bar.
+	- When expanded: show cards stacked vertically with consistent spacing.
+
+	Notes:
+	- No theme overrides here (we rely on Material variables + simple rgba).
+	- Border-radius kept at 0 to match the current app visual style.
+*/
+
 :host {
 	display: block;
 	height: 100%;
 }
 
+/* Root layout */
 .qa {
 	height: 100%;
 	display: flex;
@@ -10,6 +24,7 @@
 	gap: 12px;
 }
 
+/* Top bar */
 .qa__top {
 	display: flex;
 	align-items: center;
@@ -25,11 +40,13 @@
 	flex: 1;
 }
 
+/* Card blocks */
 .qa__card {
-	border-radius: 0px;
+	border-radius: 0;
 	padding: 15px;
 }
 
+/* Button groups */
 .qa__btns {
 	display: flex;
 	flex-wrap: wrap;
@@ -43,10 +60,11 @@
 	margin-top: 8px;
 }
 
+/* Error box */
 .qa__error {
 	margin-top: 10px;
 	padding: 10px 12px;
-	border-radius: 0px;
+	border-radius: 0;
 	background: rgba(255, 0, 0, 0.08);
 	border: 1px solid rgba(255, 0, 0, 0.18);
 	display: grid;
@@ -61,10 +79,11 @@
 	opacity: 0.9;
 }
 
+/* Promotion box */
 .qa__promo {
 	margin-top: 10px;
 	padding: 10px 12px;
-	border-radius: 0px;
+	border-radius: 0;
 	background: rgba(255, 180, 0, 0.1);
 	border: 1px solid rgba(255, 180, 0, 0.22);
 	display: grid;
@@ -81,11 +100,13 @@
 	flex-wrap: wrap;
 }
 
+/* Checklist */
 .qa__checks {
 	display: grid;
 	gap: 6px;
 }
 
+/* Logs */
 .qa__logs {
 	display: grid;
 	gap: 10px;
@@ -95,7 +116,7 @@
 
 .qa__log {
 	padding: 8px 10px;
-	border-radius: 0px;
+	border-radius: 0;
 	border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
@@ -110,10 +131,25 @@
 	font-weight: 800;
 }
 
+/* Variations section */
+.qa__variation-row {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.qa__variation-info {
+	margin-top: 8px;
+	opacity: 0.8;
+	font-size: 12px;
+}
+
+/* Collapsed mode */
 .qa--collapsed {
 	align-items: center;
 }
 
+/* Hide all cards when collapsed (keep only the top bar) */
 .qa--collapsed .qa__card {
 	display: none;
 }

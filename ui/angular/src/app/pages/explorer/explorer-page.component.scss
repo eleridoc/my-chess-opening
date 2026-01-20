@@ -1,13 +1,39 @@
+/*
+  Explorer page layout styles
+
+  Goals:
+  - 3-column desktop layout (QA | Board | MoveList)
+  - Center the chessboard and keep it responsive with a max width
+  - Collapse to a single column on smaller viewports
+*/
+
 :host {
 	display: block;
 }
 
+/* ---------------------------------------------------------------------------
+   Grid layout
+   --------------------------------------------------------------------------- */
+
 .explorer-layout {
 	display: grid;
-	grid-template-columns: repeat(3, minmax(0, 1fr)); /* 1/3 - 1/3 - 1/3 */
+
+	/* Desktop default: 3 equal columns */
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+
 	gap: 16px;
 	align-items: start;
 }
+
+.explorer-col {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+/* ---------------------------------------------------------------------------
+   Board centering / sizing
+   --------------------------------------------------------------------------- */
 
 .explorer-board-center {
 	width: 100%;
@@ -18,30 +44,32 @@
 /* Board is centered and capped but still responsive */
 .explorer-board-center > app-chess-board {
 	display: block;
-	width: min(100%, 680px); /* Adjust 680px to your taste */
+	width: min(100%, 680px); /* tweak 680px to taste */
 }
 
-.explorer-col {
-	display: flex;
-	flex-direction: column;
-	gap: 12px;
-}
-
+/* Small spacing between controls and board */
 .explorer-col--main app-chess-board {
 	margin-top: 4px;
 }
 
+/* ---------------------------------------------------------------------------
+   Responsive breakpoints
+   --------------------------------------------------------------------------- */
+
+/* Slightly more controlled column widths for medium-large screens */
 @media (max-width: 1200px) {
 	.explorer-layout {
 		grid-template-columns: 320px minmax(420px, 1fr) 380px;
 	}
 }
 
+/* Mobile / narrow screens: stack everything */
 @media (max-width: 980px) {
 	.explorer-layout {
 		grid-template-columns: 1fr;
 	}
 
+	/* Keep the layout single-column even if QA is collapsed */
 	.explorer-layout--qa-collapsed {
 		grid-template-columns: 1fr;
 	}

@@ -32,7 +32,16 @@ import type {
 
 import type { ExplorerNodeId } from './ids';
 import { createExplorerIdFactory, type ExplorerIdFactory } from './ids';
-import type { ExplorerMove, ExplorerNode, ExplorerTree } from './model';
+import type {
+	ExplorerMove,
+	ExplorerNode,
+	ExplorerTree,
+	ExplorerMainlineMove,
+	ExplorerMoveToken,
+	ExplorerVariationLine,
+	ExplorerMoveListRow,
+	ExplorerMoveListViewModel,
+} from './model';
 
 export class ExplorerSession {
 	// ---------------------------------------------------------------------------
@@ -340,9 +349,21 @@ export class ExplorerSession {
 		return this.currentNodeId !== this.tree.rootId;
 	}
 
-	/** True when current node has an active continuation. */
+	/**
+	 * True when cursor has a next step according to navigation rules:
+	 * - On mainline: next follows childIds[0]
+	 * - In variation: next follows activeChildId (fallback childIds[0])
+	 */
 	canGoNext(): boolean {
-		return Boolean(this.getCurrentNode().activeChildId);
+		const node = this.getCurrentNode();
+
+		const isOnMainline = this.getMainlineNodeIds().includes(this.currentNodeId);
+
+		if (isOnMainline) {
+			return (node.childIds?.length ?? 0) > 0;
+		}
+
+		return Boolean(node.activeChildId ?? node.childIds?.[0]);
 	}
 
 	/** Moves cursor to root (ply 0). */
@@ -350,9 +371,9 @@ export class ExplorerSession {
 		this.currentNodeId = this.tree.rootId;
 	}
 
-	/** Moves cursor to the last node on the active line. */
+	/** Moves cursor to the last node on the mainline. */
 	goEnd(): void {
-		const line = this.getActiveLineNodeIds();
+		const line = this.getMainlineNodeIds();
 		this.currentNodeId = line[line.length - 1] ?? this.tree.rootId;
 	}
 
@@ -363,26 +384,55 @@ export class ExplorerSession {
 		this.currentNodeId = node.parentId;
 	}
 
-	/** Moves cursor to active child (no-op if none). */
+	/**
+	 * Moves cursor to next node according to navigation rules:
+	 * - If cursor is on mainline: always follow childIds[0] (stay on mainline)
+	 * - If cursor is in a variation: follow activeChildId (fallback childIds[0])
+	 */
 	goNext(): void {
 		const node = this.getCurrentNode();
-		if (!node.activeChildId) return;
-		this.currentNodeId = node.activeChildId;
+		const isOnMainline = this.getMainlineNodeIds().includes(this.currentNodeId);
+
+		const nextId = isOnMainline
+			? node.childIds?.[0]
+			: (node.activeChildId ?? node.childIds?.[0]);
+		if (!nextId) return;
+
+		this.currentNodeId = nextId;
 	}
 
-	/**
-	 * Moves the cursor to a given ply on the active line.
-	 *
-	 * Ply semantics:
-	 * - ply 0 => root
-	 * - ply 1 => after White's first move
-	 * - ply 2 => after Black's first move
-	 */
+	/** True when the current ply has more than one sibling continuation (variations exist). */
+	canGoPrevVariation(): boolean {
+		return this.getVariationContextAtCurrentPly() !== null;
+	}
+
+	/** True when the current ply has more than one sibling continuation (variations exist). */
+	canGoNextVariation(): boolean {
+		return this.getVariationContextAtCurrentPly() !== null;
+	}
+
+	/** Cycle to previous variation at the current ply (wraps around). */
+	goPrevVariation(): void {
+		this.shiftVariationAtCurrentPly(-1);
+	}
+
+	/** Cycle to next variation at the current ply (wraps around). */
+	goNextVariation(): void {
+		this.shiftVariationAtCurrentPly(1);
+	}
+
 	goToPly(ply: number): void {
 		const safePly = Number.isFinite(ply) ? Math.max(0, Math.floor(ply)) : 0;
-		const line = this.getActiveLineNodeIds();
+		const line = this.getMainlineNodeIds();
 		const targetIndex = Math.min(safePly, line.length - 1);
 		this.currentNodeId = line[targetIndex] ?? this.tree.rootId;
+	}
+
+	/** Moves cursor to a specific node id (no-op if unknown). */
+	goToNode(nodeId: ExplorerNodeId): void {
+		const n = this.tree.nodesById[nodeId];
+		if (!n) return;
+		this.currentNodeId = nodeId;
 	}
 
 	// ---------------------------------------------------------------------------
@@ -480,6 +530,94 @@ export class ExplorerSession {
 		}
 
 		return line;
+	}
+
+	/**
+	 * Returns the "mainline" node ids, starting at root and following childIds[0].
+	 *
+	 * Definition:
+	 * - Mainline is defined by insertion order: the first child in childIds is the mainline continuation.
+	 * - This is independent from activeChildId (which represents the currently selected variation).
+	 */
+	getMainlineNodeIds(): ExplorerNodeId[] {
+		const line: ExplorerNodeId[] = [];
+		let currentId: ExplorerNodeId = this.tree.rootId;
+
+		while (true) {
+			line.push(currentId);
+
+			const currentNode = this.tree.nodesById[currentId] as ExplorerNode | undefined;
+			if (!currentNode) break;
+
+			const children = currentNode.childIds as ExplorerNodeId[] | undefined;
+			if (!children || children.length === 0) break;
+
+			const nextId = children[0] as ExplorerNodeId;
+
+			// Defensive guard: stop if tree is inconsistent
+			const nextNode = this.tree.nodesById[nextId] as ExplorerNode | undefined;
+			if (!nextNode) break;
+
+			currentId = nextId;
+		}
+
+		return line;
+	}
+
+	/**
+	 * Returns mainline moves (root excluded), enriched with variationCount.
+	 *
+	 * variationCount is computed on the PARENT node:
+	 * - parent.childIds includes [mainline, ...variations]
+	 * - variationCount = max(0, parent.childIds.length - 1)
+	 */
+	getMainlineMovesWithMeta(): ExplorerMainlineMove[] {
+		const ids = this.getMainlineNodeIds();
+
+		return ids
+			.slice(1) // exclude root
+			.map((id) => {
+				const node = this.getNode(id);
+
+				// For non-root nodes, parentId should exist
+				const parent = node.parentId ? this.getNode(node.parentId) : undefined;
+				const variationCount = Math.max(0, (parent?.childIds?.length ?? 0) - 1);
+
+				const move = node.incomingMove;
+				if (!move) return null;
+
+				return {
+					...move,
+					variationCount,
+				};
+			})
+			.filter((m): m is ExplorerMainlineMove => Boolean(m));
+	}
+
+	/**
+	 * Returns variation info for the current ply (siblings under the parent node).
+	 * - null if root or if there is no alternative at this ply.
+	 * - index is 0-based in parent.childIds order (0 = mainline).
+	 */
+	getVariationInfoAtCurrentPly(): { index: number; count: number } | null {
+		const ctx = this.getVariationContextAtCurrentPly();
+		if (!ctx) return null;
+		return { index: ctx.index, count: ctx.siblings.length };
+	}
+
+	getMoveListViewModel(): ExplorerMoveListViewModel {
+		const vmRows = this.buildMainlineRows();
+		const variationsByNodeId: Record<string, ExplorerVariationLine[]> = {};
+
+		// Build variation lines for every node (small tree => OK and simpler)
+		for (const id of Object.keys(this.tree.nodesById)) {
+			variationsByNodeId[id] = this.buildVariationLinesFromNode(id as ExplorerNodeId);
+		}
+
+		return {
+			rows: vmRows,
+			variationsByNodeId,
+		};
 	}
 
 	// ---------------------------------------------------------------------------
@@ -686,6 +824,131 @@ export class ExplorerSession {
 			san: payload.san,
 			uci: payload.uci,
 		};
+	}
+
+	private getVariationContextAtCurrentPly(): {
+		parent: ExplorerNode;
+		siblings: ExplorerNodeId[];
+		index: number;
+	} | null {
+		const node = this.getCurrentNode();
+		if (!node.parentId) return null;
+
+		const parent = this.getNode(node.parentId);
+
+		const siblings = (parent.childIds ?? []) as ExplorerNodeId[];
+
+		if (siblings.length <= 1) return null;
+
+		// Prefer currentNodeId index, fallback to parent's activeChildId, then default to 0.
+		let index = siblings.indexOf(this.currentNodeId);
+
+		if (index === -1 && parent.activeChildId) {
+			index = siblings.indexOf(parent.activeChildId);
+		}
+
+		if (index === -1) index = 0;
+
+		return { parent, siblings, index };
+	}
+
+	private shiftVariationAtCurrentPly(delta: number): void {
+		const ctx = this.getVariationContextAtCurrentPly();
+		if (!ctx) return;
+
+		const count = ctx.siblings.length;
+		const nextIndex = (ctx.index + delta + count) % count;
+		const nextId = ctx.siblings[nextIndex];
+
+		// Selecting a variation means: update parent activeChildId + move cursor to the selected sibling.
+		ctx.parent.activeChildId = nextId;
+		this.currentNodeId = nextId;
+	}
+
+	private buildMainlineRows(): ExplorerMoveListRow[] {
+		const ids = this.getMainlineNodeIds().slice(1); // exclude root
+		const tokens: ExplorerMoveToken[] = ids
+			.map((id) => this.nodeToToken(id, /*isLineStart*/ false))
+			.filter((t): t is ExplorerMoveToken => Boolean(t));
+
+		// Group by full-move number (white/black)
+		const rows: ExplorerMoveListRow[] = [];
+		for (let i = 0; i < tokens.length; i += 2) {
+			const moveNumber = Math.floor(i / 2) + 1;
+			rows.push({
+				moveNumber,
+				white: tokens[i],
+				black: tokens[i + 1],
+			});
+		}
+		return rows;
+	}
+
+	private buildVariationLinesFromNode(nodeId: ExplorerNodeId): ExplorerVariationLine[] {
+		const node = this.getNode(nodeId);
+		const children = node.childIds ?? [];
+		if (children.length <= 1) return [];
+
+		// Variations = all children except the mainline continuation (index 0)
+		const variationStarts = children.slice(1);
+
+		return variationStarts.map((startId) => this.buildVariationLine(startId));
+	}
+
+	private buildVariationLine(startNodeId: ExplorerNodeId): ExplorerVariationLine {
+		const tokens: ExplorerMoveToken[] = [];
+
+		let cursor: ExplorerNodeId | undefined = startNodeId;
+		let isLineStart = true;
+
+		while (cursor) {
+			const t = this.nodeToToken(cursor, isLineStart);
+			if (!t) break;
+			tokens.push(t);
+
+			const n = this.getNode(cursor);
+			const next = (n.childIds?.[0] as ExplorerNodeId | undefined) ?? undefined;
+			cursor = next;
+
+			isLineStart = false;
+		}
+
+		return { startNodeId, tokens };
+	}
+
+	private nodeToToken(nodeId: ExplorerNodeId, isLineStart: boolean): ExplorerMoveToken | null {
+		const node = this.getNode(nodeId);
+		const move = node.incomingMove;
+		if (!move) return null;
+
+		// variations AFTER this move = variations from the position AFTER this move
+		const variationCount = Math.max(0, (node.childIds?.length ?? 0) - 1);
+
+		const mainlineChildId = (node.childIds?.[0] as ExplorerNodeId | undefined) ?? undefined;
+		const activeChildId = (node.activeChildId as ExplorerNodeId | undefined) ?? undefined;
+
+		// If there is no active child or no mainline child, treat as mainline (nothing to split)
+		const activeChildIsMainline =
+			!activeChildId || !mainlineChildId ? true : activeChildId === mainlineChildId;
+
+		return {
+			nodeId,
+			ply: node.ply,
+			...move,
+			variationCount,
+			activeChildIsMainline,
+			label: this.formatVariationLabel(node.ply, move.san, isLineStart),
+		};
+	}
+
+	private formatVariationLabel(ply: number, san: string, isLineStart: boolean): string {
+		const fullMove = Math.floor((ply + 1) / 2);
+
+		// White move => always show move number (like "5.O-O")
+		if (ply % 2 === 1) return `${fullMove}.${san}`;
+
+		// Black move => show "5...c5" only if line starts on black
+		return isLineStart ? `${fullMove}...${san}` : san;
 	}
 
 	// ---------------------------------------------------------------------------

@@ -6,8 +6,8 @@
  *
  * Responsibilities:
  * - Own a single ExplorerSession instance for the whole application lifetime.
- * - Expose UI-friendly reactive state using Angular signals (mode, source, fen, ply, moves, ...).
- * - Provide an imperative API for UI actions (reset, navigation, loaders, move attempts).
+ * - Expose UI-friendly reactive state using Angular signals (mode, source, fen, cursor, move list).
+ * - Provide an imperative API for UI intents (reset, navigation, loaders, move attempts).
  * - Translate core results into UI state:
  *   - refresh signals after successful actions
  *   - expose lastError when an action fails
@@ -26,10 +26,15 @@ import type {
 	ExplorerDbGameMeta,
 	ExplorerError,
 	ExplorerMode,
-	ExplorerMove,
 	ExplorerMoveAttempt,
+	ExplorerMoveListRow,
 	ExplorerSessionSource,
+	ExplorerVariationLine,
 	PromotionPiece,
+	// NOTE:
+	// Keep this ONLY if some UI still consumes `facade.moves()`.
+	// If not used anywhere anymore, you can safely remove it + the related signal.
+	ExplorerMainlineMove,
 } from 'my-chess-opening-core/explorer';
 
 /**
@@ -79,8 +84,24 @@ export class ExplorerFacade {
 	/** Current ply (0 = root). */
 	private readonly _ply = signal<number>(this.session.getCurrentPly());
 
-	/** Active line move list (UI-ready). */
-	private readonly _moves = signal<ExplorerMove[]>(this.session.getActiveLineMoves());
+	/**
+	 * Current cursor node id (required to target moves inside variations).
+	 * Stored as string for UI convenience.
+	 */
+	private readonly _currentNodeId = signal<string>(this.session.getCurrentNodeId());
+
+	/**
+	 * MoveList view model (mainline rows + variations mapping).
+	 * These are UI-ready and should be preferred over old "flat moves" lists.
+	 */
+	private readonly _moveListRows = signal<ExplorerMoveListRow[]>([]);
+	private readonly _variationsByNodeId = signal<Record<string, ExplorerVariationLine[]>>({});
+
+	/**
+	 * Legacy mainline list (flat half-moves), with variationCount.
+	 * Keep only if still used by another component. Otherwise remove.
+	 */
+	private readonly _moves = signal<ExplorerMainlineMove[]>(this.session.getMainlineMovesWithMeta());
 
 	/** Navigation capabilities derived from the core cursor. */
 	private readonly _canPrev = signal<boolean>(this.session.canGoPrev());
@@ -95,6 +116,12 @@ export class ExplorerFacade {
 	/** Squares of the last applied move (used by the board adapter for highlighting). */
 	private readonly _lastMoveSquares = signal<LastMoveSquares>(null);
 
+	/**
+	 * "Tick" signal used to re-run computed selectors that call into the core session directly.
+	 * We do NOT mirror every core selector as a signal; instead we refresh this tick on updates.
+	 */
+	private readonly _rev = signal(0);
+
 	// ---------------------------------------------------------------------------
 	// Public readonly signals (what the UI should consume)
 	// ---------------------------------------------------------------------------
@@ -103,6 +130,12 @@ export class ExplorerFacade {
 	readonly source = this._source.asReadonly();
 	readonly fen = this._fen.asReadonly();
 	readonly ply = this._ply.asReadonly();
+
+	readonly currentNodeId = this._currentNodeId.asReadonly();
+	readonly moveListRows = this._moveListRows.asReadonly();
+	readonly variationsByNodeId = this._variationsByNodeId.asReadonly();
+
+	// Legacy (remove if unused)
 	readonly moves = this._moves.asReadonly();
 
 	readonly canPrev = this._canPrev.asReadonly();
@@ -111,6 +144,25 @@ export class ExplorerFacade {
 	/** Convenience signals for UI buttons. */
 	readonly canStart = computed(() => this._canPrev());
 	readonly canEnd = computed(() => this._canNext());
+
+	/**
+	 * Variation cycling availability depends on the current cursor context inside the core.
+	 * We re-evaluate after each refresh using the `_rev` tick dependency.
+	 */
+	readonly canPrevVariation = computed(() => {
+		this._rev();
+		return this.session.canGoPrevVariation();
+	});
+
+	readonly canNextVariation = computed(() => {
+		this._rev();
+		return this.session.canGoNextVariation();
+	});
+
+	readonly variationInfo = computed(() => {
+		this._rev();
+		return this.session.getVariationInfoAtCurrentPly();
+	});
 
 	readonly lastError = this._lastError.asReadonly();
 	readonly promotionPending = this._promotionPending.asReadonly();
@@ -125,9 +177,21 @@ export class ExplorerFacade {
 		source: this._source(),
 		fen: this._fen(),
 		ply: this._ply(),
+
+		currentNodeId: this._currentNodeId(),
+		moveListRows: this._moveListRows(),
+		variationsByNodeId: this._variationsByNodeId(),
+
+		// legacy
 		moves: this._moves(),
+
 		canPrev: this._canPrev(),
 		canNext: this._canNext(),
+
+		variationInfo: this.variationInfo(),
+		canPrevVariation: this.canPrevVariation(),
+		canNextVariation: this.canNextVariation(),
+
 		lastError: this._lastError(),
 		promotionPending: this._promotionPending(),
 		lastMoveSquares: this._lastMoveSquares(),
@@ -213,7 +277,7 @@ export class ExplorerFacade {
 	// ---------------------------------------------------------------------------
 
 	/**
-	 * All navigation methods clear UI transient state before moving the core cursor.
+	 * Navigation clears UI transient state before moving the core cursor.
 	 * This ensures errors/promotions don't remain visible after unrelated actions.
 	 */
 	goStart(): void {
@@ -240,9 +304,34 @@ export class ExplorerFacade {
 		this.refreshFromCore();
 	}
 
+	goPrevVariation(): void {
+		this.clearTransientUiState();
+		this.session.goPrevVariation();
+		this.refreshFromCore();
+	}
+
+	goNextVariation(): void {
+		this.clearTransientUiState();
+		this.session.goNextVariation();
+		this.refreshFromCore();
+	}
+
+	/**
+	 * Mainline-only navigation by ply.
+	 * For variations, use `goToNode(nodeId)`.
+	 */
 	goToPly(ply: number): void {
 		this.clearTransientUiState();
 		this.session.goToPly(ply);
+		this.refreshFromCore();
+	}
+
+	/**
+	 * Node-based navigation (required for clicking moves inside variations).
+	 */
+	goToNode(nodeId: string): void {
+		this.clearTransientUiState();
+		this.session.goToNode(nodeId as any);
 		this.refreshFromCore();
 	}
 
@@ -301,8 +390,7 @@ export class ExplorerFacade {
 	 *
 	 * Note:
 	 * - This method is optional depending on the UI approach.
-	 * - In the current implementation, cm-chessboard PromotionDialog can directly
-	 *   send promotion in `attemptMove`, so some screens may never call this.
+	 * - Some UIs can directly include promotion inside `attemptMove`.
 	 */
 	confirmPromotion(piece: PromotionPiece): void {
 		const pending = this._promotionPending();
@@ -319,17 +407,10 @@ export class ExplorerFacade {
 	// Public API — read-only helpers for board hinting (V1.2.5)
 	// ---------------------------------------------------------------------------
 
-	/**
-	 * Read-only helper for UI move hints (dots/hover/selection).
-	 * Returns legal destination squares for the side to move in the current position.
-	 */
 	getLegalDestinationsFrom(from: string): string[] {
 		return this.session.getLegalDestinationsFrom(from);
 	}
 
-	/**
-	 * Read-only helper for UI hinting: capture destinations (ring marker).
-	 */
 	getLegalCaptureDestinationsFrom(from: string): string[] {
 		return this.session.getLegalCaptureDestinationsFrom(from);
 	}
@@ -352,19 +433,30 @@ export class ExplorerFacade {
 	 * Must be called after any successful action that mutates the core.
 	 */
 	private refreshFromCore(): void {
+		// Core state
 		this._mode.set(this.session.getMode());
 		this._source.set(this.session.getSource());
 		this._fen.set(this.session.getCurrentFen());
 		this._ply.set(this.session.getCurrentPly());
+		this._currentNodeId.set(this.session.getCurrentNodeId());
 
-		this._moves.set(this.session.getActiveLineMoves());
+		// MoveList VM (preferred)
+		const vm = this.session.getMoveListViewModel();
+		this._moveListRows.set(vm.rows);
+		this._variationsByNodeId.set(vm.variationsByNodeId);
 
+		// Legacy mainline list (remove if unused)
+		this._moves.set(this.session.getMainlineMovesWithMeta());
+
+		// Navigation capabilities
 		this._canPrev.set(this.session.canGoPrev());
 		this._canNext.set(this.session.canGoNext());
 
-		// Derive last move squares from the current node incoming move.
-		// When at root, there is no incoming move -> clear the highlight.
+		// Derived last move squares (root has no incoming move)
 		const incoming = this.session.getCurrentNode().incomingMove;
 		this._lastMoveSquares.set(incoming ? { from: incoming.from, to: incoming.to } : null);
+
+		// Notify computed selectors that depend on core (canPrevVariation, variationInfo, ...)
+		this._rev.update((v) => v + 1);
 	}
 }

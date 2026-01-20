@@ -1,79 +1,115 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 
-import type { ExplorerMove } from 'my-chess-opening-core/explorer';
-
-type MoveRow = {
-	moveNumber: number;
-	white?: ExplorerMove;
-	black?: ExplorerMove;
-	whitePly?: number;
-	blackPly?: number;
-};
+import type { ExplorerMoveListRow, ExplorerVariationLine } from 'my-chess-opening-core/explorer';
 
 @Component({
 	selector: 'app-move-list',
 	standalone: true,
-	imports: [CommonModule, MatButtonModule],
+	imports: [CommonModule, MatButtonModule, MatIconModule],
 	templateUrl: './move-list.component.html',
 	styleUrl: './move-list.component.scss',
 })
 export class MoveListComponent {
 	/**
-	 * Presentational move list for the Explorer.
+	 * MoveListComponent (Explorer / UI)
 	 *
-	 * - Displays SAN moves grouped by full-moves (white/black).
-	 * - Highlights the current ply.
-	 * - Emits "plySelected" when the user clicks a move.
+	 * Single move list that renders:
+	 * - Mainline rows (1 row = 1 full move: white + black)
+	 * - Variation blocks rendered under the move that has alternative continuations
+	 *
+	 * Interaction model:
+	 * - Selection/navigation is **node-based** (nodeId), not ply-based.
+	 * - The component is presentational: it emits intents, the parent decides actions.
 	 */
 
-	private _moves: ExplorerMove[] = [];
-	rows: MoveRow[] = [];
+	// ---------------------------------------------------------------------------
+	// Inputs
+	// ---------------------------------------------------------------------------
 
-	@Input()
-	set moves(value: ExplorerMove[]) {
-		this._moves = value ?? [];
-		this.rows = this.buildRows(this._moves);
+	/** Mainline rows (already grouped by full-move number). */
+	@Input({ required: true }) rows: ExplorerMoveListRow[] = [];
+
+	/**
+	 * Variations indexed by nodeId.
+	 *
+	 * Key: nodeId representing the position AFTER the move token.
+	 * Value: variation lines that start from alternative children of that node.
+	 */
+	@Input() variationsByNodeId: Record<string, ExplorerVariationLine[]> = {};
+
+	/** Currently selected node id (for highlighting). */
+	@Input() currentNodeId = '';
+
+	// ---------------------------------------------------------------------------
+	// Outputs (UI intents)
+	// ---------------------------------------------------------------------------
+
+	/** Emitted when a move token is clicked (nodeId). */
+	@Output() nodeSelected = new EventEmitter<string>();
+
+	/**
+	 * Optional variation cycling intents (kept for future use / debugging).
+	 * Note: current UI mostly uses direct clicking inside variation lines.
+	 */
+	@Output() prevVariationAtNode = new EventEmitter<string>();
+	@Output() nextVariationAtNode = new EventEmitter<string>();
+
+	// ---------------------------------------------------------------------------
+	// UI actions
+	// ---------------------------------------------------------------------------
+
+	/** UI intent: navigate to a specific node. */
+	selectNode(nodeId: string): void {
+		this.nodeSelected.emit(nodeId);
 	}
-	get moves(): ExplorerMove[] {
-		return this._moves;
+
+	/** UI intent: cycle to previous variation at a given node. */
+	cyclePrevVariation(nodeId: string): void {
+		this.prevVariationAtNode.emit(nodeId);
 	}
 
-	/** Current ply in the explorer (used to highlight the active move). */
-	@Input() currentPly = 0;
+	/** UI intent: cycle to next variation at a given node. */
+	cycleNextVariation(nodeId: string): void {
+		this.nextVariationAtNode.emit(nodeId);
+	}
 
-	/** Emitted when a move is clicked (ply index starting at 1). */
-	@Output() plySelected = new EventEmitter<number>();
+	// ---------------------------------------------------------------------------
+	// Rendering helpers
+	// ---------------------------------------------------------------------------
 
-	/** Emit the selected ply (UI intent only). */
-	selectPly(ply: number): void {
-		this.plySelected.emit(ply);
+	/**
+	 * When a white move has variations AND the currently active continuation
+	 * after that white move is NOT the mainline continuation, we render the black
+	 * mainline move as a split continuation:
+	 *
+	 * - mainline row shows: "white | …"
+	 * - variations are displayed under the row
+	 * - then we render: "… | blackMainlineMove"
+	 */
+	shouldSplitBlack(row: ExplorerMoveListRow): boolean {
+		const w = row.white;
+		return Boolean(w && row.black && w.variationCount > 0 && w.activeChildIsMainline === false);
 	}
 
 	/**
-	 * Convert a flat half-move list into grouped rows:
-	 * - row 1: white ply 1, black ply 2
-	 * - row 2: white ply 3, black ply 4
-	 * etc.
+	 * Used to decide whether a variation block should be anchored as full-width
+	 * (under white) or right-side (under black).
+	 *
+	 * Convention:
+	 * - ply 1 = white move (odd)
+	 * - ply 2 = black move (even)
 	 */
-	private buildRows(moves: ExplorerMove[]): MoveRow[] {
-		const out: MoveRow[] = [];
-		for (let i = 0; i < moves.length; i += 2) {
-			const moveNumber = Math.floor(i / 2) + 1;
+	variationStartsWithWhite(lines: ExplorerVariationLine[]): boolean {
+		const first = lines?.[0]?.tokens?.[0];
+		if (!first) return true;
+		return first.ply % 2 === 1;
+	}
 
-			const white = moves[i];
-			const black = moves[i + 1];
-
-			out.push({
-				moveNumber,
-				white,
-				black,
-				whitePly: i + 1,
-				blackPly: black ? i + 2 : undefined,
-			});
-		}
-		return out;
+	/** Returns variation lines attached to a given node. */
+	getVariations(nodeId: string): ExplorerVariationLine[] {
+		return this.variationsByNodeId[nodeId] ?? [];
 	}
 }

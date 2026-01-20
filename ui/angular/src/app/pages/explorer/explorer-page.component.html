@@ -30,9 +30,10 @@
 
 	<section class="explorer-col explorer-col--right">
 		<app-move-list
-			[moves]="facade.moves()"
-			[currentPly]="facade.ply()"
-			(plySelected)="onPlySelected($event)"
-		/>
+			[rows]="facade.moveListRows()"
+			[variationsByNodeId]="facade.variationsByNodeId()"
+			[currentNodeId]="facade.currentNodeId()"
+			(nodeSelected)="onNodeSelected($event)"
+		></app-move-list>
 	</section>
 </div>

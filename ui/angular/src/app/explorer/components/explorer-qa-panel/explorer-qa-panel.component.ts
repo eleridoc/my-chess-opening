@@ -5,8 +5,8 @@ import {
 	Output,
 	computed,
 	effect,
-	signal,
 	isDevMode,
+	signal,
 } from '@angular/core';
 
 import { MatButtonModule } from '@angular/material/button';
@@ -52,26 +52,46 @@ type QaCheckItem = {
 export class ExplorerQaPanelComponent {
 	/**
 	 * QA / Debug panel for Explorer.
+	 *
+	 * Design:
 	 * - Dev-only by default (isDevMode()).
 	 * - Collapsible with persisted state (localStorage).
 	 * - Provides scenarios, stress actions, event log, and a smoke checklist.
 	 *
-	 * Important:
+	 * Note:
 	 * - We inject ExplorerFacade instead of passing it via @Input.
-	 *   This guarantees effects run in a valid injection context (no NG0203),
-	 *   and it always uses the same facade instance as the Explorer page.
+	 *   This ensures effects always run in a valid injection context
+	 *   and the panel uses the same facade instance as the Explorer page.
 	 */
+
+	// -------------------------------------------------------------------------
+	// Outputs (page can react to collapsed state changes)
+	// -------------------------------------------------------------------------
 
 	@Output() collapsedChange = new EventEmitter<boolean>();
 
+	// -------------------------------------------------------------------------
+	// Persisted UI state
+	// -------------------------------------------------------------------------
+
 	private readonly storageKeyCollapsed = 'mco.explorer.qa.collapsed';
 
+	/** Whether the QA panel should be displayed at all (dev-only default). */
 	readonly visible = signal<boolean>(isDevMode());
+
+	/** Collapsed UI state (persisted in localStorage). */
 	readonly collapsed = signal<boolean>(this.readCollapsedFromStorage());
 
+	// -------------------------------------------------------------------------
+	// Logs & checklist state
+	// -------------------------------------------------------------------------
+
 	private logSeq = 1;
+
+	/** Latest entries first (bounded to avoid unlimited growth). */
 	readonly logs = signal<QaLogEntry[]>([]);
 
+	/** Simple smoke checklist to validate interactions quickly. */
 	readonly checks = signal<QaCheckItem[]>([
 		{ id: 'start-play-prev-next', label: 'start → play → prev/next', done: false },
 		{ id: 'goto-ply', label: 'goToPly (several values)', done: false },
@@ -82,24 +102,26 @@ export class ExplorerQaPanelComponent {
 		{ id: 'promotion', label: 'promotion pending + resolve', done: false },
 	]);
 
+	/** Short FEN display for chips (keeps the card readable). */
 	readonly fenShort = computed(() => {
 		const fen = this.facade.fen();
 		return fen.length > 40 ? `${fen.slice(0, 40)}…` : fen;
 	});
 
 	constructor(public readonly facade: ExplorerFacade) {
-		// Emit initial collapsed state so the page can react if needed.
+		// Emit initial collapsed state so parent can adapt layout if needed.
 		queueMicrotask(() => this.collapsedChange.emit(this.collapsed()));
 
 		// Effects must run inside an injection context -> constructor is OK.
-		let init = false;
+		let initialized = false;
 
+		// Session changes: log and run dev asserts.
 		effect(() => {
 			const ply = this.facade.ply();
 			const fen = this.facade.fen();
 
-			if (!init) {
-				init = true;
+			if (!initialized) {
+				initialized = true;
 				this.addLog('INFO', `QA ready (ply=${ply})`);
 				return;
 			}
@@ -108,6 +130,7 @@ export class ExplorerQaPanelComponent {
 			this.devAsserts();
 		});
 
+		// Core errors: log as ERROR.
 		effect(() => {
 			const err = this.facade.lastError();
 			if (!err) return;
@@ -115,6 +138,7 @@ export class ExplorerQaPanelComponent {
 			this.devAsserts();
 		});
 
+		// Promotion workflow: log as WARN.
 		effect(() => {
 			const pending = this.facade.promotionPending();
 			if (!pending) return;
@@ -144,7 +168,21 @@ export class ExplorerQaPanelComponent {
 	}
 
 	// -------------------------------------------------------------------------
-	// Scenarios
+	// Variation helpers (uses core navigation rules via the facade)
+	// -------------------------------------------------------------------------
+
+	prevVariation(): void {
+		this.facade.goPrevVariation();
+		this.addLog('INFO', 'Action: prevVariation()');
+	}
+
+	nextVariation(): void {
+		this.facade.goNextVariation();
+		this.addLog('INFO', 'Action: nextVariation()');
+	}
+
+	// -------------------------------------------------------------------------
+	// Scenarios (quick setups for manual testing)
 	// -------------------------------------------------------------------------
 
 	loadInitial(): void {
@@ -172,6 +210,7 @@ export class ExplorerQaPanelComponent {
 	}
 
 	loadPromotionFen(): void {
+		// White to move: pawn on a7 can promote on a8.
 		const fen = '4k3/P7/8/8/8/8/8/4K3 w - - 0 1';
 		this.facade.reset();
 		this.facade.loadFenForCase1(fen);
@@ -179,6 +218,7 @@ export class ExplorerQaPanelComponent {
 	}
 
 	triggerPromotionAttempt(): void {
+		// Intentionally missing promotion piece -> should trigger PROMOTION_REQUIRED.
 		const ok = this.facade.attemptMove({ from: 'a7', to: 'a8' });
 		this.addLog('INFO', `Attempt move a7→a8 (ok=${ok})`);
 	}
@@ -208,7 +248,7 @@ export class ExplorerQaPanelComponent {
 		this.facade.attemptMove({ from: 'e2', to: 'e4' });
 		this.facade.attemptMove({ from: 'e7', to: 'e5' });
 
-		// Go back to ply 1 (after 1.e4), then branch: 1...c5
+		// Branch at ply 1 (after 1.e4): create 1...c5
 		this.facade.goToPly(1);
 		this.facade.attemptMove({ from: 'c7', to: 'c5' });
 
@@ -216,7 +256,7 @@ export class ExplorerQaPanelComponent {
 	}
 
 	// -------------------------------------------------------------------------
-	// Stress actions
+	// Stress actions (rapid navigation)
 	// -------------------------------------------------------------------------
 
 	nextSpam(n = 30): void {
@@ -258,6 +298,10 @@ export class ExplorerQaPanelComponent {
 		this.logs.update((prev) => [entry, ...prev].slice(0, 120));
 	}
 
+	/**
+	 * Lightweight assertions for dev builds only.
+	 * Helps detect session/model drift while iterating quickly.
+	 */
 	private devAsserts(): void {
 		if (!isDevMode()) return;
 
@@ -283,7 +327,7 @@ export class ExplorerQaPanelComponent {
 		try {
 			window.localStorage.setItem(this.storageKeyCollapsed, v ? '1' : '0');
 		} catch {
-			// ignore
+			// ignore (storage might be blocked)
 		}
 	}
 }

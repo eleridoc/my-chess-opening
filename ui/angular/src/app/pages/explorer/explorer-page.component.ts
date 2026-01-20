@@ -71,6 +71,26 @@ export class ExplorerPageComponent {
 		this.facade.goEnd();
 	}
 
+	onPrevVariationAtPly(ply: number): void {
+		// Only reposition if we are not already at that ply.
+		if (this.facade.ply() !== ply) {
+			this.facade.goToPly(ply);
+		}
+		this.facade.goPrevVariation();
+	}
+
+	onNextVariationAtPly(ply: number): void {
+		// Only reposition if we are not already at that ply.
+		if (this.facade.ply() !== ply) {
+			this.facade.goToPly(ply);
+		}
+		this.facade.goNextVariation();
+	}
+
+	onNodeSelected(nodeId: string): void {
+		this.facade.goToNode(nodeId);
+	}
+
 	// Keep it synchronous: core + facade are synchronous today.
 	readonly validateMoveAttempt = (attempt: ExplorerMoveAttempt): boolean => {
 		return this.facade.attemptMove(attempt);

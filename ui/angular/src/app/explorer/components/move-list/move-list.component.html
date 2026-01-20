@@ -4,28 +4,201 @@
 	<div class="empty" *ngIf="!rows.length">No moves yet.</div>
 
 	<div class="rows" *ngIf="rows.length">
-		<div class="row" *ngFor="let row of rows">
-			<div class="num">{{ row.moveNumber }}.</div>
+		<ng-container *ngFor="let row of rows">
+			<!--
+        We always have a white token for a mainline row (except weird states).
+        We cache variations arrays with `as ...` to avoid calling getVariations repeatedly.
+      -->
+			<ng-container *ngIf="row.white as w">
+				<ng-container *ngIf="getVariations(w.nodeId) as wVars">
+					<!-- ============================================================
+             CASE A: row has a black move (normal full-move row)
+             ============================================================ -->
+					<ng-container *ngIf="row.black as b; else noBlack">
+						<!-- Cache black variations too -->
+						<ng-container *ngIf="getVariations(b.nodeId) as bVars">
+							<!--
+                Main row (white | black)
+                - black cell may be split into "…" placeholder if we want Lichess-like layout
+              -->
+							<div class="row">
+								<div class="num">{{ row.moveNumber }}.</div>
 
-			<button
-				mat-button
-				class="ply"
-				[class.active]="row.whitePly === currentPly"
-				(click)="row.whitePly && selectPly(row.whitePly)"
-				*ngIf="row.white"
-			>
-				{{ row.white.san }}
-			</button>
+								<!-- WHITE CELL -->
+								<div class="ply-group">
+									<button
+										mat-button
+										class="ply"
+										[class.active]="w.nodeId === currentNodeId"
+										(click)="selectNode(w.nodeId)"
+									>
+										{{ w.san }}
+									</button>
 
-			<button
-				mat-button
-				class="ply"
-				[class.active]="row.blackPly === currentPly"
-				(click)="row.blackPly && selectPly(row.blackPly)"
-				*ngIf="row.black"
-			>
-				{{ row.black.san }}
-			</button>
-		</div>
+									<span class="move__var" *ngIf="w.variationCount > 0">
+										(+{{ w.variationCount }})
+									</span>
+								</div>
+
+								<!-- BLACK CELL -->
+								<div class="ply-group">
+									<!-- If a non-mainline black reply is active, show "…" like Lichess -->
+									<ng-container *ngIf="shouldSplitBlack(row); else blackNormal">
+										<span class="ply-placeholder">…</span>
+									</ng-container>
+
+									<ng-template #blackNormal>
+										<button
+											mat-button
+											class="ply"
+											[class.active]="b.nodeId === currentNodeId"
+											(click)="selectNode(b.nodeId)"
+										>
+											{{ b.san }}
+										</button>
+
+										<span class="move__var" *ngIf="b.variationCount > 0">
+											(+{{ b.variationCount }})
+										</span>
+									</ng-template>
+								</div>
+							</div>
+
+							<!--
+                Variations after WHITE move (i.e. alternative black replies)
+                - Anchored below the row (you chose full width by using `.var-cell` without --black)
+              -->
+							<div class="var-block" *ngIf="wVars.length">
+								<div class="num"></div>
+								<div class="var-cell">
+									<ng-container *ngFor="let line of wVars">
+										<ng-container
+											*ngTemplateOutlet="lineTpl; context: { $implicit: line, depth: 1 }"
+										></ng-container>
+									</ng-container>
+								</div>
+							</div>
+
+							<!--
+                If split: show the mainline black move AFTER variations as "... | Be7"
+              -->
+							<div class="row row--continuation" *ngIf="shouldSplitBlack(row)">
+								<div class="num">{{ row.moveNumber }}.</div>
+
+								<div class="ply-group ply-group--placeholder">
+									<span class="ply-placeholder">…</span>
+								</div>
+
+								<div class="ply-group">
+									<button
+										mat-button
+										class="ply"
+										[class.active]="b.nodeId === currentNodeId"
+										(click)="selectNode(b.nodeId)"
+									>
+										{{ b.san }}
+									</button>
+
+									<span class="move__var" *ngIf="b.variationCount > 0">
+										(+{{ b.variationCount }})
+									</span>
+								</div>
+							</div>
+
+							<!--
+                Variations after BLACK move (i.e. alternative white replies)
+                - If variation starts with WHITE, use full width (var-cell--white)
+                - Otherwise anchor under black column (var-cell--black)
+              -->
+							<div class="var-block" *ngIf="bVars.length">
+								<div class="num"></div>
+
+								<div
+									class="var-cell"
+									[class.var-cell--white]="variationStartsWithWhite(bVars)"
+									[class.var-cell--black]="!variationStartsWithWhite(bVars)"
+								>
+									<ng-container *ngFor="let line of bVars">
+										<ng-container
+											*ngTemplateOutlet="lineTpl; context: { $implicit: line, depth: 1 }"
+										></ng-container>
+									</ng-container>
+								</div>
+							</div>
+						</ng-container>
+					</ng-container>
+
+					<!-- ============================================================
+             CASE B: row has no black move (game ended on white move)
+             ============================================================ -->
+					<ng-template #noBlack>
+						<div class="row">
+							<div class="num">{{ row.moveNumber }}.</div>
+
+							<!-- WHITE CELL -->
+							<div class="ply-group">
+								<button
+									mat-button
+									class="ply"
+									[class.active]="w.nodeId === currentNodeId"
+									(click)="selectNode(w.nodeId)"
+								>
+									{{ w.san }}
+								</button>
+
+								<span class="move__var" *ngIf="w.variationCount > 0">
+									(+{{ w.variationCount }})
+								</span>
+							</div>
+
+							<!-- BLACK CELL (empty) -->
+							<div class="ply-group"></div>
+						</div>
+
+						<!-- Variations after WHITE move -->
+						<div class="var-block" *ngIf="wVars.length">
+							<div class="num"></div>
+							<div class="var-cell">
+								<ng-container *ngFor="let line of wVars">
+									<ng-container
+										*ngTemplateOutlet="lineTpl; context: { $implicit: line, depth: 1 }"
+									></ng-container>
+								</ng-container>
+							</div>
+						</div>
+					</ng-template>
+				</ng-container>
+			</ng-container>
+		</ng-container>
 	</div>
+
+	<!-- ============================================================
+     Variation line template (recursive)
+     ============================================================ -->
+	<ng-template #lineTpl let-line let-depth="depth">
+		<div class="var-line" [style.padding-left.px]="depth * 14">
+			<span class="var-line__elbow"></span>
+
+			<!-- Tokens in this variation line -->
+			<ng-container *ngFor="let t of line.tokens">
+				<button
+					mat-button
+					class="var-move"
+					[class.active]="t.nodeId === currentNodeId"
+					(click)="selectNode(t.nodeId)"
+				>
+					{{ t.label }}
+				</button>
+			</ng-container>
+		</div>
+
+		<!-- Recursive: render sub-variations under any token that has them -->
+		<ng-container *ngFor="let t of line.tokens">
+			<ng-container *ngFor="let sub of getVariations(t.nodeId)">
+				<ng-container
+					*ngTemplateOutlet="lineTpl; context: { $implicit: sub, depth: depth + 1 }"
+				></ng-container>
+			</ng-container>
+		</ng-container>
+	</ng-template>
 </div>

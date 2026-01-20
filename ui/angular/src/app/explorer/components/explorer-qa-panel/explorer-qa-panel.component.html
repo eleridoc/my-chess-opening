@@ -1,5 +1,21 @@
+<!--
+	QA Panel (Explorer / UI)
+
+	Purpose:
+	- Lightweight debug/QA surface for the Explorer feature.
+	- Lets you quickly exercise core scenarios (reset/load/apply moves/navigation).
+	- Shows transient session state (mode/source/ply/fen, lastError, promotion workflow).
+	- Provides stress buttons and a simple smoke checklist.
+	- Displays a small event log for quick inspection during dev.
+
+	Notes:
+	- This is intentionally UI-only and should not contain any domain logic.
+	- All actions call methods on the page/component TS, which delegates to ExplorerFacade.
+-->
+
 <ng-container *ngIf="visible()">
 	<div class="qa" [class.qa--collapsed]="collapsed()">
+		<!-- Top bar (collapse/expand + title + clear) -->
 		<div class="qa__top">
 			<button mat-icon-button (click)="toggleCollapsed()" aria-label="Toggle QA panel">
 				<mat-icon>{{ collapsed() ? 'chevron_right' : 'chevron_left' }}</mat-icon>
@@ -14,7 +30,9 @@
 			</button>
 		</div>
 
+		<!-- Collapsible content -->
 		<ng-container *ngIf="!collapsed()">
+			<!-- Session snapshot + transient states (error/promotion) -->
 			<mat-card class="qa__card">
 				<mat-card-title>Session</mat-card-title>
 				<mat-card-content>
@@ -25,11 +43,13 @@
 						<mat-chip>FEN: {{ fenShort() }}</mat-chip>
 					</mat-chip-set>
 
+					<!-- Last error raised by a facade action -->
 					<div class="qa__error" *ngIf="facade.lastError() as err">
 						<div class="qa__error-code">{{ err.code }}</div>
 						<div class="qa__error-msg">{{ err.message }}</div>
 					</div>
 
+					<!-- Promotion workflow (when PROMOTION_REQUIRED is returned by the core) -->
 					<div class="qa__promo" *ngIf="facade.promotionPending() as p">
 						<div class="qa__promo-title">Promotion pending</div>
 						<div class="qa__promo-row">{{ p.from }} → {{ p.to }}</div>
@@ -43,6 +63,7 @@
 				</mat-card-content>
 			</mat-card>
 
+			<!-- Scenario helpers (load/reset/illegal/promotion/etc.) -->
 			<mat-card class="qa__card">
 				<mat-card-title>Scenarios</mat-card-title>
 				<mat-card-content class="qa__btns">
@@ -58,6 +79,7 @@
 				</mat-card-content>
 			</mat-card>
 
+			<!-- Stress actions (rapid navigation spam + goto shortcuts) -->
 			<mat-card class="qa__card">
 				<mat-card-title>Stress actions</mat-card-title>
 				<mat-card-content class="qa__btns">
@@ -73,6 +95,41 @@
 				</mat-card-content>
 			</mat-card>
 
+			<!-- Variation cycling (legacy / debug: cycles at current ply) -->
+			<mat-card class="qa__card">
+				<mat-card-title>Variations</mat-card-title>
+				<mat-card-content class="qa__btns">
+					<div class="qa__variation-row">
+						<button
+							mat-stroked-button
+							(click)="prevVariation()"
+							[disabled]="!facade.canPrevVariation()"
+						>
+							Prev variation
+						</button>
+
+						<button
+							mat-stroked-button
+							(click)="nextVariation()"
+							[disabled]="!facade.canNextVariation()"
+						>
+							Next variation
+						</button>
+					</div>
+
+					<!-- Current variation index/count (1-based in UI) -->
+					<div class="qa__variation-info" *ngIf="facade.variationInfo() as v">
+						Current: {{ v.index + 1 }} / {{ v.count }}
+					</div>
+
+					<!-- No variation available at the current ply -->
+					<div class="qa__variation-info" *ngIf="!facade.variationInfo()">
+						No variation at current ply.
+					</div>
+				</mat-card-content>
+			</mat-card>
+
+			<!-- Simple checklist for manual smoke testing -->
 			<mat-card class="qa__card">
 				<mat-card-title>Smoke checklist</mat-card-title>
 				<mat-card-content class="qa__checks">
@@ -84,6 +141,7 @@
 				</mat-card-content>
 			</mat-card>
 
+			<!-- Event log (dev-only visibility) -->
 			<mat-card class="qa__card">
 				<mat-card-title>Event log</mat-card-title>
 				<mat-card-content class="qa__logs">

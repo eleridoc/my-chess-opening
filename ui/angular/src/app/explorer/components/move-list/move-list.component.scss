@@ -1,11 +1,20 @@
+/* ==========================================================================
+   MoveList (Explorer) — styles
+   - Mainline rows: "moveNumber | white | black"
+   - Variation blocks: indented inline lines under the relevant move
+   ========================================================================== */
+
 .move-list {
-	// border-radius: 12px;
 	background: var(--mat-sys-surface-container, rgba(255, 255, 255, 0.04));
 	box-shadow:
 		0 1px 0 rgba(255, 255, 255, 0.04),
 		0 8px 24px rgba(0, 0, 0, 0.2);
 	padding: 12px;
 }
+
+/* --------------------------------------------------------------------------
+   Header / empty state
+   -------------------------------------------------------------------------- */
 
 .header {
 	font-weight: 700;
@@ -17,6 +26,10 @@
 	font-size: 13px;
 	padding: 8px 0;
 }
+
+/* --------------------------------------------------------------------------
+   Mainline grid (rows)
+   -------------------------------------------------------------------------- */
 
 .rows {
 	display: grid;
@@ -30,6 +43,11 @@
 	gap: 4px;
 }
 
+/* When we render a split black move as "... | Be7", visually glue it */
+.row--continuation {
+	margin-top: -2px;
+}
+
 .num {
 	opacity: 0.7;
 	font-size: 12px;
@@ -37,11 +55,113 @@
 	padding-right: 6px;
 }
 
+/* --------------------------------------------------------------------------
+   Ply cells (mainline)
+   - inline layout: SAN button + (+n) or placeholder
+   -------------------------------------------------------------------------- */
+
+.ply-group {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	min-width: 0;
+}
+
+.ply-group--placeholder {
+	opacity: 0.85;
+}
+
+/* SAN buttons (mainline + variations reuse mat-button reset) */
 .ply {
 	justify-content: flex-start;
+	min-width: 0;
 }
 
 .ply.active {
+	font-weight: 800;
+	text-decoration: underline;
+}
+
+/* "…" placeholder (used when black move is split like Lichess) */
+.ply-placeholder {
+	display: inline-flex;
+	align-items: center;
+	justify-content: flex-start;
+	min-height: 32px;
+	padding: 0 8px;
+	border-radius: 999px;
+	opacity: 0.75;
+	font-weight: 700;
+	user-select: none;
+}
+
+/* (+n) indicator */
+.move__var {
+	margin-left: 2px;
+	font-size: 12px;
+	opacity: 0.75;
+	font-weight: 700;
+	white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   Variation blocks (displayed under moves)
+   - same 3-col grid as main rows to align with move numbers
+   -------------------------------------------------------------------------- */
+
+.var-block {
+	display: grid;
+	grid-template-columns: 36px 1fr 1fr;
+	align-items: start;
+	gap: 4px;
+}
+
+/* Base container for variation lines */
+.var-cell {
+	border-left: 2px solid rgba(255, 255, 255, 0.12);
+	padding-left: 10px;
+	padding-top: 2px;
+	padding-bottom: 2px;
+}
+
+/* Full-width under mainline row (covers white+black columns) */
+.var-cell--white {
+	grid-column: 2 / -1;
+}
+
+/* Right-side alignment (starts under black column) */
+.var-cell--black {
+	grid-column: 3 / -1;
+}
+
+/* One variation line: inline list of move tokens, indented by depth (inline style in template) */
+.var-line {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	align-items: center;
+	min-height: 30px;
+	position: relative;
+}
+
+/* Small elbow before each line */
+.var-line__elbow {
+	width: 10px;
+	height: 1px;
+	background: rgba(255, 255, 255, 0.12);
+	display: inline-block;
+	margin-right: 6px;
+}
+
+/* Move tokens inside variation lines */
+.var-move {
+	min-width: 0;
+	padding: 0 6px;
+	justify-content: flex-start;
+	line-height: 28px;
+}
+
+.var-move.active {
 	font-weight: 800;
 	text-decoration: underline;
 }
