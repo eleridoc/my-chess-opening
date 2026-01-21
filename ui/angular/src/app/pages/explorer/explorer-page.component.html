@@ -4,6 +4,17 @@
 	</section>
 
 	<section class="explorer-col explorer-col--main">
+		<div class="explorer-board-center">
+			<app-chess-board
+				[fen]="facade.fen()"
+				[inputEnabled]="inputEnabled()"
+				[validateMoveAttempt]="validateMoveAttempt"
+				[lastMoveSquares]="facade.lastMoveSquares()"
+				[getLegalDestinationsFrom]="getLegalDestinationsFrom"
+				[getLegalCaptureDestinationsFrom]="getLegalCaptureDestinationsFrom"
+			/>
+		</div>
+
 		<app-board-controls
 			[canStart]="facade.canStart()"
 			[canPrev]="facade.canPrev()"
@@ -15,17 +26,6 @@
 			(next)="onNext()"
 			(end)="onEnd()"
 		/>
-
-		<div class="explorer-board-center">
-			<app-chess-board
-				[fen]="facade.fen()"
-				[inputEnabled]="inputEnabled()"
-				[validateMoveAttempt]="validateMoveAttempt"
-				[lastMoveSquares]="facade.lastMoveSquares()"
-				[getLegalDestinationsFrom]="getLegalDestinationsFrom"
-				[getLegalCaptureDestinationsFrom]="getLegalCaptureDestinationsFrom"
-			/>
-		</div>
 	</section>
 
 	<section class="explorer-col explorer-col--right">

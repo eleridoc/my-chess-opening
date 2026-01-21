@@ -27,6 +27,13 @@ export const routes: Routes = [
 			{ path: 'dashboard', component: DashboardPageComponent },
 			{ path: 'games', component: GamesPageComponent },
 			{ path: 'explorer', component: ExplorerPageComponent },
+			{
+				path: 'test-mat',
+				loadComponent: () =>
+					import('./pages/test/test-mat/test-mat-page.component').then(
+						(m) => m.TestMatPageComponent,
+					),
+			},
 			{ path: 'import', component: ImportPageComponent },
 
 			{

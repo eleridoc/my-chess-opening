@@ -1,0 +1,109 @@
+:host {
+	display: block;
+	height: 100%;
+}
+
+/* Page uses theme tokens (Material 3) */
+.page {
+	height: 100%;
+	display: grid;
+	grid-template-rows: auto 1fr;
+	background: var(--mat-sys-background);
+	color: var(--mat-sys-on-surface);
+}
+
+.toolbar {
+	/* Toolbar already uses color="primary"; keep spacing consistent */
+	box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.spacer {
+	flex: 1;
+}
+
+.content {
+	padding: 16px;
+	overflow: auto;
+}
+
+.grid {
+	display: grid;
+	gap: 16px;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	align-items: start;
+}
+
+.card {
+	border: 1px solid var(--mat-sys-outline-variant);
+	background: var(--mat-sys-surface-container);
+	box-shadow: none;
+}
+
+.card--wide {
+	grid-column: 1 / -1;
+}
+
+.stack {
+	display: grid;
+	gap: 12px;
+}
+
+.row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+}
+
+.form {
+	display: grid;
+	gap: 12px;
+}
+
+.pad {
+	padding: 10px 0;
+	color: var(--mat-sys-on-surface-variant);
+}
+
+.slider-row {
+	display: grid;
+	gap: 6px;
+}
+
+.slider-label {
+	font-size: 12px;
+	opacity: 0.85;
+}
+
+.table {
+	width: 100%;
+	border-radius: 12px;
+	overflow: hidden;
+	border: 1px solid var(--mat-sys-outline-variant);
+}
+
+.tree-node {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+/* Sidenav demo area */
+.sidenav-demo {
+	height: 220px;
+	border: 1px solid var(--mat-sys-outline-variant);
+	border-radius: 12px;
+	overflow: hidden;
+	background: var(--mat-sys-surface);
+}
+
+.sidenav-content {
+	padding: 12px;
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+	.grid {
+		grid-template-columns: 1fr;
+	}
+}

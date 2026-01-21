@@ -5,11 +5,11 @@
    ========================================================================== */
 
 .move-list {
-	background: var(--mat-sys-surface-container, rgba(255, 255, 255, 0.04));
+	background: var(--mat-sys-surface-container);
 	box-shadow:
-		0 1px 0 rgba(255, 255, 255, 0.04),
+		0 1px 0 color-mix(in srgb, var(--mat-sys-outline-variant) 20%, transparent),
 		0 8px 24px rgba(0, 0, 0, 0.2);
-	padding: 12px;
+	padding: 0 0 12px 0;
 }
 
 /* --------------------------------------------------------------------------
@@ -19,6 +19,7 @@
 .header {
 	font-weight: 700;
 	margin-bottom: 10px;
+	padding: 12px 12px 0px 12px;
 }
 
 .empty {
@@ -40,7 +41,7 @@
 	display: grid;
 	grid-template-columns: 36px 1fr 1fr;
 	align-items: center;
-	gap: 4px;
+	//gap: 4px;
 }
 
 /* When we render a split black move as "... | Be7", visually glue it */
@@ -75,11 +76,8 @@
 .ply {
 	justify-content: flex-start;
 	min-width: 0;
-}
-
-.ply.active {
-	font-weight: 800;
-	text-decoration: underline;
+	color: color-mix(in srgb, var(--mat-sys-on-surface-variant) 80%, transparent);
+	border-radius: 6px !important;
 }
 
 /* "…" placeholder (used when black move is split like Lichess) */
@@ -118,39 +116,42 @@
 
 /* Base container for variation lines */
 .var-cell {
-	border-left: 2px solid rgba(255, 255, 255, 0.12);
+	border-top: 1px solid var(--mat-sys-outline-variant);
+	border-bottom: 1px solid var(--mat-sys-outline-variant);
+	margin: 5px 0;
 	padding-left: 10px;
 	padding-top: 2px;
 	padding-bottom: 2px;
+	background: var(--mat-sys-surface-container-high);
 }
 
 /* Full-width under mainline row (covers white+black columns) */
 .var-cell--white {
-	grid-column: 2 / -1;
+	grid-column: 1 / -1;
 }
 
-/* Right-side alignment (starts under black column) */
+/* Full-width under mainline row (covers white+black columns) */
 .var-cell--black {
-	grid-column: 3 / -1;
+	grid-column: 1 / -1;
 }
 
 /* One variation line: inline list of move tokens, indented by depth (inline style in template) */
 .var-line {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 6px;
+	gap: 2px;
 	align-items: center;
 	min-height: 30px;
 	position: relative;
+	font-size: 8px;
 }
 
 /* Small elbow before each line */
 .var-line__elbow {
 	width: 10px;
 	height: 1px;
-	background: rgba(255, 255, 255, 0.12);
+	background: var(--mat-sys-outline-variant);
 	display: inline-block;
-	margin-right: 6px;
 }
 
 /* Move tokens inside variation lines */
@@ -158,10 +159,17 @@
 	min-width: 0;
 	padding: 0 6px;
 	justify-content: flex-start;
-	line-height: 28px;
+	font-size: 12px;
+	font-style: italic;
+	color: color-mix(in srgb, var(--mat-sys-on-surface-variant) 70%, transparent);
+	border-radius: 6px !important;
 }
-
+.ply.active,
 .var-move.active {
 	font-weight: 800;
-	text-decoration: underline;
+	text-decoration: none;
+
+	color: var(--mat-sys-primary);
+	background: var(--mat-sys-surface-container-highest);
+	border-radius: 6px !important;
 }
