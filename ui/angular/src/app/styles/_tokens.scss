@@ -1,0 +1,75 @@
+/* ==========================================================================
+   Tokens (single source of truth)
+   - Put only CSS variables here
+   - No component selectors
+   ========================================================================== */
+
+/* Common scale tokens (shared across themes) */
+:root {
+	/* Spacing */
+	--app-page-pad-x: 20px;
+	--app-page-pad-top: 20px;
+	--app-page-pad-bottom: 20px;
+	--app-page-gap: 12px;
+
+	/* Radius */
+	--app-radius-md: 0px;
+	--app-radius-lg: 0px;
+
+	/* Shadows */
+	--app-shadow-panel: 0 12px 32px rgba(0, 0, 0, 0.35);
+
+	/* Buttons (keep your current “desktop app” feel) */
+	--app-button-radius: 0px;
+
+	/* Borders / separators / hover */
+	--app-border: rgba(255, 255, 255, 0.08);
+	--app-sep: rgba(255, 255, 255, 0.06);
+	--app-hover: rgba(255, 255, 255, 0.03);
+
+	/* Accent states */
+	--app-warn-border: rgba(255, 193, 7, 0.35);
+	--app-warn-bg: rgba(255, 193, 7, 0.1);
+
+	--app-error-border: rgba(244, 67, 54, 0.35);
+	--app-error-bg: rgba(244, 67, 54, 0.12);
+}
+
+/* Default = dark theme */
+body,
+body.theme-dark {
+	color-scheme: dark;
+
+	/* Background + main surfaces */
+	--app-bg: #181818;
+	--app-card: #1f1f1f;
+	--app-divider: #2b2b2b;
+
+	/* Pattern surfaces (used by app-patterns) */
+	--app-surface-0: transparent;
+	--app-surface-1: rgba(0, 0, 0, 0.1);
+	--app-surface-2: rgba(0, 0, 0, 0.12);
+	--app-surface-3: rgba(0, 0, 0, 0.18);
+	--app-surface-4: rgba(0, 0, 0, 0.22);
+}
+
+/* Light theme overrides */
+body.theme-light {
+	color-scheme: light;
+
+	--app-bg: #f3f3f3;
+	--app-card: #ffffff;
+	--app-divider: rgba(0, 0, 0, 0.12);
+
+	--app-border: rgba(0, 0, 0, 0.1);
+	--app-sep: rgba(0, 0, 0, 0.08);
+	--app-hover: rgba(0, 0, 0, 0.03);
+
+	--app-surface-0: transparent;
+	--app-surface-1: rgba(255, 255, 255, 0.55);
+	--app-surface-2: rgba(255, 255, 255, 0.72);
+	--app-surface-3: rgba(255, 255, 255, 0.82);
+	--app-surface-4: rgba(255, 255, 255, 0.92);
+
+	--app-shadow-panel: 0 12px 28px rgba(0, 0, 0, 0.12);
+}

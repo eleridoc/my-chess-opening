@@ -1,8 +1,8 @@
 .controls {
 	display: flex;
-	align-items: center;
-	gap: 8px;
-	flex-wrap: wrap;
+	justify-content: center; /* centre horizontalement */
+	align-items: center; /* centre verticalement */
+	gap: 8px; /* espace entre les boutons */
 }
 
 .spacer {

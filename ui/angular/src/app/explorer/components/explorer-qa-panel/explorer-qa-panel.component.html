@@ -33,9 +33,9 @@
 		<!-- Collapsible content -->
 		<ng-container *ngIf="!collapsed()">
 			<!-- Session snapshot + transient states (error/promotion) -->
-			<mat-card class="qa__card">
-				<mat-card-title>Session</mat-card-title>
-				<mat-card-content>
+			<div class="app-card-flat">
+				<div class="app-card-flat-title">Session</div>
+				<div class="app-card-flat-content">
 					<mat-chip-set aria-label="Explorer session info">
 						<mat-chip>Mode: {{ facade.mode() }}</mat-chip>
 						<mat-chip>Source: {{ facade.source().kind }}</mat-chip>
@@ -60,13 +60,13 @@
 							<button mat-stroked-button (click)="confirmPromotion('n')">N</button>
 						</div>
 					</div>
-				</mat-card-content>
-			</mat-card>
+				</div>
+			</div>
 
 			<!-- Scenario helpers (load/reset/illegal/promotion/etc.) -->
-			<mat-card class="qa__card">
-				<mat-card-title>Scenarios</mat-card-title>
-				<mat-card-content class="qa__btns">
+			<div class="app-card-flat">
+				<div class="app-card-flat-title">Scenarios</div>
+				<div class="app-card-flat-content">
 					<button mat-stroked-button (click)="loadInitial()">Reset / Initial</button>
 					<button mat-stroked-button (click)="loadLongPgn()">Load long PGN</button>
 					<button mat-stroked-button (click)="createVariationAtPly1()">
@@ -76,13 +76,13 @@
 					<button mat-stroked-button (click)="tryIllegalMove()">Try illegal move</button>
 					<button mat-stroked-button (click)="loadPromotionFen()">Load promotion FEN</button>
 					<button mat-stroked-button (click)="triggerPromotionAttempt()">Try a7→a8</button>
-				</mat-card-content>
-			</mat-card>
+				</div>
+			</div>
 
 			<!-- Stress actions (rapid navigation spam + goto shortcuts) -->
-			<mat-card class="qa__card">
-				<mat-card-title>Stress actions</mat-card-title>
-				<mat-card-content class="qa__btns">
+			<div class="app-card-flat">
+				<div class="app-card-flat-title">Stress actions</div>
+				<div class="app-card-flat-content">
 					<button mat-stroked-button (click)="prevSpam()">Prev ×30</button>
 					<button mat-stroked-button (click)="nextSpam()">Next ×30</button>
 
@@ -92,13 +92,13 @@
 						<button mat-stroked-button (click)="goToPly(2)">goToPly(2)</button>
 						<button mat-stroked-button (click)="goToPly(10)">goToPly(10)</button>
 					</div>
-				</mat-card-content>
-			</mat-card>
+				</div>
+			</div>
 
 			<!-- Variation cycling (legacy / debug: cycles at current ply) -->
-			<mat-card class="qa__card">
-				<mat-card-title>Variations</mat-card-title>
-				<mat-card-content class="qa__btns">
+			<div class="app-card-flat">
+				<div class="app-card-flat-title">Variations</div>
+				<div class="app-card-flat-content">
 					<div class="qa__variation-row">
 						<button
 							mat-stroked-button
@@ -126,34 +126,25 @@
 					<div class="qa__variation-info" *ngIf="!facade.variationInfo()">
 						No variation at current ply.
 					</div>
-				</mat-card-content>
-			</mat-card>
-
-			<!-- Simple checklist for manual smoke testing -->
-			<mat-card class="qa__card">
-				<mat-card-title>Smoke checklist</mat-card-title>
-				<mat-card-content class="qa__checks">
-					<div class="qa__check" *ngFor="let c of checks()">
-						<mat-checkbox [checked]="c.done" (change)="toggleCheck(c.id)">
-							{{ c.label }}
-						</mat-checkbox>
-					</div>
-				</mat-card-content>
-			</mat-card>
+				</div>
+			</div>
 
 			<!-- Event log (dev-only visibility) -->
-			<mat-card class="qa__card">
-				<mat-card-title>Event log</mat-card-title>
-				<mat-card-content class="qa__logs">
-					<div class="qa__log" *ngFor="let l of logs()">
-						<div class="qa__log-meta">
-							<span class="qa__log-level">{{ l.level }}</span>
-							<span class="qa__log-at">{{ l.at }}</span>
+
+			<div class="app-card-flat">
+				<div class="app-card-flat-title">Event log</div>
+				<div class="app-card-flat-content">
+					<div class="qa__logs">
+						<div class="qa__log" *ngFor="let l of logs()">
+							<div class="qa__log-meta">
+								<span class="qa__log-level">{{ l.level }}</span>
+								<span class="qa__log-at">{{ l.at }}</span>
+							</div>
+							<div class="qa__log-msg">{{ l.message }}</div>
 						</div>
-						<div class="qa__log-msg">{{ l.message }}</div>
 					</div>
-				</mat-card-content>
-			</mat-card>
+				</div>
+			</div>
 		</ng-container>
 	</div>
 </ng-container>

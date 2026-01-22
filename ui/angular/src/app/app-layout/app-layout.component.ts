@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { signal } from '@angular/core';
 
@@ -7,6 +7,8 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
+
+import { ThemeService } from '../services/theme.service';
 
 type TopNavItem = {
 	label: string;
@@ -31,6 +33,8 @@ type TopNavItem = {
 	styleUrl: './app-layout.component.scss',
 })
 export class AppLayoutComponent {
+	readonly theme = inject(ThemeService);
+
 	readonly topNav: TopNavItem[] = [
 		{ label: 'Dashboard', path: '/dashboard' },
 		{ label: 'Games', path: '/games' },

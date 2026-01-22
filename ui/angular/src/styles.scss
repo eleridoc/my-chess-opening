@@ -1,156 +1,44 @@
-@use '@angular/material' as mat;
+@use './app/styles/tokens';
+@use './app/styles/material-theme';
+@use './app/styles/material-overrides';
 
-@use './app/styles/app-theme';
-@use './app/styles/app-patterns';
-@use './app/styles/chessboard-markers';
+@use './app/styles/primitives/app-patterns';
+@use './app/styles/integrations/chessboard-markers';
 
+/* External CSS from cm-chessboard extension (global) */
 @import 'cm-chessboard/assets/extensions/promotion-dialog/promotion-dialog.css';
 
-:root {
-	/* Existing app variables */
-	--app-bg: #181818;
-	--app-card: #1f1f1f;
-	--app-divider: #2b2b2b;
-
-	/* ✅ Map old vars to new pattern tokens (dark defaults) */
-	--app-border: rgba(255, 255, 255, 0.08);
-	--app-sep: rgba(255, 255, 255, 0.06);
-	--app-hover: rgba(255, 255, 255, 0.03);
-
-	/* Surfaces used by patterns */
-	--app-surface-1: rgba(0, 0, 0, 0.1);
-	--app-surface-2: rgba(0, 0, 0, 0.12);
-	--app-surface-3: rgba(0, 0, 0, 0.18);
-	--app-surface-4: rgba(0, 0, 0, 0.22);
-
-	/* App pattern tokens (used by app-patterns + pages) */
-	--app-radius-md: 12px;
-	--app-radius-lg: 14px;
-
-	--app-shadow-panel: 0 1px 0 rgba(255, 255, 255, 0.04), 0 12px 28px rgba(0, 0, 0, 0.25);
-
-	/* If you want to keep it consistent everywhere */
-	--app-page-pad-x: 8px;
-	--app-page-pad-top: 8px;
-	--app-page-pad-bottom: 12px;
-	--app-page-gap: 12px;
-}
-
-html {
-	color-scheme: dark;
-
-	@include mat.theme(
-		(
-			color: (
-				primary: mat.$azure-palette,
-				tertiary: mat.$violet-palette,
-				theme-type: dark,
-			),
-			typography: (
-				plain-family: ubuntu,
-				brand-family: ubuntu,
-			),
-			density: -2,
-		)
-	);
-}
-
+/* Global resets only (no design system here) */
 html,
 body {
 	height: 100%;
 	margin: 0;
-	overflow: hidden; // prevent global scrollbar
 }
 
 body {
-	font: var(--mat-sys-body-medium);
+	/* Default theme if you don't add any class */
+	background: var(--app-bg);
 	color: var(--mat-sys-on-surface);
 
-	/* EXACT colors from your reference image */
-	background: var(--app-bg) !important;
+	/* Prefer controlling scroll on your app shell instead of body, later */
+	overflow: hidden;
 }
 
 * {
 	box-sizing: border-box;
 }
 
-/* Container de base (si tu n’en as pas déjà un) */
-.app-container {
-	max-width: 1100px;
-	margin: 0 auto;
-	padding: 16px;
-}
-
-/* Cards: exact "top" color + divider line */
-.mat-mdc-card {
-	// border-radius: 16px !important;
-	background: var(--app-card) !important;
-	border: 1px solid var(--app-divider);
-	box-shadow: none !important;
-}
-
-/* Divider (mat-divider) + general separators */
-.mat-divider {
-	border-top-color: var(--app-divider) !important;
-}
-
-/* Champs */
-.mat-mdc-form-field {
-	width: 100%;
-}
-
-/* Réduit la hauteur perçue des inputs (sans casser MDC) */
-.mat-mdc-form-field .mdc-text-field {
-	// border-radius: 12px !important;
-}
-
-/* Outlined inputs: border like your divider */
-.mat-mdc-form-field .mdc-notched-outline__leading,
-.mat-mdc-form-field .mdc-notched-outline__notch,
-.mat-mdc-form-field .mdc-notched-outline__trailing {
-	border-color: var(--app-divider) !important;
-}
-
-/* Hover: slightly brighter */
-.mat-mdc-form-field:hover .mdc-notched-outline__leading,
-.mat-mdc-form-field:hover .mdc-notched-outline__notch,
-.mat-mdc-form-field:hover .mdc-notched-outline__trailing {
-	border-color: color-mix(in oklab, var(--app-divider) 70%, white) !important;
-}
-
-/* Focus: use theme primary */
-.mat-mdc-form-field.mat-focused .mdc-notched-outline__leading,
-.mat-mdc-form-field.mat-focused .mdc-notched-outline__notch,
-.mat-mdc-form-field.mat-focused .mdc-notched-outline__trailing {
-	border-color: var(--mat-sys-primary) !important;
-}
-
-/* Boutons un peu plus “desktop app” */
-.mat-mdc-raised-button,
-.mat-mdc-unelevated-button,
-.mat-mdc-outlined-button,
-.mat-mdc-button,
-.mat-mdc-text-button,
-.mat-mdc-flat-button {
-	border-radius: 0px !important;
-	letter-spacing: 0.2px;
-}
-
-/* Toolbar: app bg + divider line */
-.mat-toolbar {
-	background: var(--app-bg) !important;
-	border-bottom: 1px solid var(--app-divider);
-}
-
-/* Scrollbar */
+/* Optional: scrollbar styling (global) */
 ::-webkit-scrollbar {
 	width: 10px;
 	height: 10px;
 }
+
 ::-webkit-scrollbar-thumb {
 	background: color-mix(in oklab, var(--mat-sys-on-surface) 22%, transparent);
 	border-radius: 999px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
 	background: color-mix(in oklab, var(--mat-sys-on-surface) 30%, transparent);
 }

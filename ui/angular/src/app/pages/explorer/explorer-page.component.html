@@ -1,39 +1,41 @@
-<div class="explorer-layout" [class.explorer-layout--qa-collapsed]="qaCollapsed()">
-	<section class="explorer-col explorer-col--qa">
-		<app-explorer-qa-panel (collapsedChange)="qaCollapsed.set($event)" />
-	</section>
+<div class="app-page">
+	<div class="explorer-layout" [class.explorer-layout--qa-collapsed]="qaCollapsed()">
+		<section class="explorer-col explorer-col--qa">
+			<app-explorer-qa-panel (collapsedChange)="qaCollapsed.set($event)" />
+		</section>
 
-	<section class="explorer-col explorer-col--main">
-		<div class="explorer-board-center">
-			<app-chess-board
-				[fen]="facade.fen()"
-				[inputEnabled]="inputEnabled()"
-				[validateMoveAttempt]="validateMoveAttempt"
-				[lastMoveSquares]="facade.lastMoveSquares()"
-				[getLegalDestinationsFrom]="getLegalDestinationsFrom"
-				[getLegalCaptureDestinationsFrom]="getLegalCaptureDestinationsFrom"
+		<section class="explorer-col explorer-col--main">
+			<div class="explorer-board-center">
+				<app-chess-board
+					[fen]="facade.fen()"
+					[inputEnabled]="inputEnabled()"
+					[validateMoveAttempt]="validateMoveAttempt"
+					[lastMoveSquares]="facade.lastMoveSquares()"
+					[getLegalDestinationsFrom]="getLegalDestinationsFrom"
+					[getLegalCaptureDestinationsFrom]="getLegalCaptureDestinationsFrom"
+				/>
+			</div>
+
+			<app-board-controls
+				[canStart]="facade.canStart()"
+				[canPrev]="facade.canPrev()"
+				[canNext]="facade.canNext()"
+				[canEnd]="facade.canEnd()"
+				(reset)="onReset()"
+				(start)="onStart()"
+				(prev)="onPrev()"
+				(next)="onNext()"
+				(end)="onEnd()"
 			/>
-		</div>
+		</section>
 
-		<app-board-controls
-			[canStart]="facade.canStart()"
-			[canPrev]="facade.canPrev()"
-			[canNext]="facade.canNext()"
-			[canEnd]="facade.canEnd()"
-			(reset)="onReset()"
-			(start)="onStart()"
-			(prev)="onPrev()"
-			(next)="onNext()"
-			(end)="onEnd()"
-		/>
-	</section>
-
-	<section class="explorer-col explorer-col--right">
-		<app-move-list
-			[rows]="facade.moveListRows()"
-			[variationsByNodeId]="facade.variationsByNodeId()"
-			[currentNodeId]="facade.currentNodeId()"
-			(nodeSelected)="onNodeSelected($event)"
-		></app-move-list>
-	</section>
+		<section class="explorer-col explorer-col--right">
+			<app-move-list
+				[rows]="facade.moveListRows()"
+				[variationsByNodeId]="facade.variationsByNodeId()"
+				[currentNodeId]="facade.currentNodeId()"
+				(nodeSelected)="onNodeSelected($event)"
+			></app-move-list>
+		</section>
+	</div>
 </div>

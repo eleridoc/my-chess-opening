@@ -30,6 +30,12 @@
 			<span>{{ isImporting() ? 'Importing…' : 'Import now' }}</span>
 		</button>
 
+		<button mat-icon-button (click)="theme.toggle()" aria-label="Open menu">
+			<mat-icon aria-hidden="true">
+				{{ theme.isDark() ? 'light_mode' : 'dark_mode' }}
+			</mat-icon>
+		</button>
+
 		<a mat-icon-button routerLink="/settings" aria-label="Settings">
 			<mat-icon aria-hidden="true">settings</mat-icon>
 		</a>

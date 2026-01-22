@@ -8,12 +8,36 @@
 .app-page {
 	height: 100%;
 	min-height: 0;
-
 	display: flex;
 	flex-direction: column;
 	gap: var(--app-page-gap, 12px);
+	padding: var(--app-page-pad-top, 15px) var(--app-page-pad-x, 15px)
+		var(--app-page-pad-bottom, 15px);
+}
 
-	padding: var(--app-page-pad-top, 8px) var(--app-page-pad-x, 8px) var(--app-page-pad-bottom, 12px);
+.app-card-flat {
+	border-radius: 5px;
+
+	//border: 1px solid var(--app-border);
+}
+
+.app-card-flat-title {
+	padding: 10px 15px;
+	//background-color: darkslateblue;
+	//background: var(--app-surface-2);
+	//background: var(--mat-sys-surface-container);
+	//background: var(--mat-sys-surface-container-high);
+
+	background: var(--mat-sys-surface-container);
+	font-weight: 700;
+	font-size: 14px;
+	border-bottom: 1px solid var(--app-border);
+	//background: var(--app-surface-1);
+}
+
+.app-card-flat-content {
+	padding: 15px 15px;
+	background: var(--app-surface-2);
 }
 
 /* Generic card used for small blocks (run context, etc.) */
@@ -21,7 +45,38 @@
 	border: 1px solid var(--app-border);
 	border-radius: var(--app-radius-md);
 	background: var(--app-surface-2);
-	padding: 10px 12px;
+	// padding: 10px 12px;
+}
+
+.app-card-title {
+	padding: 15px 15px;
+	//background-color: darkslateblue;
+	//background: var(--app-surface-2);
+	//background: var(--mat-sys-surface-container);
+	background: var(--mat-sys-surface-container-high);
+	font-weight: 700;
+	font-size: 16px;
+}
+
+.app-card-top {
+	padding: 15px 15px;
+}
+.app-card-top,
+.app-card-top-fit {
+	background: var(--mat-sys-surface-container-high);
+}
+
+.app-card-content {
+	padding: 20px 30px;
+}
+.app-card-content-fit {
+	padding: 20px 0px;
+}
+.app-card-bottom {
+	padding: 10px 15px;
+	// background-color: darkslategrey;
+	//background: var(--app-surface-2);
+	background: var(--mat-sys-surface-container);
 }
 
 /* ==========================================================================
@@ -106,14 +161,11 @@
 .app-table-card {
 	flex: 1 1 auto;
 	min-height: 0;
-
 	display: flex;
 	flex-direction: column;
-
 	border: 1px solid var(--app-border);
 	border-radius: var(--app-radius-lg);
 	overflow: hidden;
-
 	background: var(--app-surface-2);
 }
 
