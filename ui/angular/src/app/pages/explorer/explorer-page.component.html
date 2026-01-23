@@ -27,6 +27,41 @@
 				(next)="onNext()"
 				(end)="onEnd()"
 			/>
+
+			<mat-tab-group mat-stretch-tabs="false" mat-align-tabs="end">
+				<mat-tab disabled>
+					<ng-template mat-tab-label>
+						<mat-icon class="app-tab-icon">timeline</mat-icon>
+						Analysis
+					</ng-template>
+					Content 1
+				</mat-tab>
+
+				<mat-tab disabled>
+					<ng-template mat-tab-label>
+						<mat-icon class="app-tab-icon">timer</mat-icon>
+						Time
+					</ng-template>
+					Content 2
+				</mat-tab>
+
+				<mat-tab>
+					<ng-template mat-tab-label>
+						<mat-icon class="app-tab-icon">content_paste_go</mat-icon>
+						Import
+					</ng-template>
+
+					Content 3
+				</mat-tab>
+				<mat-tab disabled>
+					<ng-template mat-tab-label>
+						<mat-icon class="app-tab-icon">share</mat-icon>
+						Export
+					</ng-template>
+
+					Content 4
+				</mat-tab>
+			</mat-tab-group>
 		</section>
 
 		<section class="explorer-col explorer-col--right">

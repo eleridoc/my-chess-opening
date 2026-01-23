@@ -1,5 +1,7 @@
 import { Component, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatIconModule } from '@angular/material/icon';
 
 import { ExplorerFacade } from '../../explorer/facade/explorer.facade';
 import type { ExplorerMoveAttempt } from 'my-chess-opening-core/explorer';
@@ -17,6 +19,8 @@ import { ExplorerQaPanelComponent } from '../../explorer/components/explorer-qa-
 		ChessBoardComponent,
 		MoveListComponent,
 		ExplorerQaPanelComponent,
+		MatTabsModule,
+		MatIconModule,
 	],
 	templateUrl: './explorer-page.component.html',
 	styleUrl: './explorer-page.component.scss',
