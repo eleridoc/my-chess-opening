@@ -18,10 +18,10 @@
 
 .app-topbar {
 	/* slightly higher surface to stand out */
-	background: var(--mat-sys-surface-container-high, #222222);
+	background: var(--app-bg-plus-2);
 
 	/* Remove harsh separator line */
-	border-bottom: none;
+	border-bottom: 1px solid var(--app-divider);
 
 	box-shadow:
 		0 0px 0 rgba(255, 255, 255, 0.04),
@@ -62,7 +62,7 @@
 
 /* Make tabs look a bit nicer in a toolbar */
 :host ::ng-deep .app-topbar__nav .mdc-tab {
-	height: 48px;
+	height: 40px;
 }
 
 /* Remove any extra separator line some themes add to tab nav */
@@ -81,6 +81,5 @@
 .app-content {
 	height: 100%;
 	min-height: 0;
-	overflow: auto; // ✅ the ONLY vertical scroll for your pages
-	//padding: 16px; // keep your padding here
+	overflow: auto; // ✅ the ONLY vertical scroll for pages
 }

@@ -34,7 +34,7 @@
 		<ng-container *ngIf="!collapsed()">
 			<!-- Session snapshot + transient states (error/promotion) -->
 			<div class="app-card-flat">
-				<div class="app-card-flat-title">Session</div>
+				<div class="app-card-flat-top">Session</div>
 				<div class="app-card-flat-content">
 					<mat-chip-set aria-label="Explorer session info">
 						<mat-chip>Mode: {{ facade.mode() }}</mat-chip>
@@ -65,7 +65,7 @@
 
 			<!-- Scenario helpers (load/reset/illegal/promotion/etc.) -->
 			<div class="app-card-flat">
-				<div class="app-card-flat-title">Scenarios</div>
+				<div class="app-card-flat-top">Scenarios</div>
 				<div class="app-card-flat-content">
 					<button mat-stroked-button (click)="loadInitial()">Reset / Initial</button>
 					<button mat-stroked-button (click)="loadLongPgn()">Load long PGN</button>
@@ -81,7 +81,7 @@
 
 			<!-- Stress actions (rapid navigation spam + goto shortcuts) -->
 			<div class="app-card-flat">
-				<div class="app-card-flat-title">Stress actions</div>
+				<div class="app-card-flat-top">Stress actions</div>
 				<div class="app-card-flat-content">
 					<button mat-stroked-button (click)="prevSpam()">Prev ×30</button>
 					<button mat-stroked-button (click)="nextSpam()">Next ×30</button>
@@ -97,7 +97,7 @@
 
 			<!-- Variation cycling (legacy / debug: cycles at current ply) -->
 			<div class="app-card-flat">
-				<div class="app-card-flat-title">Variations</div>
+				<div class="app-card-flat-top">Variations</div>
 				<div class="app-card-flat-content">
 					<div class="qa__variation-row">
 						<button
@@ -132,7 +132,7 @@
 			<!-- Event log (dev-only visibility) -->
 
 			<div class="app-card-flat">
-				<div class="app-card-flat-title">Event log</div>
+				<div class="app-card-flat-top">Event log</div>
 				<div class="app-card-flat-content">
 					<div class="qa__logs">
 						<div class="qa__log" *ngFor="let l of logs()">

@@ -41,11 +41,20 @@ body.theme-dark {
 	color-scheme: dark;
 
 	/* Background + main surfaces */
-	--app-bg: #181818;
-	--app-card: #1f1f1f;
-	--app-divider: #2b2b2b;
+	--app-bg: #242424;
+	--app-bg-plus-1: #282828;
+	--app-bg-plus-2: #2b2b2b;
+	--app-bg-plus-3: #383838;
+	--app-bg-less-1: #202020;
+	--app-bg-less-2: #1b1b1b;
 
-	/* Pattern surfaces (used by app-patterns) */
+	--app-card: #1f1f1f;
+	--app-divider: #383838;
+	--app-border: rgba(255, 255, 255, 0.08);
+
+	--app-primary: #abc7ff;
+	--app-on-surface-variant: #c6c6cb;
+
 	--app-surface-0: transparent;
 	--app-surface-1: rgba(0, 0, 0, 0.1);
 	--app-surface-2: rgba(0, 0, 0, 0.12);
@@ -57,14 +66,18 @@ body.theme-dark {
 body.theme-light {
 	color-scheme: light;
 
-	--app-bg: #f3f3f3;
+	--app-bg: #f3f3f3; /* base page */
+	--app-bg-plus-1: #ededed; /* slightly darker than bg */
+	--app-bg-plus-2: #e7e7e7;
+	--app-bg-plus-3: #dcdcdc; /* more contrast (panels, headers) */
+	--app-bg-less-1: #f8f8f8; /* slightly lighter than bg */
+	--app-bg-less-2: #ffffff; /* pure white (cards if needed) */
+
 	--app-card: #ffffff;
 	--app-divider: rgba(0, 0, 0, 0.12);
-
 	--app-border: rgba(0, 0, 0, 0.1);
-	--app-sep: rgba(0, 0, 0, 0.08);
-	--app-hover: rgba(0, 0, 0, 0.03);
 
+	/* Pattern surfaces (used by app-patterns) */
 	--app-surface-0: transparent;
 	--app-surface-1: rgba(255, 255, 255, 0.55);
 	--app-surface-2: rgba(255, 255, 255, 0.72);

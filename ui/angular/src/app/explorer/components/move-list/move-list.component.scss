@@ -14,7 +14,7 @@
 
 .empty {
 	opacity: 0.75;
-	font-size: 13px;
+	font-size: 14px;
 	padding: 20px 30px;
 }
 
@@ -25,6 +25,7 @@
 .rows {
 	display: grid;
 	gap: 4px;
+	padding: 15px 0;
 }
 
 .row {
@@ -66,7 +67,7 @@
 .ply {
 	justify-content: flex-start;
 	min-width: 0;
-	color: color-mix(in srgb, var(--mat-sys-on-surface-variant) 80%, transparent);
+	color: color-mix(in srgb, var(--app-on-surface-variant) 80%, transparent);
 	border-radius: 6px !important;
 }
 
@@ -106,14 +107,13 @@
 
 /* Base container for variation lines */
 .var-cell {
-	border-top: 1px solid var(--mat-sys-outline-variant);
-	border-bottom: 1px solid var(--mat-sys-outline-variant);
+	border-top: 1px solid var(--app-divider);
+	border-bottom: 1px solid var(--app-divider);
 	margin: 5px 0;
 	padding-left: 10px;
 	padding-top: 2px;
 	padding-bottom: 2px;
-	//background: var(--mat-sys-surface-container-high);
-	background: var(--app-surface-2);
+	background: var(--app-bg-less-2);
 }
 
 /* Full-width under mainline row (covers white+black columns) */
@@ -135,13 +135,14 @@
 	min-height: 30px;
 	position: relative;
 	font-size: 8px;
+	padding: 5px 0;
 }
 
 /* Small elbow before each line */
 .var-line__elbow {
 	width: 10px;
 	height: 1px;
-	background: var(--mat-sys-outline-variant);
+	background: var(--app-bg-plus-3);
 	display: inline-block;
 }
 
@@ -152,15 +153,14 @@
 	justify-content: flex-start;
 	font-size: 12px;
 	font-style: italic;
-	color: color-mix(in srgb, var(--mat-sys-on-surface-variant) 70%, transparent);
+	color: color-mix(in srgb, var(--app-on-surface-variant) 70%, transparent);
 	border-radius: 6px !important;
 }
 .ply.active,
 .var-move.active {
 	font-weight: 800;
 	text-decoration: none;
-
-	color: var(--mat-sys-primary);
-	background: var(--mat-sys-surface-container-highest);
+	color: var(--app-primary);
+	background: var(--app-bg-plus-3);
 	border-radius: 6px !important;
 }
