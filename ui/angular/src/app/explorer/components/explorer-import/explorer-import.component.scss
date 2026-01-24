@@ -1,0 +1,56 @@
+:host {
+	display: block;
+	padding: 12px 0;
+}
+
+/*
+	ExplorerImport layout
+	- Keep this stylesheet focused on component layout/spacing only.
+	- Visual feedback (success/error/info) is handled globally via the snackbar system.
+*/
+.import {
+	display: grid;
+	gap: 12px;
+}
+
+/* A generic vertical section wrapper (FEN / PGN) */
+.import__section {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.import__field {
+	width: 100%;
+}
+
+/* Action buttons inside the FEN input suffix */
+.import__suffix-actions {
+	display: inline-flex;
+	align-items: center;
+	gap: 2px;
+
+	/* Helps visual alignment inside the filled field */
+	margin-right: 10px;
+}
+
+/* PGN field container (so we can anchor the action buttons) */
+.import__pgn-wrap {
+	position: relative;
+}
+
+/* Bottom-right actions for the PGN textarea */
+.import__pgn-actions {
+	position: absolute;
+	right: 6px;
+	top: 10px;
+
+	display: inline-flex;
+	align-items: center;
+	gap: 2px;
+
+	padding: 2px;
+	border: 1px solid var(--app-border);
+	border-radius: 6px;
+	background: var(--app-surface-2);
+}

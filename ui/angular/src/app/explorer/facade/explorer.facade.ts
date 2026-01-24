@@ -10,12 +10,12 @@
  * - Provide an imperative API for UI intents (reset, navigation, loaders, move attempts).
  * - Translate core results into UI state:
  *   - refresh signals after successful actions
- *   - expose lastError when an action fails
+ *   - expose errors for UI feedback (import errors, lastError)
  *   - expose promotionPending when PROMOTION_REQUIRED occurs
  *
  * Non-responsibilities:
  * - No chess rules here (all rules live in ExplorerSession).
- * - No UI components here (dialogs, toasts, etc. are handled by the page/components).
+ * - No UI rendering here (snackbars/dialogs are handled by pages/components).
  */
 
 import { Injectable, computed, signal } from '@angular/core';
@@ -30,19 +30,14 @@ import type {
 	ExplorerMoveListRow,
 	ExplorerSessionSource,
 	ExplorerVariationLine,
+	ExplorerMainlineMove, // Keep only if some UI still consumes `facade.moves()`
 	PromotionPiece,
-	// NOTE:
-	// Keep this ONLY if some UI still consumes `facade.moves()`.
-	// If not used anywhere anymore, you can safely remove it + the related signal.
-	ExplorerMainlineMove,
 } from 'my-chess-opening-core/explorer';
 
 /**
- * PromotionPending
- *
  * UI-friendly representation of a "promotion required" situation.
- * The UI may decide to:
- * - show a promotion choice UI
+ * The UI can decide to:
+ * - show a promotion picker
  * - disable input until resolved
  * - or cancel promotion by navigating elsewhere (depending on adapter strategy)
  */
@@ -53,10 +48,8 @@ type PromotionPending = {
 };
 
 /**
- * LastMoveSquares
- *
  * UI hint: squares to highlight for the last applied move in the current path.
- * This is derived from the current node incoming move.
+ * Derived from the current node incoming move (root has no incoming move).
  */
 type LastMoveSquares = { from: string; to: string } | null;
 
@@ -92,14 +85,14 @@ export class ExplorerFacade {
 
 	/**
 	 * MoveList view model (mainline rows + variations mapping).
-	 * These are UI-ready and should be preferred over old "flat moves" lists.
+	 * Preferred UI representation (should replace legacy flat move lists).
 	 */
 	private readonly _moveListRows = signal<ExplorerMoveListRow[]>([]);
 	private readonly _variationsByNodeId = signal<Record<string, ExplorerVariationLine[]>>({});
 
 	/**
-	 * Legacy mainline list (flat half-moves), with variationCount.
-	 * Keep only if still used by another component. Otherwise remove.
+	 * Legacy mainline list (flat half-moves), with variationCount meta.
+	 * Keep only if still used by some component. Otherwise remove safely later.
 	 */
 	private readonly _moves = signal<ExplorerMainlineMove[]>(this.session.getMainlineMovesWithMeta());
 
@@ -107,8 +100,15 @@ export class ExplorerFacade {
 	private readonly _canPrev = signal<boolean>(this.session.canGoPrev());
 	private readonly _canNext = signal<boolean>(this.session.canGoNext());
 
-	/** Last core error (if any) after an attempted action. */
+	/**
+	 * Generic last error for QA/debug and legacy UI.
+	 * Prefer using more specific signals (importFenError/importPgnError) for import UX.
+	 */
 	private readonly _lastError = signal<ExplorerError | null>(null);
+
+	/** Ephemeral import errors (FEN/PGN). Used by the Import component to notify the user. */
+	private readonly _importFenError = signal<ExplorerError | null>(null);
+	private readonly _importPgnError = signal<ExplorerError | null>(null);
 
 	/** Promotion workflow state (set when PROMOTION_REQUIRED occurs). */
 	private readonly _promotionPending = signal<PromotionPending | null>(null);
@@ -145,6 +145,9 @@ export class ExplorerFacade {
 	readonly canStart = computed(() => this._canPrev());
 	readonly canEnd = computed(() => this._canNext());
 
+	/** Ephemeral import is only allowed from CASE1_FREE. */
+	readonly importRequiresReset = computed(() => this.mode() !== 'CASE1_FREE');
+
 	/**
 	 * Variation cycling availability depends on the current cursor context inside the core.
 	 * We re-evaluate after each refresh using the `_rev` tick dependency.
@@ -165,6 +168,8 @@ export class ExplorerFacade {
 	});
 
 	readonly lastError = this._lastError.asReadonly();
+	readonly importFenError = this._importFenError.asReadonly();
+	readonly importPgnError = this._importPgnError.asReadonly();
 	readonly promotionPending = this._promotionPending.asReadonly();
 	readonly lastMoveSquares = this._lastMoveSquares.asReadonly();
 
@@ -215,18 +220,21 @@ export class ExplorerFacade {
 		this.refreshFromCore();
 	}
 
-	/**
-	 * Alias for starting a fresh exploration.
-	 */
+	/** Starts a fresh exploration (alias kept for UI readability). */
 	loadInitial(): void {
 		this.clearTransientUiState();
 		this.session.loadInitial();
 		this.refreshFromCore();
 	}
 
+	/** UI-friendly alias for ephemeral import. */
+	loadFen(fen: string): void {
+		this.loadFenForCase1(fen);
+	}
+
 	/**
 	 * Loads a FEN into CASE1 (only allowed in CASE1_FREE).
-	 * On failure, sets `lastError`.
+	 * On failure, sets `importFenError` (and `lastError` for QA/legacy use).
 	 */
 	loadFenForCase1(fen: string): void {
 		this.clearTransientUiState();
@@ -237,12 +245,12 @@ export class ExplorerFacade {
 			return;
 		}
 
-		this._lastError.set(result.error);
+		this.setImportError('FEN', result.error);
 	}
 
 	/**
 	 * Loads a PGN into CASE2_PGN (only allowed in CASE1_FREE).
-	 * On failure, sets `lastError`.
+	 * On failure, sets `importPgnError` (and `lastError` for QA/legacy use).
 	 */
 	loadPgn(pgn: string, meta?: { name?: string }): void {
 		this.clearTransientUiState();
@@ -253,7 +261,7 @@ export class ExplorerFacade {
 			return;
 		}
 
-		this._lastError.set(result.error);
+		this.setImportError('PGN', result.error);
 	}
 
 	/**
@@ -318,7 +326,7 @@ export class ExplorerFacade {
 
 	/**
 	 * Mainline-only navigation by ply.
-	 * For variations, use `goToNode(nodeId)`.
+	 * For variations, prefer `goToNode(nodeId)`.
 	 */
 	goToPly(ply: number): void {
 		this.clearTransientUiState();
@@ -354,7 +362,6 @@ export class ExplorerFacade {
 		this.clearTransientUiState();
 
 		const result = this.session.applyMoveUci(attempt);
-
 		if (result.ok) {
 			this.refreshFromCore();
 			return true;
@@ -385,12 +392,8 @@ export class ExplorerFacade {
 	}
 
 	/**
-	 * Resolves a pending promotion by replaying the last (from/to) attempt
-	 * with the chosen promotion piece.
-	 *
-	 * Note:
-	 * - This method is optional depending on the UI approach.
-	 * - Some UIs can directly include promotion inside `attemptMove`.
+	 * Resolves a pending promotion by replaying the (from/to) attempt with the chosen piece.
+	 * Safe no-op if there is no pending promotion.
 	 */
 	confirmPromotion(piece: PromotionPiece): void {
 		const pending = this._promotionPending();
@@ -404,7 +407,7 @@ export class ExplorerFacade {
 	}
 
 	// ---------------------------------------------------------------------------
-	// Public API — read-only helpers for board hinting (V1.2.5)
+	// Public API — board hinting (V1.2.5)
 	// ---------------------------------------------------------------------------
 
 	getLegalDestinationsFrom(from: string): string[] {
@@ -415,9 +418,27 @@ export class ExplorerFacade {
 		return this.session.getLegalCaptureDestinationsFrom(from);
 	}
 
+	/** Clears the last FEN import error (called by Import component on edit/empty). */
+	clearImportFenError(): void {
+		this._importFenError.set(null);
+	}
+
+	/** Clears the last PGN import error (called by Import component on edit/empty). */
+	clearImportPgnError(): void {
+		this._importPgnError.set(null);
+	}
+
 	// ---------------------------------------------------------------------------
 	// Internal helpers
 	// ---------------------------------------------------------------------------
+
+	private setImportError(kind: 'FEN' | 'PGN', error: ExplorerError): void {
+		if (kind === 'FEN') this._importFenError.set(error);
+		else this._importPgnError.set(error);
+
+		// Keep for QA/debug (and any legacy UI still reading lastError).
+		this._lastError.set(error);
+	}
 
 	/**
 	 * Clears UI-only transient state (errors and promotion prompt).
@@ -426,6 +447,8 @@ export class ExplorerFacade {
 	private clearTransientUiState(): void {
 		this._lastError.set(null);
 		this._promotionPending.set(null);
+		this.clearImportFenError();
+		this.clearImportPgnError();
 	}
 
 	/**
@@ -452,11 +475,11 @@ export class ExplorerFacade {
 		this._canPrev.set(this.session.canGoPrev());
 		this._canNext.set(this.session.canGoNext());
 
-		// Derived last move squares (root has no incoming move)
+		// Derived last move squares
 		const incoming = this.session.getCurrentNode().incomingMove;
 		this._lastMoveSquares.set(incoming ? { from: incoming.from, to: incoming.to } : null);
 
-		// Notify computed selectors that depend on core (canPrevVariation, variationInfo, ...)
+		// Notify computed selectors that depend on core (variationInfo, canPrevVariation, ...)
 		this._rev.update((v) => v + 1);
 	}
 }

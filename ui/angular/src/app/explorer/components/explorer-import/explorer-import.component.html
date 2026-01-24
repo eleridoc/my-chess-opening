@@ -1,0 +1,118 @@
+<div class="import">
+	<!--
+		Standalone import panel (no <form>).
+		We keep ngModel controls "standalone" to avoid Angular registering them to a parent form
+		(which would require name="" or ngModelOptions).
+	-->
+
+	<!-- FEN ---------------------------------------------------------------- -->
+	<div class="import__section">
+		<mat-form-field class="import__field" floatLabel="always" appearance="fill">
+			<mat-label>Paste a full FEN</mat-label>
+
+			<input
+				matInput
+				[disabled]="disabled"
+				[(ngModel)]="fen"
+				[ngModelOptions]="{ standalone: true }"
+				(ngModelChange)="onFenChange()"
+				(keydown.enter)="onFenEnter($event)"
+				placeholder="e.g. rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+				autocomplete="off"
+				spellcheck="false"
+			/>
+
+			<!-- Suffix actions apply to the FEN input only -->
+			<div matSuffix class="import__suffix-actions">
+				<button
+					type="button"
+					mat-icon-button
+					[disabled]="disabled || !fen.length"
+					(click)="onFenEmpty()"
+					matTooltip="Empty"
+					aria-label="Empty FEN"
+				>
+					<mat-icon aria-hidden="true">delete_sweep</mat-icon>
+				</button>
+
+				<button
+					type="button"
+					mat-icon-button
+					[disabled]="disabled || !fen.trim().length"
+					(click)="onFenCopy()"
+					matTooltip="Copy"
+					aria-label="Copy FEN"
+				>
+					<mat-icon aria-hidden="true">content_copy</mat-icon>
+				</button>
+
+				<button
+					type="button"
+					mat-icon-button
+					[disabled]="disabled || !fen.trim().length"
+					(click)="onFenApply()"
+					matTooltip="Apply"
+					aria-label="Apply FEN"
+				>
+					<mat-icon aria-hidden="true">check</mat-icon>
+				</button>
+			</div>
+		</mat-form-field>
+	</div>
+
+	<!-- PGN ---------------------------------------------------------------- -->
+	<div class="import__section">
+		<div class="import__pgn-wrap">
+			<mat-form-field class="import__field import__pgn-field" floatLabel="always" appearance="fill">
+				<mat-label>Paste a PGN (variants allowed)</mat-label>
+
+				<textarea
+					matInput
+					[disabled]="disabled"
+					[(ngModel)]="pgn"
+					[ngModelOptions]="{ standalone: true }"
+					(ngModelChange)="onPgnChange()"
+					rows="3"
+					placeholder='[Event "..."]&#10;1. e4 e5 2. Nf3 Nc6 (2... d6) 3. Bb5 ...'
+					spellcheck="false"
+				></textarea>
+			</mat-form-field>
+
+			<!-- Bottom-right actions for the PGN textarea -->
+			<div class="import__pgn-actions">
+				<button
+					type="button"
+					mat-icon-button
+					[disabled]="disabled || !pgn.length"
+					(click)="onPgnEmpty()"
+					matTooltip="Empty"
+					aria-label="Empty PGN"
+				>
+					<mat-icon aria-hidden="true">delete_sweep</mat-icon>
+				</button>
+
+				<button
+					type="button"
+					mat-icon-button
+					[disabled]="disabled || !pgn.trim().length"
+					(click)="onPgnCopy()"
+					matTooltip="Copy"
+					aria-label="Copy PGN"
+				>
+					<mat-icon aria-hidden="true">content_copy</mat-icon>
+				</button>
+
+				<button
+					type="button"
+					mat-icon-button
+					[disabled]="disabled || !pgn.trim().length"
+					(click)="onPgnApply()"
+					matTooltip="Apply"
+					aria-label="Apply PGN"
+				>
+					<mat-icon aria-hidden="true">check</mat-icon>
+				</button>
+			</div>
+		</div>
+	</div>
+</div>

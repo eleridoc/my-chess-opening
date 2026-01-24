@@ -8,6 +8,7 @@ import type { ExplorerMoveAttempt } from 'my-chess-opening-core/explorer';
 import { BoardControlsComponent } from '../../explorer/components/board-controls/board-controls.component';
 import { ChessBoardComponent } from '../../explorer/components/chess-board/chess-board.component';
 import { MoveListComponent } from '../../explorer/components/move-list/move-list.component';
+import { ExplorerImportComponent } from '../../explorer/components/explorer-import/explorer-import.component';
 import { ExplorerQaPanelComponent } from '../../explorer/components/explorer-qa-panel/explorer-qa-panel.component';
 
 @Component({
@@ -18,6 +19,7 @@ import { ExplorerQaPanelComponent } from '../../explorer/components/explorer-qa-
 		BoardControlsComponent,
 		ChessBoardComponent,
 		MoveListComponent,
+		ExplorerImportComponent,
 		ExplorerQaPanelComponent,
 		MatTabsModule,
 		MatIconModule,
@@ -93,6 +95,14 @@ export class ExplorerPageComponent {
 
 	onNodeSelected(nodeId: string): void {
 		this.facade.goToNode(nodeId);
+	}
+
+	onApplyFen(fen: string): void {
+		this.facade.loadFen(fen); // alias ajouté en V1.4.0.0
+	}
+
+	onApplyPgn(pgn: string): void {
+		this.facade.loadPgn(pgn);
 	}
 
 	// Keep it synchronous: core + facade are synchronous today.

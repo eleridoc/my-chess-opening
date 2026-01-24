@@ -4,6 +4,7 @@
 
 @use './app/styles/primitives/app-patterns';
 @use './app/styles/integrations/chessboard-markers';
+@use './app/styles/integrations/snackbar';
 
 /* External CSS from cm-chessboard extension (global) */
 @import 'cm-chessboard/assets/extensions/promotion-dialog/promotion-dialog.css';

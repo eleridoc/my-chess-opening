@@ -1,0 +1,61 @@
+:host {
+	display: block;
+}
+
+/*
+	AppSnackbarComponent
+	- Layout only. Container visuals (bg/border/radius/padding) are handled by the snackbar panelClass.
+	- Keep the component flexible so it works for short and longer messages.
+*/
+.snack {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+
+	/* Smaller + more "desktop-like" */
+	min-width: 220px;
+	max-width: 520px;
+
+	/* Panel provides the background; component uses the computed foreground token. */
+	color: var(--mco-snackbar-fg, var(--mat-sys-inverse-on-surface));
+}
+
+/* Leading icon */
+.snack__icon {
+	flex: 0 0 auto;
+
+	font-size: 22px;
+	width: 22px;
+	height: 22px;
+
+	opacity: 0.95;
+}
+
+/* Main message */
+.snack__message {
+	flex: 1 1 auto;
+
+	line-height: 1.25;
+	font-size: 13px;
+
+	/* Prevent ultra-long words/urls from breaking the layout */
+	overflow-wrap: anywhere;
+}
+
+/* Optional action label (rare; keep it compact) */
+.snack__action {
+	white-space: nowrap;
+}
+
+/* Close button */
+.snack__close {
+	flex: 0 0 auto;
+	margin-left: 2px;
+}
+
+/* Icon size inside the close button */
+.snack__close mat-icon {
+	font-size: 18px;
+	width: 18px;
+	height: 18px;
+}

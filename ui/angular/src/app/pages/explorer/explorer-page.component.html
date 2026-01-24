@@ -29,6 +29,22 @@
 			/>
 
 			<mat-tab-group mat-stretch-tabs="false" mat-align-tabs="end">
+				<mat-tab>
+					<ng-template mat-tab-label>
+						<mat-icon class="app-tab-icon">content_paste_go</mat-icon>
+						Import
+					</ng-template>
+
+					<app-explorer-import
+						[disabled]="facade.promotionPending() !== null"
+						[fenError]="facade.importFenError()"
+						[pgnError]="facade.importPgnError()"
+						(applyFen)="onApplyFen($event)"
+						(applyPgn)="onApplyPgn($event)"
+						(clearFenError)="facade.clearImportFenError()"
+						(clearPgnError)="facade.clearImportPgnError()"
+					/>
+				</mat-tab>
 				<mat-tab disabled>
 					<ng-template mat-tab-label>
 						<mat-icon class="app-tab-icon">timeline</mat-icon>
@@ -45,14 +61,6 @@
 					Content 2
 				</mat-tab>
 
-				<mat-tab>
-					<ng-template mat-tab-label>
-						<mat-icon class="app-tab-icon">content_paste_go</mat-icon>
-						Import
-					</ng-template>
-
-					Content 3
-				</mat-tab>
 				<mat-tab disabled>
 					<ng-template mat-tab-label>
 						<mat-icon class="app-tab-icon">share</mat-icon>

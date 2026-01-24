@@ -1,0 +1,65 @@
+/* Applied on the overlay container via panelClass */
+.mat-mdc-snack-bar-container.mco-snackbar {
+	/* Tokens */
+	--mco-snackbar-radius: 5px;
+	--mco-snackbar-pad-y: 6px;
+	--mco-snackbar-pad-x: 10px;
+
+	--mco-snackbar-bg: var(--mat-sys-inverse-surface);
+	--mco-snackbar-fg: var(--mat-sys-inverse-on-surface);
+	--mco-snackbar-border: color-mix(in oklab, var(--mco-snackbar-fg) 18%, transparent);
+	margin-right: 20px;
+}
+
+/* The actual visible surface in MDC */
+.mat-mdc-snack-bar-container.mco-snackbar .mdc-snackbar__surface {
+	background: var(--mco-snackbar-bg) !important;
+	color: var(--mco-snackbar-fg) !important;
+	border: 1px solid var(--mco-snackbar-border) !important;
+
+	border-radius: var(--mco-snackbar-radius) !important;
+	padding: var(--mco-snackbar-pad-y) var(--mco-snackbar-pad-x) !important;
+
+	/* Optional: remove default shadow if you want */
+	box-shadow: var(--app-shadow-panel, none) !important;
+}
+
+/* Ensure text uses your fg */
+.mat-mdc-snack-bar-container.mco-snackbar .mdc-snackbar__label {
+	color: var(--mco-snackbar-fg) !important;
+	padding: 0px;
+}
+
+/* Action button color */
+.mat-mdc-snack-bar-container.mco-snackbar .mdc-button__label {
+	color: var(--mco-snackbar-fg) !important;
+}
+
+/* Variants: just override tokens */
+.mat-mdc-snack-bar-container.mco-snackbar--info {
+	--mco-snackbar-bg: var(--mat-sys-inverse-surface);
+	--mco-snackbar-fg: var(--mat-sys-inverse-on-surface);
+}
+
+.mat-mdc-snack-bar-container.mco-snackbar--success {
+	--mco-snackbar-bg: color-mix(
+		in oklab,
+		var(--mat-sys-primary) 20%,
+		var(--mat-sys-surface-container-high)
+	);
+	--mco-snackbar-fg: var(--mat-sys-on-surface);
+}
+
+.mat-mdc-snack-bar-container.mco-snackbar--warn {
+	--mco-snackbar-bg: color-mix(
+		in oklab,
+		var(--mat-sys-tertiary) 22%,
+		var(--mat-sys-surface-container-high)
+	);
+	--mco-snackbar-fg: var(--mat-sys-on-surface);
+}
+
+.mat-mdc-snack-bar-container.mco-snackbar--error {
+	--mco-snackbar-bg: var(--mat-sys-error-container);
+	--mco-snackbar-fg: var(--mat-sys-on-error-container);
+}

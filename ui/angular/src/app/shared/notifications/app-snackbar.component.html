@@ -1,0 +1,33 @@
+<div
+	class="snack"
+	role="status"
+	[attr.aria-live]="data.kind === 'error' ? 'assertive' : 'polite'"
+	[attr.aria-atomic]="true"
+>
+	<!-- Leading icon is decorative: the message conveys the content. -->
+	<mat-icon class="snack__icon" aria-hidden="true">{{ iconFor(data.kind) }}</mat-icon>
+
+	<div class="snack__message">{{ data.message }}</div>
+
+	<!-- Optional action (e.g. Undo / Retry). -->
+	<button
+		*ngIf="data.actionLabel"
+		mat-button
+		type="button"
+		class="snack__action"
+		(click)="onActionClick()"
+	>
+		{{ data.actionLabel }}
+	</button>
+
+	<!-- Always available close button. -->
+	<button
+		mat-icon-button
+		type="button"
+		class="snack__close"
+		(click)="onCloseClick()"
+		aria-label="Close notification"
+	>
+		<mat-icon aria-hidden="true">close</mat-icon>
+	</button>
+</div>

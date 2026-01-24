@@ -1,6 +1,11 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
+import {
+	ApplicationConfig,
+	provideBrowserGlobalErrorListeners,
+	importProvidersFrom,
+} from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideChessBoardAdapter } from './explorer/board/board.providers';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { routes } from './app.routes';
 
@@ -9,5 +14,6 @@ export const appConfig: ApplicationConfig = {
 		provideBrowserGlobalErrorListeners(),
 		provideRouter(routes),
 		provideChessBoardAdapter(),
+		importProvidersFrom(MatSnackBarModule),
 	],
 };
