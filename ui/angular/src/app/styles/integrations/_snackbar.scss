@@ -1,41 +1,59 @@
-/* Applied on the overlay container via panelClass */
+/*
+	App snackbar styling (global)
+	- These styles target the MDC snackbar container rendered in the CDK overlay.
+	- `panelClass: ['mco-snackbar', 'mco-snackbar--<kind>']` is applied on
+	  `.mat-mdc-snack-bar-container`, so we scope everything from there.
+*/
+
+/* Base (shared) ----------------------------------------------------------- */
 .mat-mdc-snack-bar-container.mco-snackbar {
-	/* Tokens */
-	--mco-snackbar-radius: 5px;
-	--mco-snackbar-pad-y: 6px;
+	/* Geometry */
+	--mco-snackbar-radius: 6px;
+	--mco-snackbar-pad-y: 4px; /* slimmer */
 	--mco-snackbar-pad-x: 10px;
 
+	/* Default colors (info-like) */
 	--mco-snackbar-bg: var(--mat-sys-inverse-surface);
 	--mco-snackbar-fg: var(--mat-sys-inverse-on-surface);
 	--mco-snackbar-border: color-mix(in oklab, var(--mco-snackbar-fg) 18%, transparent);
-	margin-right: 20px;
+
+	/* Offset from the viewport edge (works with bottom/end positioning) */
+	margin: 0 16px 16px 0;
+
+	/* Prevent the container itself from adding extra padding around the surface */
+	padding: 0;
 }
 
-/* The actual visible surface in MDC */
+/* Visible surface -------------------------------------------------------- */
 .mat-mdc-snack-bar-container.mco-snackbar .mdc-snackbar__surface {
 	background: var(--mco-snackbar-bg) !important;
 	color: var(--mco-snackbar-fg) !important;
-	border: 1px solid var(--mco-snackbar-border) !important;
 
+	border: 1px solid var(--mco-snackbar-border) !important;
 	border-radius: var(--mco-snackbar-radius) !important;
+
+	/* This is the "thickness" you perceive */
 	padding: var(--mco-snackbar-pad-y) var(--mco-snackbar-pad-x) !important;
 
-	/* Optional: remove default shadow if you want */
+	/* Keep it consistent with your app surfaces */
 	box-shadow: var(--app-shadow-panel, none) !important;
 }
 
-/* Ensure text uses your fg */
+/* MDC label wrapper (avoid default extra padding) ------------------------ */
 .mat-mdc-snack-bar-container.mco-snackbar .mdc-snackbar__label {
 	color: var(--mco-snackbar-fg) !important;
-	padding: 0px;
+	padding: 0 !important;
+	margin: 0 !important;
 }
 
-/* Action button color */
+/* Make actions inherit the same foreground (including your close button) */
+.mat-mdc-snack-bar-container.mco-snackbar button,
+.mat-mdc-snack-bar-container.mco-snackbar .mat-icon,
 .mat-mdc-snack-bar-container.mco-snackbar .mdc-button__label {
 	color: var(--mco-snackbar-fg) !important;
 }
 
-/* Variants: just override tokens */
+/* Variants (only override tokens) ---------------------------------------- */
 .mat-mdc-snack-bar-container.mco-snackbar--info {
 	--mco-snackbar-bg: var(--mat-sys-inverse-surface);
 	--mco-snackbar-fg: var(--mat-sys-inverse-on-surface);
