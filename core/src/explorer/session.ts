@@ -21,6 +21,7 @@ import type {
 	ExplorerDbGameMeta,
 	ExplorerError,
 	ExplorerErrorCode,
+	ExplorerGameSnapshot,
 	ExplorerMode,
 	ExplorerMoveAttempt,
 	ExplorerPgnMeta,
@@ -55,6 +56,8 @@ export class ExplorerSession {
 	private tree: ExplorerTree = { rootId: 'n0', nodesById: {} };
 	private currentNodeId: ExplorerNodeId = 'n0';
 
+	private dbSnapshot: ExplorerGameSnapshot | null = null;
+
 	constructor() {
 		this.resetToInitial();
 	}
@@ -75,12 +78,21 @@ export class ExplorerSession {
 	resetToInitial(): void {
 		this.mode = 'CASE1_FREE';
 		this.source = { kind: 'FREE' };
+		this.dbSnapshot = null;
 
 		this.idFactory = createExplorerIdFactory();
 		const initialFen = new Chess().fen();
 
 		const rootId = this.idFactory.nextNodeId();
-		const rootNode: ExplorerNode = { id: rootId, ply: 0, fen: initialFen, childIds: [] };
+		const rootIdentity = this.computePositionIdentity(initialFen);
+		const rootNode: ExplorerNode = {
+			id: rootId,
+			ply: 0,
+			fen: initialFen,
+			normalizedFen: rootIdentity.normalizedFen,
+			positionKey: rootIdentity.positionKey,
+			childIds: [],
+		};
 
 		this.tree = { rootId, nodesById: { [rootId]: rootNode } };
 		this.currentNodeId = rootId;
@@ -220,6 +232,69 @@ export class ExplorerSession {
 
 		this.mode = 'CASE2_DB';
 		this.source = { kind: 'DB', gameId: meta.gameId };
+
+		return { ok: true };
+	}
+
+	/**
+	 * Loads a DB-backed game snapshot (CASE2_DB).
+	 *
+	 * Rules:
+	 * - Only allowed from CASE1_FREE (otherwise RESET_REQUIRED)
+	 * - snapshot must be schemaVersion=1 and kind='DB'
+	 * - snapshot.gameId is required
+	 * - snapshot.movesSan must contain at least one move
+	 */
+	loadDbGameSnapshot(snapshot: ExplorerGameSnapshot): ExplorerResult {
+		if (this.mode !== 'CASE1_FREE') {
+			return {
+				ok: false,
+				error: this.makeError(
+					'RESET_REQUIRED',
+					'Loading a DB game snapshot is only allowed from CASE1. Please reset the session first.',
+				),
+			};
+		}
+
+		if (!snapshot || snapshot.schemaVersion !== 1 || snapshot.kind !== 'DB') {
+			return {
+				ok: false,
+				error: this.makeError('INTERNAL_ERROR', 'Invalid DB game snapshot.', {
+					schemaVersion: (snapshot as any)?.schemaVersion,
+					kind: (snapshot as any)?.kind,
+				}),
+			};
+		}
+
+		const gameId = (snapshot.gameId ?? '').trim();
+		if (gameId.length === 0) {
+			return {
+				ok: false,
+				error: this.makeError('INTERNAL_ERROR', 'Missing gameId for DB snapshot load.'),
+			};
+		}
+
+		if (!snapshot.headers || typeof snapshot.headers !== 'object') {
+			return {
+				ok: false,
+				error: this.makeError('INTERNAL_ERROR', 'Missing headers for DB snapshot load.'),
+			};
+		}
+
+		if (!Array.isArray(snapshot.movesSan) || snapshot.movesSan.length === 0) {
+			return {
+				ok: false,
+				error: this.makeError('INVALID_PGN', 'DB game snapshot contains no moves.'),
+			};
+		}
+
+		const rebuild = this.rebuildTreeFromSanMoves(snapshot.movesSan);
+		if (!rebuild.ok) return rebuild;
+
+		this.mode = 'CASE2_DB';
+		this.source = { kind: 'DB', gameId };
+
+		this.dbSnapshot = this.cloneDbGameSnapshot({ ...snapshot, gameId });
 
 		return { ok: true };
 	}
@@ -447,6 +522,10 @@ export class ExplorerSession {
 		return this.source;
 	}
 
+	getDbGameSnapshot(): ExplorerGameSnapshot | null {
+		return this.dbSnapshot ? this.cloneDbGameSnapshot(this.dbSnapshot) : null;
+	}
+
 	getRootId(): ExplorerNodeId {
 		return this.tree.rootId;
 	}
@@ -461,6 +540,14 @@ export class ExplorerSession {
 
 	getCurrentFen(): string {
 		return this.getCurrentNode().fen;
+	}
+
+	getCurrentNormalizedFen(): string {
+		return this.getCurrentNode().normalizedFen;
+	}
+
+	getCurrentPositionKey(): string {
+		return this.getCurrentNode().positionKey;
 	}
 
 	getCurrentPly(): number {
@@ -696,7 +783,15 @@ export class ExplorerSession {
 		this.idFactory = createExplorerIdFactory();
 
 		const rootId = this.idFactory.nextNodeId();
-		const rootNode: ExplorerNode = { id: rootId, ply: 0, fen: rootFen, childIds: [] };
+		const rootIdentity = this.computePositionIdentity(rootFen);
+		const rootNode: ExplorerNode = {
+			id: rootId,
+			ply: 0,
+			fen: rootFen,
+			normalizedFen: rootIdentity.normalizedFen,
+			positionKey: rootIdentity.positionKey,
+			childIds: [],
+		};
 
 		this.tree = { rootId, nodesById: { [rootId]: rootNode } };
 		this.currentNodeId = rootId;
@@ -711,10 +806,20 @@ export class ExplorerSession {
 
 		const chess = new Chess(); // initial position
 		const rootId = this.idFactory.nextNodeId();
-
+		const rootFen = chess.fen();
+		const rootIdentity = this.computePositionIdentity(rootFen);
 		this.tree = {
 			rootId,
-			nodesById: { [rootId]: { id: rootId, ply: 0, fen: chess.fen(), childIds: [] } },
+			nodesById: {
+				[rootId]: {
+					id: rootId,
+					ply: 0,
+					fen: rootFen,
+					normalizedFen: rootIdentity.normalizedFen,
+					positionKey: rootIdentity.positionKey,
+					childIds: [],
+				},
+			},
 		};
 
 		let parentId = rootId;
@@ -741,11 +846,16 @@ export class ExplorerSession {
 			const newId = this.idFactory.nextNodeId();
 			const parent = this.tree.nodesById[parentId];
 
+			const fenAfter = chess.fen();
+			const identity = this.computePositionIdentity(fenAfter);
+
 			this.tree.nodesById[newId] = {
 				id: newId,
 				parentId,
 				ply: this.tree.nodesById[parentId].ply + 1,
-				fen: chess.fen(),
+				fen: fenAfter,
+				normalizedFen: identity.normalizedFen,
+				positionKey: identity.positionKey,
 				incomingMove: { uci, san: moveResult.san, from, to, promotion: promotionApplied },
 				childIds: [],
 			};
@@ -798,11 +908,15 @@ export class ExplorerSession {
 
 		const newId = this.idFactory.nextNodeId();
 
+		const identity = this.computePositionIdentity(payload.fenAfter);
+
 		this.tree.nodesById[newId] = {
 			id: newId,
 			parentId: parent.id,
 			ply: parent.ply + 1,
 			fen: payload.fenAfter,
+			normalizedFen: identity.normalizedFen,
+			positionKey: identity.positionKey,
 			incomingMove: {
 				uci: payload.uci,
 				san: payload.san,
@@ -1079,5 +1193,55 @@ export class ExplorerSession {
 
 		// Fallback: if promotion is detected but pieces are not reported, expose standard options.
 		return options.size > 0 ? Array.from(options) : ['q', 'r', 'b', 'n'];
+	}
+
+	private cloneDbGameSnapshot(snapshot: ExplorerGameSnapshot): ExplorerGameSnapshot {
+		return {
+			schemaVersion: 1,
+			kind: 'DB',
+			gameId: snapshot.gameId,
+			headers: { ...(snapshot.headers ?? {}) },
+			pgnTags: snapshot.pgnTags ? { ...snapshot.pgnTags } : undefined,
+			movesSan: Array.isArray(snapshot.movesSan) ? [...snapshot.movesSan] : [],
+			analysis: snapshot.analysis
+				? {
+						version: 1,
+						byPly: snapshot.analysis.byPly
+							? snapshot.analysis.byPly.map((x) => ({ ...x }))
+							: undefined,
+					}
+				: undefined,
+			importMeta: snapshot.importMeta ? { ...snapshot.importMeta } : undefined,
+		};
+	}
+
+	private computePositionIdentity(fen: string): { normalizedFen: string; positionKey: string } {
+		const normalizedFen = this.normalizeFenForPositionIdentity(fen);
+		const positionKey = this.fnv1a64Hex(normalizedFen);
+		return { normalizedFen, positionKey };
+	}
+
+	private normalizeFenForPositionIdentity(fen: string): string {
+		const parts = (fen ?? '').trim().split(/\s+/);
+		// chess.js fen() always returns 6 fields, but keep it defensive.
+		if (parts.length >= 4) return parts.slice(0, 4).join(' ');
+		return (fen ?? '').trim();
+	}
+
+	/**
+	 * FNV-1a 64-bit hash, returned as 16-hex lowercase string.
+	 * Deterministic and cheap; good enough as a stable key for ASCII FEN strings.
+	 */
+	private fnv1a64Hex(text: string): string {
+		let hash = 14695981039346656037n; // offset basis
+		const prime = 1099511628211n;
+		const mask = 0xffffffffffffffffn;
+
+		for (let i = 0; i < text.length; i++) {
+			hash ^= BigInt(text.charCodeAt(i)); // FEN is ASCII => safe/deterministic
+			hash = (hash * prime) & mask;
+		}
+
+		return hash.toString(16).padStart(16, '0');
 	}
 }

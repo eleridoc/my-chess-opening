@@ -74,6 +74,19 @@ export type ExplorerNode = {
 	fen: string;
 
 	/**
+	 * Normalized FEN used for position identity and DB lookups.
+	 * Format: first 4 fields of a FEN (board, side to move, castling, en-passant).
+	 * (Halfmove/fullmove counters are intentionally excluded.)
+	 */
+	normalizedFen: string;
+
+	/**
+	 * Stable position key derived from normalizedFen.
+	 * Used to query DB for "next moves from this position" (opening-book style).
+	 */
+	positionKey: string;
+
+	/**
 	 * Move played from parent -> this node.
 	 * Undefined for root.
 	 */

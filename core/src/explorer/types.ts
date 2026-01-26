@@ -1,14 +1,16 @@
 /**
  * Explorer domain types (CORE)
  *
- * This file defines the public type surface for the Explorer feature.
- * The goal is to keep UI/Electron code independent from implementation details:
- * - UI sends "attempts" (from/to/promotion)
- * - Core returns typed errors (illegal move, promotion required, etc.)
+ * Public type surface for the Explorer feature.
  *
- * IMPORTANT:
- * - All comments/logical documentation must be in English.
- * - Keep these types stable: they are the backbone of the Explorer module.
+ * Goals:
+ * - Keep UI/Electron code independent from chess rules and internal modeling.
+ * - UI sends intents (move attempts, load requests, navigation).
+ * - Core returns explicit results and typed errors (ok/error unions).
+ *
+ * Notes:
+ * - All comments must be in English.
+ * - Keep these types stable: they are the contract of the Explorer module.
  */
 
 export type ExplorerMode = 'CASE1_FREE' | 'CASE2_DB' | 'CASE2_PGN';
@@ -20,9 +22,14 @@ export type ExplorerMode = 'CASE1_FREE' | 'CASE2_DB' | 'CASE2_PGN';
 export type PromotionPiece = 'q' | 'r' | 'b' | 'n';
 
 export type ExplorerMoveAttempt = {
-	from: string; // e.g. "e2"
-	to: string; // e.g. "e4"
-	promotion?: PromotionPiece; // required for pawn promotions
+	/** Origin square in algebraic coordinates (e.g. "e2"). */
+	from: string;
+
+	/** Destination square in algebraic coordinates (e.g. "e4"). */
+	to: string;
+
+	/** Required for pawn promotions. */
+	promotion?: PromotionPiece;
 };
 
 export type ExplorerErrorCode =
@@ -51,13 +58,13 @@ export type ExplorerApplyMoveSuccess = {
 	/** New current node id after applying the move (existing or newly created). */
 	newNodeId: string;
 
-	/** Position after the move. */
+	/** Position after the move (FEN). */
 	fen: string;
 
 	/** Move notation (SAN). */
 	san: string;
 
-	/** Move notation (UCI). Example: "e2e4", "e7e8q" */
+	/** Move notation (UCI). Example: "e2e4", "e7e8q". */
 	uci: string;
 };
 
@@ -70,8 +77,8 @@ export type ExplorerPromotionRequiredError = ExplorerError<PromotionRequiredDeta
 };
 
 /**
- * For any other error code, details are intentionally left as unknown.
- * This keeps the API flexible while still allowing code narrowing.
+ * For non-promotion errors, details are intentionally left as unknown.
+ * This keeps the API flexible while still supporting safe narrowing by code.
  */
 export type ExplorerNonPromotionError = ExplorerError & {
 	code: Exclude<ExplorerErrorCode, 'PROMOTION_REQUIRED'>;
@@ -88,7 +95,7 @@ export type ExplorerApplyMoveResult = ExplorerApplyMoveSuccess | ExplorerApplyMo
  * Generic result helpers (CORE)
  *
  * We use ok/error unions instead of throwing exceptions for domain operations.
- * This makes UI/Electron integration easier and keeps error handling explicit.
+ * This keeps integration explicit and predictable.
  */
 export type ExplorerOk = { ok: true };
 
@@ -102,7 +109,7 @@ export type ExplorerResult<E extends ExplorerError = ExplorerError> = ExplorerOk
 /**
  * Explorer session source (CORE)
  *
- * This describes *how* the current session was created.
+ * Describes how the current session was created.
  * It is informational and helps UI decide which actions are allowed/visible.
  */
 export type ExplorerSessionSource =
@@ -114,8 +121,8 @@ export type ExplorerSessionSource =
 /**
  * PGN metadata (CORE)
  *
- * This is intentionally minimal for now.
- * We may extend it later with headers, player names, dates, etc.
+ * Intentionally minimal.
+ * Can be extended later (headers, players, dates, etc.).
  */
 export type ExplorerPgnMeta = {
 	name?: string;
@@ -123,8 +130,101 @@ export type ExplorerPgnMeta = {
 
 /**
  * Database-loaded game metadata (CORE)
+ *
+ * Legacy payload used by loadGameMovesSan().
+ * New code should prefer ExplorerGameSnapshot.
  */
 export type ExplorerDbGameMeta = {
 	gameId: string;
 	name?: string;
+};
+
+/**
+ * Explorer game snapshot (CORE)
+ *
+ * A single, versioned DTO representing everything the Explorer needs to start a DB-backed session
+ * and feed current/future UI components.
+ *
+ * Design constraints:
+ * - Storage-agnostic: DB schema may evolve.
+ * - Contract should remain stable (only additive changes).
+ */
+export type ExplorerGameSnapshot = ExplorerGameSnapshotV1;
+
+export type ExplorerGameSnapshotV1 = {
+	/** Contract version for safe evolution. */
+	schemaVersion: 1;
+
+	/** Snapshot kind (reserved for future extensions). */
+	kind: 'DB';
+
+	/** Primary DB identifier. */
+	gameId: string;
+
+	/** Minimal structured headers used by UI now and later. */
+	headers: ExplorerGameHeaders;
+
+	/**
+	 * Optional raw PGN tags (if available).
+	 * Useful for future UI without forcing schema changes.
+	 */
+	pgnTags?: Record<string, string>;
+
+	/** Mainline moves in SAN (variations are handled in-session, not loaded here). */
+	movesSan: string[];
+
+	/**
+	 * Optional analysis payload.
+	 * Can be computed server-side during import or later by an engine (e.g. Stockfish).
+	 */
+	analysis?: ExplorerGameAnalysisV1;
+
+	/** Optional import metadata (external source info, timestamps, etc.). */
+	importMeta?: ExplorerGameImportMeta;
+};
+
+export type ExplorerGameHeaders = {
+	event?: string;
+	site?: string;
+	date?: string;
+	round?: string;
+
+	white?: string;
+	black?: string;
+	result?: '1-0' | '0-1' | '1/2-1/2' | '*';
+
+	eco?: string;
+	opening?: string;
+
+	whiteElo?: string;
+	blackElo?: string;
+};
+
+export type ExplorerGameImportMeta = {
+	site?: 'CHESSCOM' | 'LICHESS';
+	externalGameId?: string;
+
+	/** ISO-8601 timestamp (string) produced by the server/importer. */
+	importedAt?: string;
+};
+
+export type ExplorerGameAnalysisV1 = {
+	version: 1;
+
+	/**
+	 * Analysis indexed by ply (0-based or 1-based is up to the producer),
+	 * but must be consistent for a given snapshot.
+	 */
+	byPly?: Array<{
+		ply: number;
+
+		/** Centipawn evaluation. Positive = white advantage. */
+		evalCp?: number;
+
+		/** Mate in N (sign convention can be decided later). */
+		mateIn?: number;
+
+		/** Optional best move suggestion (SAN). */
+		bestSan?: string;
+	}>;
 };

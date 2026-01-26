@@ -1,9 +1,4 @@
-<div
-	class="snack"
-	role="status"
-	[attr.aria-live]="data.kind === 'error' ? 'assertive' : 'polite'"
-	[attr.aria-atomic]="true"
->
+<div class="snack">
 	<!-- Leading icon is decorative: the message conveys the content. -->
 	<mat-icon class="snack__icon" aria-hidden="true">{{ iconFor(data.kind) }}</mat-icon>
 

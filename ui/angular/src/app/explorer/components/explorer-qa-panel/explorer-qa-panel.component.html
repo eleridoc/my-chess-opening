@@ -63,6 +63,59 @@
 				</div>
 			</div>
 
+			<div class="app-card-flat">
+				<div class="app-card-flat-top">DB Snapshot (mock)</div>
+
+				<div class="app-card-flat-content">
+					<div class="qa-row qa-row--wrap">
+						<button mat-stroked-button type="button" (click)="loadDemoDbSnapshot001()">
+							Load demo-001
+						</button>
+
+						<button mat-stroked-button type="button" (click)="loadDemoDbSnapshot002()">
+							Load demo-002
+						</button>
+					</div>
+
+					<div class="qa-kv">
+						<div class="qa-kv__row">
+							<div class="qa-kv__key">dbSnapshot</div>
+							<div class="qa-kv__value">
+								{{ facade.dbGameSnapshot() ? 'loaded' : 'null' }}
+							</div>
+						</div>
+
+						<div class="qa-kv__row">
+							<div class="qa-kv__key">gameId</div>
+							<div class="qa-kv__value">
+								{{ facade.dbGameSnapshot()?.gameId ?? '-' }}
+							</div>
+						</div>
+
+						<div class="qa-kv__row">
+							<div class="qa-kv__key">positionKey</div>
+							<div class="qa-kv__value qa-mono">
+								{{ facade.positionKey() }}
+							</div>
+						</div>
+
+						<div class="qa-kv__row">
+							<div class="qa-kv__key">normalizedFen</div>
+							<div class="qa-kv__value qa-mono">
+								{{ facade.normalizedFen() }}
+							</div>
+						</div>
+
+						<div class="qa-kv__row">
+							<div class="qa-kv__key">pendingDbGameId</div>
+							<div class="qa-kv__value qa-mono">
+								{{ facade.pendingDbGameId() ?? '-' }}
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
 			<!-- Scenario helpers (load/reset/illegal/promotion/etc.) -->
 			<div class="app-card-flat">
 				<div class="app-card-flat-top">Scenarios</div>
@@ -76,6 +129,22 @@
 					<button mat-stroked-button (click)="tryIllegalMove()">Try illegal move</button>
 					<button mat-stroked-button (click)="loadPromotionFen()">Load promotion FEN</button>
 					<button mat-stroked-button (click)="triggerPromotionAttempt()">Try a7→a8</button>
+
+					<button
+						mat-stroked-button
+						type="button"
+						(click)="navigateExplorerWithDbGameId('demo-001')"
+					>
+						Go /explorer?dbGameId=demo-001
+					</button>
+
+					<button
+						mat-stroked-button
+						type="button"
+						(click)="navigateExplorerWithDbGameId('demo-002')"
+					>
+						Go /explorer?dbGameId=demo-002
+					</button>
 				</div>
 			</div>
 

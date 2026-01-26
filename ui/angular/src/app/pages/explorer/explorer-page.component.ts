@@ -1,15 +1,18 @@
-import { Component, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatTabsModule } from '@angular/material/tabs';
+import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTabsModule } from '@angular/material/tabs';
+
+import type { ExplorerMoveAttempt } from 'my-chess-opening-core/explorer';
 
 import { ExplorerFacade } from '../../explorer/facade/explorer.facade';
-import type { ExplorerMoveAttempt } from 'my-chess-opening-core/explorer';
 import { BoardControlsComponent } from '../../explorer/components/board-controls/board-controls.component';
 import { ChessBoardComponent } from '../../explorer/components/chess-board/chess-board.component';
-import { MoveListComponent } from '../../explorer/components/move-list/move-list.component';
 import { ExplorerImportComponent } from '../../explorer/components/explorer-import/explorer-import.component';
 import { ExplorerQaPanelComponent } from '../../explorer/components/explorer-qa-panel/explorer-qa-panel.component';
+import { MoveListComponent } from '../../explorer/components/move-list/move-list.component';
 
 @Component({
 	selector: 'app-explorer-page',
@@ -28,22 +31,46 @@ import { ExplorerQaPanelComponent } from '../../explorer/components/explorer-qa-
 	styleUrl: './explorer-page.component.scss',
 })
 export class ExplorerPageComponent {
+	private readonly route = inject(ActivatedRoute);
+	private readonly router = inject(Router);
+	private readonly destroyRef = inject(DestroyRef);
+
+	private lastLoggedDbGameId: string | null = null;
+
 	/**
-	 * ExplorerPage is a "container" page:
+	 * ExplorerPage is a container page:
 	 * - It composes the Explorer UI (board + move list + controls).
-	 * - It delegates all chess/domain logic to the ExplorerFacade.
+	 * - It delegates all chess/domain logic to ExplorerFacade (and core).
 	 *
-	 * UI components must only display facade signals and emit user intentions.
+	 * UI components must only render facade signals and emit user intentions.
 	 */
-	constructor(public readonly facade: ExplorerFacade) {}
+	constructor(public readonly facade: ExplorerFacade) {
+		this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
+			const raw = params.get('dbGameId');
+			const id = this.normalizeDbGameId(raw);
+
+			// Store as "pending" (will be consumed by IPC wiring in V1.5.0).
+			this.facade.setPendingDbGameId(id);
+
+			// Avoid noisy logs on every router emission.
+			if (!id) {
+				this.lastLoggedDbGameId = null;
+				return;
+			}
+
+			if (id !== this.lastLoggedDbGameId) {
+				this.lastLoggedDbGameId = id;
+
+				// NOTE:
+				// We intentionally avoid triggering a snackbar here to prevent UI-side
+				// overlay issues while routing. The QA panel already exposes pendingDbGameId.
+				// IPC wiring will be implemented in V1.5.0.
+				console.info(`[Explorer] DB load requested via URL: ${id}`);
+			}
+		});
+	}
 
 	readonly qaCollapsed = signal<boolean>(false);
-
-	/** Forward a board move attempt to the facade (core validation happens in core). */
-	// onMoveAttempt(attempt: ExplorerMoveAttempt): void {
-	// 	console.log('onMoveAttempt :', attempt);
-	// 	this.facade.attemptMove(attempt);
-	// }
 
 	/** Navigate to the selected ply from the move list. */
 	onPlySelected(ply: number): void {
@@ -52,9 +79,20 @@ export class ExplorerPageComponent {
 
 	// --- Controls actions (delegated from BoardControlsComponent) ---
 
-	/** Hard reset the explorer session (returns to CASE1 initial state). */
+	/**
+	 * Hard reset the explorer session (returns to CASE1 initial state).
+	 *
+	 * We also remove dbGameId from the URL to keep route state consistent with CASE1_FREE.
+	 */
 	onReset(): void {
 		this.facade.reset();
+
+		void this.router.navigate([], {
+			relativeTo: this.route,
+			queryParams: { dbGameId: null }, // remove
+			queryParamsHandling: 'merge', // keep other params if any
+			replaceUrl: true, // avoid polluting history
+		});
 	}
 
 	/** Jump to the start of the active line. */
@@ -98,14 +136,17 @@ export class ExplorerPageComponent {
 	}
 
 	onApplyFen(fen: string): void {
-		this.facade.loadFen(fen); // alias ajouté en V1.4.0.0
+		this.facade.loadFen(fen);
 	}
 
 	onApplyPgn(pgn: string): void {
 		this.facade.loadPgn(pgn);
 	}
 
-	// Keep it synchronous: core + facade are synchronous today.
+	/**
+	 * Keep it synchronous: core + facade are synchronous today.
+	 * The board adapter can use this to decide whether to "snap back" on failure.
+	 */
 	readonly validateMoveAttempt = (attempt: ExplorerMoveAttempt): boolean => {
 		return this.facade.attemptMove(attempt);
 	};
@@ -117,4 +158,9 @@ export class ExplorerPageComponent {
 
 	readonly getLegalCaptureDestinationsFrom = (from: string) =>
 		this.facade.getLegalCaptureDestinationsFrom(from);
+
+	private normalizeDbGameId(raw: string | null): string | null {
+		const id = (raw ?? '').trim();
+		return id.length ? id : null;
+	}
 }

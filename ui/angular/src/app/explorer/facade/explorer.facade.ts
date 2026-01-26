@@ -32,6 +32,7 @@ import type {
 	ExplorerVariationLine,
 	ExplorerMainlineMove, // Keep only if some UI still consumes `facade.moves()`
 	PromotionPiece,
+	ExplorerGameSnapshot,
 } from 'my-chess-opening-core/explorer';
 
 /**
@@ -64,6 +65,14 @@ export class ExplorerFacade {
 	// ---------------------------------------------------------------------------
 	// Internal signals (source of truth for UI bindings)
 	// ---------------------------------------------------------------------------
+
+	/**
+	 * Pending DB game id requested by navigation (e.g. /explorer?dbGameId=...).
+	 * This is intentionally UI-side only (it is NOT core state).
+	 *
+	 * In V1.5.0, this will be "consumed" by IPC loading and cleared on success.
+	 */
+	private readonly _pendingDbGameId = signal<string | null>(null);
 
 	/** Current core mode (CASE1_FREE / CASE2_PGN / CASE2_DB). */
 	private readonly _mode = signal<ExplorerMode>(this.session.getMode());
@@ -122,9 +131,22 @@ export class ExplorerFacade {
 	 */
 	private readonly _rev = signal(0);
 
+	/** Normalized FEN (first 4 fields) for stable position identity. */
+	private readonly _normalizedFen = signal<string>(this.session.getCurrentNormalizedFen());
+
+	/** Stable position key derived from normalizedFen (FNV-1a 64-bit hex). */
+	private readonly _positionKey = signal<string>(this.session.getCurrentPositionKey());
+
+	/** DB snapshot currently loaded in the core session (null when not in DB snapshot mode). */
+	private readonly _dbGameSnapshot = signal<ExplorerGameSnapshot | null>(
+		this.session.getDbGameSnapshot(),
+	);
+
 	// ---------------------------------------------------------------------------
 	// Public readonly signals (what the UI should consume)
 	// ---------------------------------------------------------------------------
+
+	readonly pendingDbGameId = this._pendingDbGameId.asReadonly();
 
 	readonly mode = this._mode.asReadonly();
 	readonly source = this._source.asReadonly();
@@ -173,6 +195,10 @@ export class ExplorerFacade {
 	readonly promotionPending = this._promotionPending.asReadonly();
 	readonly lastMoveSquares = this._lastMoveSquares.asReadonly();
 
+	readonly normalizedFen = this._normalizedFen.asReadonly();
+	readonly positionKey = this._positionKey.asReadonly();
+	readonly dbGameSnapshot = this._dbGameSnapshot.asReadonly();
+
 	/**
 	 * Stable snapshot mainly for debug/templates.
 	 * Avoid using this for core UI logic (prefer individual signals).
@@ -200,6 +226,11 @@ export class ExplorerFacade {
 		lastError: this._lastError(),
 		promotionPending: this._promotionPending(),
 		lastMoveSquares: this._lastMoveSquares(),
+
+		normalizedFen: this._normalizedFen(),
+		positionKey: this._positionKey(),
+		dbGameSnapshot: this._dbGameSnapshot(),
+		pendingDbGameId: this._pendingDbGameId(),
 	}));
 
 	constructor() {
@@ -216,6 +247,8 @@ export class ExplorerFacade {
 	 */
 	reset(): void {
 		this.clearTransientUiState();
+		this.setPendingDbGameId(null);
+
 		this.session.resetToInitial();
 		this.refreshFromCore();
 	}
@@ -267,6 +300,9 @@ export class ExplorerFacade {
 	/**
 	 * Loads a DB game into CASE2_DB (only allowed in CASE1_FREE).
 	 * On failure, sets `lastError`.
+	 *
+	 * Legacy note:
+	 * Prefer loadDbGameSnapshot() for future-proof "single payload" DB loading.
 	 */
 	loadGameMovesSan(movesSan: string[], meta: ExplorerDbGameMeta): void {
 		this.clearTransientUiState();
@@ -278,6 +314,35 @@ export class ExplorerFacade {
 		}
 
 		this._lastError.set(result.error);
+	}
+
+	/**
+	 * Loads a DB game snapshot into CASE2_DB (only allowed in CASE1_FREE).
+	 * On failure, sets `lastError`.
+	 */
+	loadDbGameSnapshot(snapshot: ExplorerGameSnapshot): void {
+		this.clearTransientUiState();
+
+		const result = this.session.loadDbGameSnapshot(snapshot);
+		if (result.ok) {
+			// Snapshot load is a "hard context switch" -> clear UI-side request state.
+			this._lastError.set(null);
+			this.setPendingDbGameId(null);
+
+			this.refreshFromCore();
+			return;
+		}
+
+		this._lastError.set(result.error);
+	}
+
+	/**
+	 * Stores a pending DB game id requested by navigation (query param).
+	 * `null` clears the pending request.
+	 */
+	setPendingDbGameId(gameId: string | null): void {
+		const id = (gameId ?? '').trim();
+		this._pendingDbGameId.set(id.length ? id : null);
 	}
 
 	// ---------------------------------------------------------------------------
@@ -326,7 +391,7 @@ export class ExplorerFacade {
 
 	/**
 	 * Mainline-only navigation by ply.
-	 * For variations, prefer `goToNode(nodeId)`.
+	 * For variations, prefer goToNode(nodeId).
 	 */
 	goToPly(ply: number): void {
 		this.clearTransientUiState();
@@ -336,10 +401,14 @@ export class ExplorerFacade {
 
 	/**
 	 * Node-based navigation (required for clicking moves inside variations).
+	 *
+	 * Note:
+	 * Core uses ExplorerNodeId; UI keeps node ids as string. We cast locally to keep
+	 * the facade API ergonomic without leaking core types into templates.
 	 */
 	goToNode(nodeId: string): void {
 		this.clearTransientUiState();
-		this.session.goToNode(nodeId as any);
+		this.session.goToNode(nodeId as unknown as any);
 		this.refreshFromCore();
 	}
 
@@ -352,11 +421,11 @@ export class ExplorerFacade {
 	 *
 	 * Return value:
 	 * - true  -> move was applied by the core (board may keep the piece)
-	 * - false -> move rejected or requires promotion (board should snap back unless it handles promo UI)
+	 * - false -> move rejected or requires promotion
 	 *
 	 * Failure mapping:
-	 * - PROMOTION_REQUIRED -> populate `promotionPending`
-	 * - otherwise -> populate `lastError`
+	 * - PROMOTION_REQUIRED -> populate promotionPending
+	 * - otherwise -> populate lastError
 	 */
 	attemptMove(attempt: ExplorerMoveAttempt): boolean {
 		this.clearTransientUiState();
@@ -407,7 +476,7 @@ export class ExplorerFacade {
 	}
 
 	// ---------------------------------------------------------------------------
-	// Public API — board hinting (V1.2.5)
+	// Public API — board hinting
 	// ---------------------------------------------------------------------------
 
 	getLegalDestinationsFrom(from: string): string[] {
@@ -460,6 +529,9 @@ export class ExplorerFacade {
 		this._mode.set(this.session.getMode());
 		this._source.set(this.session.getSource());
 		this._fen.set(this.session.getCurrentFen());
+		this._normalizedFen.set(this.session.getCurrentNormalizedFen());
+		this._positionKey.set(this.session.getCurrentPositionKey());
+		this._dbGameSnapshot.set(this.session.getDbGameSnapshot());
 		this._ply.set(this.session.getCurrentPly());
 		this._currentNodeId.set(this.session.getCurrentNodeId());
 

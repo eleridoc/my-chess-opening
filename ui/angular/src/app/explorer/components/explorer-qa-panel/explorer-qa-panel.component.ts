@@ -1,4 +1,6 @@
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
+import { inject } from '@angular/core';
 import {
 	Component,
 	EventEmitter,
@@ -16,7 +18,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
 
-import type { PromotionPiece } from 'my-chess-opening-core/explorer';
+import type { PromotionPiece, ExplorerGameSnapshot } from 'my-chess-opening-core/explorer';
 import { ExplorerFacade } from '../../facade/explorer.facade';
 
 type QaLogLevel = 'INFO' | 'WARN' | 'ERROR';
@@ -32,6 +34,59 @@ type QaCheckItem = {
 	id: string;
 	label: string;
 	done: boolean;
+};
+
+const DEMO_DB_SNAPSHOT_001: ExplorerGameSnapshot = {
+	schemaVersion: 1,
+	kind: 'DB',
+	gameId: 'demo-001',
+	headers: {
+		event: 'Demo',
+		site: 'Local QA',
+		date: '2026-01-25',
+		white: 'White Demo',
+		black: 'Black Demo',
+		result: '*',
+		opening: 'Ruy Lopez (demo)',
+	},
+	movesSan: [
+		'e4',
+		'e5',
+		'Nf3',
+		'Nc6',
+		'Bb5',
+		'a6',
+		'Ba4',
+		'Nf6',
+		'O-O',
+		'Be7',
+		'Re1',
+		'b5',
+		'Bb3',
+		'd6',
+		'c3',
+		'O-O',
+		'h3',
+		'Nb8',
+		'd4',
+		'Nbd7',
+	],
+};
+
+const DEMO_DB_SNAPSHOT_002: ExplorerGameSnapshot = {
+	schemaVersion: 1,
+	kind: 'DB',
+	gameId: 'demo-002',
+	headers: {
+		event: 'Demo',
+		site: 'Local QA',
+		date: '2026-01-25',
+		white: 'White Demo 2',
+		black: 'Black Demo 2',
+		result: '*',
+		opening: 'Italian Game (demo)',
+	},
+	movesSan: ['e4', 'e5', 'Nf3', 'Nc6', 'Bc4', 'Bc5', 'c3', 'Nf6', 'd4', 'exd4', 'cxd4', 'Bb4+'],
 };
 
 @Component({
@@ -50,6 +105,8 @@ type QaCheckItem = {
 	styleUrl: './explorer-qa-panel.component.scss',
 })
 export class ExplorerQaPanelComponent {
+	private readonly router = inject(Router);
+
 	/**
 	 * QA / Debug panel for Explorer.
 	 *
@@ -185,6 +242,14 @@ export class ExplorerQaPanelComponent {
 	// Scenarios (quick setups for manual testing)
 	// -------------------------------------------------------------------------
 
+	loadDemoDbSnapshot001(): void {
+		this.facade.loadDbGameSnapshot(DEMO_DB_SNAPSHOT_001);
+	}
+
+	loadDemoDbSnapshot002(): void {
+		this.facade.loadDbGameSnapshot(DEMO_DB_SNAPSHOT_002);
+	}
+
 	loadInitial(): void {
 		this.facade.reset();
 		this.addLog('INFO', 'Scenario: reset to initial');
@@ -280,6 +345,13 @@ export class ExplorerQaPanelComponent {
 	goToPly(ply: number): void {
 		this.facade.goToPly(ply);
 		this.addLog('INFO', `Action: goToPly(${ply})`);
+	}
+
+	navigateExplorerWithDbGameId(gameId: string): void {
+		void this.router.navigate(['/explorer'], {
+			queryParams: { dbGameId: gameId },
+			queryParamsHandling: 'merge',
+		});
 	}
 
 	// -------------------------------------------------------------------------

@@ -65,6 +65,7 @@ export class NotificationService {
 			horizontalPosition: 'end',
 			verticalPosition: 'bottom',
 			panelClass: ['mco-snackbar', `mco-snackbar--${kind}`],
+			announcementMessage: message, // Let Material handle SR announcement safely
 		});
 
 		if (opts?.onAction) {
