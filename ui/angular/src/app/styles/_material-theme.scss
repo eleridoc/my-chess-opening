@@ -169,3 +169,40 @@ body.theme-dark {
 	@include mat.theme-overrides($_overrides-dark);
 	@include mat.fab-overrides($_fab_overrides);
 }
+
+/* Context density helpers */
+.app-density--1 {
+	@include mat.theme(
+		(
+			density: -1,
+		)
+	);
+}
+.app-density--2 {
+	@include mat.theme(
+		(
+			density: -2,
+		)
+	);
+}
+.app-density--3 {
+	@include mat.theme(
+		(
+			density: -3,
+		)
+	);
+}
+.app-density--4 {
+	@include mat.theme(
+		(
+			density: -4,
+		)
+	);
+}
+.app-density--5 {
+	@include mat.theme(
+		(
+			density: -5,
+		)
+	);
+}

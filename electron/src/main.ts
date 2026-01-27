@@ -5,6 +5,9 @@ import { coreIsReady } from 'my-chess-opening-core';
 import { testImportSinceYesterday, testImportAllAccountsMax5 } from './dev/testImport';
 import { importAllAccounts } from './import/importAllAccounts';
 import { registerLogsIpc } from './logs/logsIpc';
+import { registerExplorerIpc } from './explorer/explorerIpc';
+import { registerGamesIpc } from './games/gamesIpc';
+import { registerSystemIpc } from './system/systemIpc';
 
 let isImportRunning = false;
 
@@ -177,6 +180,9 @@ app.whenReady().then(() => {
 	);
 
 	registerLogsIpc();
+	registerExplorerIpc();
+	registerGamesIpc();
+	registerSystemIpc();
 
 	createWindow();
 

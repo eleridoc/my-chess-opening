@@ -2,8 +2,10 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
+import { firstValueFrom } from 'rxjs';
 
 import type { ExplorerMoveAttempt } from 'my-chess-opening-core/explorer';
 
@@ -13,6 +15,13 @@ import { ChessBoardComponent } from '../../explorer/components/chess-board/chess
 import { ExplorerImportComponent } from '../../explorer/components/explorer-import/explorer-import.component';
 import { ExplorerQaPanelComponent } from '../../explorer/components/explorer-qa-panel/explorer-qa-panel.component';
 import { MoveListComponent } from '../../explorer/components/move-list/move-list.component';
+import { ExplorerDbService } from '../../services/explorer-db.service';
+import {
+	ResetConfirmDialogComponent,
+	type ResetConfirmDialogData,
+} from '../../shared/dialogs/reset-confirm-dialog/reset-confirm-dialog.component';
+
+type ResetReason = 'DB_LOAD' | 'PGN_IMPORT' | 'FEN_IMPORT';
 
 @Component({
 	selector: 'app-explorer-page',
@@ -26,6 +35,7 @@ import { MoveListComponent } from '../../explorer/components/move-list/move-list
 		ExplorerQaPanelComponent,
 		MatTabsModule,
 		MatIconModule,
+		MatDialogModule,
 	],
 	templateUrl: './explorer-page.component.html',
 	styleUrl: './explorer-page.component.scss',
@@ -34,43 +44,58 @@ export class ExplorerPageComponent {
 	private readonly route = inject(ActivatedRoute);
 	private readonly router = inject(Router);
 	private readonly destroyRef = inject(DestroyRef);
+	private readonly explorerDb = inject(ExplorerDbService);
+	private readonly dialog = inject(MatDialog);
 
+	/** Prevent opening multiple confirm dialogs concurrently. */
+	private resetConfirmOpen = false;
+
+	/** Avoid noisy logs on repeated router emissions. */
 	private lastLoggedDbGameId: string | null = null;
+
+	/** Avoid re-prompting for the same dbGameId on repeated router emissions. */
+	private lastPromptedDbGameId: string | null = null;
+
+	/**
+	 * DB load guards:
+	 * - seq: "last wins" token (increments to cancel older in-flight loads)
+	 * - inFlightId: prevent duplicate concurrent loads for the same id
+	 * - succeededId: prevent re-loading the same game within the current free session
+	 */
+	private dbLoadSeq = 0;
+	private dbLoadInFlightId: string | null = null;
+	private dbLoadSucceededId: string | null = null;
+
+	readonly qaCollapsed = signal<boolean>(false);
 
 	/**
 	 * ExplorerPage is a container page:
 	 * - It composes the Explorer UI (board + move list + controls).
-	 * - It delegates all chess/domain logic to ExplorerFacade (and core).
+	 * - It delegates chess/domain logic to ExplorerFacade (and core).
 	 *
-	 * UI components must only render facade signals and emit user intentions.
+	 * UI components should only render facade signals and emit user intentions.
 	 */
 	constructor(public readonly facade: ExplorerFacade) {
 		this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
-			const raw = params.get('dbGameId');
-			const id = this.normalizeDbGameId(raw);
+			const id = this.normalizeDbGameId(params.get('dbGameId'));
 
-			// Store as "pending" (will be consumed by IPC wiring in V1.5.0).
+			// Store as "pending". It will only be consumed by the facade when a DB load succeeds.
 			this.facade.setPendingDbGameId(id);
 
-			// Avoid noisy logs on every router emission.
 			if (!id) {
+				// URL no longer requests a DB game → clear guards & log state.
 				this.lastLoggedDbGameId = null;
+				this.lastPromptedDbGameId = null;
+				this.resetDbLoadGuards();
 				return;
 			}
 
-			if (id !== this.lastLoggedDbGameId) {
-				this.lastLoggedDbGameId = id;
+			this.logDbRequestOnce(id);
 
-				// NOTE:
-				// We intentionally avoid triggering a snackbar here to prevent UI-side
-				// overlay issues while routing. The QA panel already exposes pendingDbGameId.
-				// IPC wiring will be implemented in V1.5.0.
-				console.info(`[Explorer] DB load requested via URL: ${id}`);
-			}
+			// Always handle the presence of dbGameId; guards inside prevent useless calls.
+			void this.handleDbGameIdFromUrl(id);
 		});
 	}
-
-	readonly qaCollapsed = signal<boolean>(false);
 
 	/** Navigate to the selected ply from the move list. */
 	onPlySelected(ply: number): void {
@@ -80,54 +105,42 @@ export class ExplorerPageComponent {
 	// --- Controls actions (delegated from BoardControlsComponent) ---
 
 	/**
-	 * Hard reset the explorer session (returns to CASE1 initial state).
-	 *
-	 * We also remove dbGameId from the URL to keep route state consistent with CASE1_FREE.
+	 * Hard reset the explorer session (returns to CASE1_FREE).
+	 * We also remove dbGameId from the URL to keep routing state consistent.
 	 */
 	onReset(): void {
 		this.facade.reset();
+		this.lastPromptedDbGameId = null;
+		this.resetDbLoadGuards();
 
-		void this.router.navigate([], {
-			relativeTo: this.route,
-			queryParams: { dbGameId: null }, // remove
-			queryParamsHandling: 'merge', // keep other params if any
-			replaceUrl: true, // avoid polluting history
-		});
+		void this.clearDbGameIdInUrl();
 	}
 
-	/** Jump to the start of the active line. */
 	onStart(): void {
 		this.facade.goStart();
 	}
 
-	/** Go to previous ply. */
 	onPrev(): void {
 		this.facade.goPrev();
 	}
 
-	/** Go to next ply. */
 	onNext(): void {
 		this.facade.goNext();
 	}
 
-	/** Jump to the end of the active line. */
 	onEnd(): void {
 		this.facade.goEnd();
 	}
 
 	onPrevVariationAtPly(ply: number): void {
 		// Only reposition if we are not already at that ply.
-		if (this.facade.ply() !== ply) {
-			this.facade.goToPly(ply);
-		}
+		if (this.facade.ply() !== ply) this.facade.goToPly(ply);
 		this.facade.goPrevVariation();
 	}
 
 	onNextVariationAtPly(ply: number): void {
 		// Only reposition if we are not already at that ply.
-		if (this.facade.ply() !== ply) {
-			this.facade.goToPly(ply);
-		}
+		if (this.facade.ply() !== ply) this.facade.goToPly(ply);
 		this.facade.goNextVariation();
 	}
 
@@ -136,11 +149,11 @@ export class ExplorerPageComponent {
 	}
 
 	onApplyFen(fen: string): void {
-		this.facade.loadFen(fen);
+		void this.applyFenWithResetGuard(fen);
 	}
 
 	onApplyPgn(pgn: string): void {
-		this.facade.loadPgn(pgn);
+		void this.applyPgnWithResetGuard(pgn);
 	}
 
 	/**
@@ -162,5 +175,180 @@ export class ExplorerPageComponent {
 	private normalizeDbGameId(raw: string | null): string | null {
 		const id = (raw ?? '').trim();
 		return id.length ? id : null;
+	}
+
+	private logDbRequestOnce(gameId: string): void {
+		if (gameId === this.lastLoggedDbGameId) return;
+		this.lastLoggedDbGameId = gameId;
+
+		// NOTE:
+		// Avoid snackbar/overlays here to prevent UI overlay issues while routing.
+		console.info(`[Explorer] DB load requested via URL: ${gameId}`);
+	}
+
+	private resetDbLoadGuards(): void {
+		this.dbLoadInFlightId = null;
+		this.dbLoadSucceededId = null;
+		this.dbLoadSeq++; // cancels any in-flight promise ("last wins")
+	}
+
+	private async clearDbGameIdInUrl(): Promise<void> {
+		await this.router.navigate([], {
+			relativeTo: this.route,
+			queryParams: { dbGameId: null },
+			queryParamsHandling: 'merge',
+			replaceUrl: true,
+		});
+	}
+
+	private async openResetConfirmDialog(data: ResetConfirmDialogData): Promise<boolean> {
+		if (this.resetConfirmOpen) return false;
+
+		this.resetConfirmOpen = true;
+
+		// Avoid opening overlays in the middle of a synchronous router emission.
+		// Using a microtask is typically enough and TS-lib compatible.
+		await Promise.resolve();
+
+		try {
+			const ref = this.dialog.open(ResetConfirmDialogComponent, {
+				data,
+				disableClose: true,
+				width: '520px',
+			});
+
+			const result = await firstValueFrom(ref.afterClosed());
+			return result === true;
+		} finally {
+			this.resetConfirmOpen = false;
+		}
+	}
+
+	private async confirmResetIfNeeded(
+		reason: ResetReason,
+		meta?: { gameId?: string },
+	): Promise<boolean> {
+		if (this.facade.mode() === 'CASE1_FREE') return true;
+
+		const message = 'This will reset your current work in Explorer. Do you want to continue?';
+
+		let title = 'Reset required';
+		let details: string | undefined;
+
+		switch (reason) {
+			case 'DB_LOAD':
+				title = 'Load DB game?';
+				details = meta?.gameId ? `GameId: ${meta.gameId}` : undefined;
+				break;
+			case 'PGN_IMPORT':
+				title = 'Import PGN?';
+				break;
+			case 'FEN_IMPORT':
+				title = 'Load FEN?';
+				break;
+		}
+
+		return this.openResetConfirmDialog({
+			title,
+			message,
+			details,
+			confirmLabel: 'Reset & Continue',
+			cancelLabel: 'Cancel',
+		});
+	}
+
+	private async handleDbGameIdFromUrl(gameId: string): Promise<void> {
+		// If we are free, load immediately.
+		if (this.facade.mode() === 'CASE1_FREE') {
+			await this.loadDbGame(gameId);
+			return;
+		}
+
+		// Prevent re-prompting for the same id on repeated router emissions.
+		if (this.lastPromptedDbGameId === gameId) return;
+		this.lastPromptedDbGameId = gameId;
+
+		const ok = await this.confirmResetIfNeeded('DB_LOAD', { gameId });
+
+		if (!ok) {
+			// User canceled: keep current session, remove URL param to avoid loops.
+			this.facade.setPendingDbGameId(null);
+			await this.clearDbGameIdInUrl();
+			this.lastPromptedDbGameId = null;
+			return;
+		}
+
+		// Confirmed: reset session but keep dbGameId in URL, then load.
+		this.facade.reset();
+		this.resetDbLoadGuards();
+
+		// reset() clears pending, re-set it so it can be consumed by loadDbGameSnapshot on success.
+		this.facade.setPendingDbGameId(gameId);
+
+		await this.loadDbGame(gameId);
+	}
+
+	private async loadDbGame(gameId: string): Promise<void> {
+		// Only allowed from CASE1_FREE (core rule).
+		if (this.facade.mode() !== 'CASE1_FREE') return;
+
+		// Already loaded in the current free session.
+		if (this.dbLoadSucceededId === gameId) return;
+
+		// Same request already running.
+		if (this.dbLoadInFlightId === gameId) return;
+
+		this.dbLoadInFlightId = gameId;
+		const seq = ++this.dbLoadSeq;
+
+		try {
+			const res = await this.explorerDb.getGame(gameId);
+
+			// "Last wins" guard
+			if (seq !== this.dbLoadSeq) return;
+
+			if (!res.ok) {
+				console.error(
+					`[Explorer] Failed to load DB game (${gameId}): ${res.error.code} - ${res.error.message}`,
+				);
+				return;
+			}
+
+			this.facade.loadDbGameSnapshot(res.snapshot);
+			this.dbLoadSucceededId = gameId;
+		} catch (e) {
+			console.error(`[Explorer] Failed to load DB game (${gameId})`, e);
+		} finally {
+			// Always release in-flight lock
+			if (this.dbLoadInFlightId === gameId) this.dbLoadInFlightId = null;
+		}
+	}
+
+	private async applyFenWithResetGuard(fen: string): Promise<void> {
+		const ok = await this.confirmResetIfNeeded('FEN_IMPORT');
+		if (!ok) return;
+
+		// Import is not DB mode → ensure URL is not in DB mode.
+		await this.clearDbGameIdInUrl();
+		this.facade.setPendingDbGameId(null);
+
+		this.facade.reset();
+		this.resetDbLoadGuards();
+
+		this.facade.loadFen(fen);
+	}
+
+	private async applyPgnWithResetGuard(pgn: string): Promise<void> {
+		const ok = await this.confirmResetIfNeeded('PGN_IMPORT');
+		if (!ok) return;
+
+		// Import is not DB mode → ensure URL is not in DB mode.
+		await this.clearDbGameIdInUrl();
+		this.facade.setPendingDbGameId(null);
+
+		this.facade.reset();
+		this.resetDbLoadGuards();
+
+		this.facade.loadPgn(pgn);
 	}
 }

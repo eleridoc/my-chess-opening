@@ -1,0 +1,116 @@
+/* Games page styles
+   - Keep styles local to this page.
+   - Use lightweight utility-like classes and avoid duplicating rules. */
+
+.games-search {
+	min-width: 320px;
+}
+
+.games-table {
+	width: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   Players cell (white/black)
+   -------------------------------------------------------------------------- */
+
+.games-player {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 8px;
+}
+
+.games-player__elo {
+	opacity: 0.8;
+	font-size: 12px;
+}
+
+.games-player--me {
+	font-weight: 700;
+}
+
+.games-player--me-win {
+	color: var(--mco-success, #2e7d32);
+}
+
+.games-player--me-loss {
+	color: var(--mco-error, #c62828);
+}
+
+.games-player--me-draw {
+	color: var(--mco-muted, #7a7a7a);
+}
+
+/* --------------------------------------------------------------------------
+   Opening cell (ECO + name)
+   -------------------------------------------------------------------------- */
+
+.games-opening {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 10px;
+}
+
+.games-eco {
+	font-family:
+		ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+		monospace;
+	font-size: 12px;
+	opacity: 0.85;
+}
+
+.games-opening-name {
+	opacity: 0.9;
+}
+
+/* --------------------------------------------------------------------------
+   Time control cell (compact label)
+   -------------------------------------------------------------------------- */
+
+.games-time-compact {
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   Site link (opens in external browser via Electron)
+   -------------------------------------------------------------------------- */
+
+.games-site-link {
+	color: inherit;
+	text-decoration: underline;
+	text-underline-offset: 2px;
+	opacity: 0.9;
+}
+
+.games-site-link:hover {
+	opacity: 1;
+}
+
+/**
+ * Disabled state (no externalUrl available).
+ * We keep an <a> for semantics, but disable pointer interactions and adjust opacity.
+ */
+.games-site-link--disabled {
+	opacity: 0.5;
+	text-decoration: none;
+	pointer-events: none;
+	cursor: default;
+}
+
+/* --------------------------------------------------------------------------
+   Misc
+   -------------------------------------------------------------------------- */
+
+.games-moves {
+	text-align: left;
+	font-variant-numeric: tabular-nums;
+}
+
+/* Empty state inside the scroll area */
+.games-empty {
+	padding: 16px 0;
+	opacity: 0.8;
+	text-align: center;
+	vertical-align: middle;
+}

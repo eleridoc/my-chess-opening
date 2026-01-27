@@ -1,0 +1,88 @@
+/* ==========================================================================
+   Filters pattern
+   ========================================================================== */
+
+.app-filters {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+/* Row 1: main filters */
+.app-filters__main {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	align-items: stretch; /* keep same height when possible */
+}
+
+/* Row 2: advanced filters (should look like just another row) */
+.app-filters__advanced {
+	padding: 0;
+	border: 0;
+	background: none;
+}
+
+.app-filters__advanced-grid {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(220px, 1fr));
+	gap: 12px;
+	padding: 0;
+}
+
+/* Row 3: quick actions */
+.app-filters__quick {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 12px;
+	margin-top: 10px;
+}
+
+.app-filters__quick-buttons {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+}
+
+.app-filters__spacer {
+	flex: 1 1 auto;
+}
+
+.app-filters__loading {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	opacity: 0.85;
+}
+
+.app-filters__chips {
+	margin-top: 2px;
+}
+
+.app-filters__main > button[matButton],
+.app-filters__main > button[mat-button],
+.app-filters__main > button.mat-mdc-button-base {
+	height: auto;
+	align-self: stretch; /* ✅ prend la hauteur du form-field */
+}
+
+.app-filters__main > button.mat-mdc-button-base .mdc-button__label {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+
+/* Responsive grid for advanced filters */
+@media (max-width: 1100px) {
+	.app-filters__advanced-grid {
+		grid-template-columns: repeat(2, minmax(220px, 1fr));
+	}
+}
+
+@media (max-width: 700px) {
+	.app-filters__advanced-grid {
+		grid-template-columns: 1fr;
+	}
+}

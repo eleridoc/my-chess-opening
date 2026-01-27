@@ -1,7 +1,7 @@
 /* ==========================================================================
    Logs page (component-specific)
-   - Most layout/pattern styles are handled globally (app-page, app-filters, etc.)
-   - This file keeps only logs-specific sizing + table + drawer tweaks
+   - Most layout/pattern styles are handled globally (app-page, app-filters, app-table-card, etc.)
+   - This file keeps only logs-specific sizing, table truncation, and drawer tweaks.
    ========================================================================== */
 
 :host {
@@ -22,35 +22,36 @@
 }
 
 /* ==========================================================================
-   FIX: Main filters first row
-   - Override global .mat-mdc-form-field { width: 100%; } for inline rows
-   - Give the fields explicit flex behavior
+   Filters row (logs page)
+   - Global styles usually set mat-form-field to width: 100%.
+   - On this page, the first filters row is inline, so we override width and rely on flex sizing.
    ========================================================================== */
 
 .app-filters__main {
-	/* The global pattern already sets display:flex etc.
-	   Here we only ensure form-fields can shrink in the row. */
+	/* Allow form fields to participate in the inline flex row (shrink/grow). */
 	> mat-form-field {
 		width: auto;
+		min-width: 0;
 	}
 }
 
-/* Search should grow and take remaining space */
+/* Search should grow and take remaining space. */
 .logs-search {
 	flex: 1 1 560px;
 	min-width: 320px;
 }
 
-/* Level + Time are fixed-width controls */
+/* Level + Time are fixed-width controls (desktop). */
 .logs-level,
 .logs-time {
 	flex: 0 0 200px;
 	width: 200px;
+	min-width: 0;
 }
 
-/* Toggle button should visually match the outline field height */
+/* Toggle button should visually align with the "fill" field height (with your density). */
 .logs-advanced-toggle {
-	height: 48px; /* Material outline field height with your density */
+	height: 48px;
 	align-self: stretch;
 	display: inline-flex;
 	align-items: center;
@@ -63,51 +64,26 @@
 }
 
 /* ==========================================================================
-   Table (logs-specific table look)
+   Table (logs-specific)
    ========================================================================== */
 
 .logs-table {
 	width: 100%;
 }
 
-:host ::ng-deep .logs-table .mat-mdc-header-row {
-	background: rgba(0, 0, 0, 0.18);
-}
-
-:host ::ng-deep .logs-table .mat-mdc-header-cell,
-:host ::ng-deep .logs-table .mat-mdc-cell {
-	padding: 10px 12px;
-	border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-	vertical-align: middle;
-}
-
-:host ::ng-deep .logs-table .mat-mdc-row:hover .mat-mdc-cell {
-	background: rgba(255, 255, 255, 0.03);
-}
-
-.actions-col {
-	width: 132px;
-}
-
-.actions {
-	display: flex;
-	justify-content: flex-end;
-	gap: 4px;
-}
-
-/* These classes are used in your HTML */
-.app-table__message {
+/* Truncated cells */
+.logs-message {
 	max-width: 720px;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
 
-.app-table__external-id {
+.logs-external-id {
+	max-width: 220px;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
-	max-width: 220px;
 }
 
 /* ==========================================================================
@@ -115,16 +91,18 @@
    ========================================================================== */
 
 .details-drawer {
+	/* Create spacing between table and drawer */
 	margin-top: 8px;
 	margin-bottom: 12px;
 	margin-right: 8px;
-	margin-left: 12px; /* spacing between table and drawer */
+	margin-left: 12px;
 
 	height: calc(100% - 8px - 12px);
 	border-radius: 14px;
 	overflow: hidden;
 }
 
+/* Sticky header inside drawer */
 .drawer-header {
 	position: sticky;
 	top: 0;
@@ -134,7 +112,7 @@
 	align-items: center;
 	justify-content: space-between;
 
-	padding: 12px 12px;
+	padding: 12px;
 	border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 	background: rgba(0, 0, 0, 0.22);
 }
@@ -144,13 +122,16 @@
 	letter-spacing: 0.2px;
 }
 
+/* Drawer scroll area */
 .drawer-body {
 	padding: 12px;
 	display: flex;
 	flex-direction: column;
 	gap: 12px;
-	max-height: calc(100% - 56px);
+
+	/* Let the body scroll under the sticky header */
 	overflow: auto;
+	max-height: calc(100% - 56px);
 }
 
 .drawer-loading {
@@ -167,7 +148,7 @@
 .drawer-section {
 	border: 1px solid rgba(255, 255, 255, 0.08);
 	border-radius: 12px;
-	padding: 10px 10px;
+	padding: 10px;
 	background: rgba(0, 0, 0, 0.1);
 }
 
@@ -177,6 +158,7 @@
 	opacity: 0.95;
 }
 
+/* Key/value grid */
 .kv {
 	display: grid;
 	grid-template-columns: 90px 1fr;
@@ -211,6 +193,7 @@
 	gap: 8px;
 }
 
+/* Code blocks */
 .pre {
 	margin: 0;
 	padding: 10px;
@@ -228,7 +211,7 @@
 	max-height: 260px;
 }
 
-/* Optional: keep your previous behavior */
+/* Optional: preserve previous behavior when the drawer is open */
 .logs-container.drawer-open .logs-content {
 	padding-right: 12px;
 }
@@ -253,7 +236,7 @@
 		max-width: 85vw;
 	}
 
-	.app-table__message {
+	.logs-message {
 		max-width: 420px;
 	}
 }

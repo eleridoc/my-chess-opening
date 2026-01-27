@@ -1,0 +1,288 @@
+/* ==========================================================================
+   Table card pattern
+   ========================================================================== */
+
+.app-table-card {
+	flex: 1 1 auto;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	border: 1px solid var(--app-border);
+	border-radius: var(--app-radius-lg);
+	overflow: hidden;
+	background: var(--app-bg);
+
+	/* Density defaults */
+	--app-table-cell-py: 10px;
+	--app-table-cell-px: 12px;
+	--app-table-font-size: inherit;
+	--app-table-line-height: 1.25;
+	--app-table-row-min-height: 49px;
+
+	--app-table-btn-width: 50px;
+	--app-table-btn-height: 49px;
+	--app-table-btn-mr: 10px;
+	--app-table-icon-size: 35px;
+
+	--app-pg-height: 52px; /* normal */
+	--app-pg-py: 6px;
+	--app-pg-font-size: 13px;
+	--app-pg-field-height: 36px;
+	--app-pg-field-px: 10px;
+	--app-pg-btn-size: 32px;
+	--app-pg-icon-size: 20px;
+}
+
+/* Variants */
+.app-table-card--dense {
+	--app-table-cell-py: 6px;
+	--app-table-cell-px: 10px;
+	--app-table-font-size: 14px;
+	--app-table-row-min-height: 44px;
+
+	--app-table-btn-width: 45px;
+	--app-table-btn-height: 44px;
+	--app-table-btn-mr: 5px;
+	--app-table-icon-size: 35px;
+
+	--app-pg-height: 46px;
+	--app-pg-py: 4px;
+	--app-pg-font-size: 12px;
+	--app-pg-field-height: 32px;
+	--app-pg-field-px: 8px;
+	--app-pg-btn-size: 30px;
+	--app-pg-icon-size: 18px;
+}
+
+.app-table-card--dense .mat-mdc-row,
+.app-table-card--dense .mat-mdc-header-row {
+	height: 45px;
+}
+
+.app-table-card--compact {
+	--app-table-cell-py: 4px;
+	--app-table-cell-px: 8px;
+	--app-table-font-size: 14px;
+	--app-table-row-min-height: 39px;
+
+	--app-table-btn-width: 45px;
+	--app-table-btn-height: 39px;
+	--app-table-btn-mr: 0px;
+	--app-table-icon-size: 30px;
+
+	--app-pg-height: 42px;
+	--app-pg-py: 2px;
+	--app-pg-font-size: 12px;
+	--app-pg-field-height: 30px;
+	--app-pg-field-px: 8px;
+	--app-pg-btn-size: 28px;
+	--app-pg-icon-size: 18px;
+}
+
+.app-table-card--compact .mat-mdc-row,
+.app-table-card--compact .mat-mdc-header-row {
+	height: 40px;
+}
+
+.app-table-card .mat-mdc-row {
+	background-color: var(--app-bg-plus-2);
+}
+
+.app-table-card .mat-mdc-header-row {
+	background-color: var(--app-bg-less-1);
+}
+
+.app-table-card .mat-mdc-paginator {
+	background-color: var(--app-bg-less-1);
+}
+
+/* --------------------------------------------------------------------------
+   app-table-card__icon-button inside table cells use .app-table-card__actions on cell
+   -------------------------------------------------------------------------- */
+
+.app-table-card .app-table-card__actions.mat-mdc-cell {
+	white-space: nowrap;
+	padding: 0;
+	margin: 0;
+	text-align: right;
+	padding-right: 5px;
+}
+
+.app-table-card .app-table-card__actions .app-table-card__icon-button {
+	width: var(--app-table-btn-width);
+	height: var(--app-table-btn-height);
+	display: inline-flex;
+	margin-right: var(--app-table-btn-mr);
+	align-items: center;
+	justify-content: center;
+	border-radius: var(--app-button-radius);
+}
+
+.app-table-card .app-table-card__actions .app-table-card__icon-button:hover {
+	background-color: var(--app-bg);
+}
+
+.app-table-card .app-table-card__actions .mat-icon {
+	font-size: var(--app-table-icon-size);
+	width: var(--app-table-btn-size);
+	height: var(--app-table-icon-size);
+	line-height: var(--app-table-icon-size);
+	padding: 0;
+	margin: 0;
+	cursor: pointer;
+	display: inline-block;
+}
+
+/* Scroll area */
+.app-table-card__scroll {
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow: auto;
+	position: relative; /* helps sticky rendering */
+}
+
+/* Table rows min height (important: affects real row height) */
+.app-table-card :is(.mat-mdc-row, .mat-mdc-header-row) {
+	min-height: var(--app-table-row-min-height);
+}
+
+/* Cells */
+.app-table-card .mat-mdc-header-cell,
+.app-table-card .mat-mdc-cell {
+	padding: var(--app-table-cell-py) var(--app-table-cell-px);
+	font-size: var(--app-table-font-size);
+	line-height: var(--app-table-line-height);
+	border-bottom: 1px solid var(--app-border);
+	vertical-align: middle;
+}
+
+/* Hover */
+.app-table-card .mat-mdc-row:hover .mat-mdc-cell {
+	background: var(--app-bg-plus-3);
+}
+
+/* Sticky header: put this class on the header row:
+   <tr mat-header-row ... class="app-table-card__sticky-header"></tr>
+*/
+.app-table-card__sticky-header {
+	position: sticky;
+	top: 0;
+	z-index: 3;
+	// background: var(--app-surface-2);
+}
+
+/* --- Sticky header (Material table) --- */
+/* Put this class on the header row:
+   <tr mat-header-row ... class="app-table-card__sticky-header"></tr>
+*/
+.app-table-card__sticky-header {
+	position: sticky;
+	top: 0;
+	z-index: 3;
+
+	/* Must be opaque so rows don't show behind */
+	// background: var(--app-surface-2);
+}
+
+/* Ensure header cells keep the opaque background too */
+.app-table-card__sticky-header .mat-mdc-header-cell {
+	background: inherit;
+}
+
+/* Optional: subtle separation line under sticky header */
+.app-table-card__sticky-header .mat-mdc-header-cell {
+	box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.12);
+}
+
+/* --------------------------------------------------------------------------
+   Paginator density (scoped)
+   -------------------------------------------------------------------------- */
+
+.app-table-card__paginator {
+	/* fixed height for compact variants */
+	min-height: var(--app-pg-height);
+	height: var(--app-pg-height);
+	padding: var(--app-pg-py) 12px;
+	display: flex !important;
+	align-items: center;
+	font-size: var(--app-pg-font-size);
+	justify-content: right;
+}
+
+/* Container */
+.app-table-card__paginator .mat-mdc-paginator-container {
+	min-height: 0;
+	height: 100%;
+	padding: 0;
+	align-items: center;
+}
+
+/* Page size form-field (mat-select) */
+.app-table-card__paginator .mat-mdc-paginator-page-size {
+	align-items: center;
+}
+
+/* Reduce label spacing */
+.app-table-card__paginator .mat-mdc-paginator-page-size-label {
+	margin-right: 8px;
+}
+
+/* Make the mat-form-field shorter */
+.app-table-card__paginator .mat-mdc-form-field {
+	height: var(--app-pg-field-height);
+	margin: 0;
+}
+
+/* Remove extra vertical padding inside the field */
+.app-table-card__paginator .mat-mdc-form-field-infix {
+	padding-top: 0;
+	padding-bottom: 0;
+	min-height: var(--app-pg-field-height);
+	display: flex;
+	align-items: center;
+}
+
+/* Outline/filled wrapper height alignment */
+.app-table-card__paginator .mat-mdc-text-field-wrapper {
+	height: var(--app-pg-field-height);
+	padding: 0 var(--app-pg-field-px);
+	display: flex;
+	align-items: center;
+}
+
+/* Select trigger/value alignment */
+.app-table-card__paginator .mat-mdc-select-trigger {
+	height: var(--app-pg-field-height);
+	display: inline-flex;
+	align-items: center;
+}
+
+.app-table-card__paginator .mat-mdc-select-value {
+	display: inline-flex;
+	align-items: center;
+}
+
+/* Nav buttons */
+.app-table-card__paginator .mat-mdc-paginator-range-actions {
+	height: 100%;
+	display: inline-flex;
+	align-items: center;
+}
+
+.app-table-card__paginator .mat-mdc-icon-button {
+	width: var(--app-pg-btn-size);
+	height: var(--app-pg-btn-size);
+	padding: 0;
+}
+
+.app-table-card__paginator .mat-mdc-icon-button .mat-mdc-button-touch-target {
+	width: var(--app-pg-btn-size);
+	height: var(--app-pg-btn-size);
+}
+
+.app-table-card__paginator .mat-mdc-icon-button mat-icon {
+	font-size: var(--app-pg-icon-size);
+	width: var(--app-pg-icon-size);
+	height: var(--app-pg-icon-size);
+	line-height: var(--app-pg-icon-size);
+}

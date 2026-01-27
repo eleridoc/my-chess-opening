@@ -91,6 +91,10 @@ model Game {
   //  1 = white win, 0 = draw, -1 = black win
   resultKey Int
 
+    // Result as numeric key for fast aggregation (owner perspective):
+  //  1 = owner win, 0 = draw/unknown, -1 = owner loss
+  myResultKey Int @default(0)
+
   // Raw data
   pgn     String
   pgnHash String?
@@ -122,6 +126,7 @@ model Game {
   @@index([playedAt])
   @@index([eco])
   @@index([resultKey])
+  @@index([accountConfigId, myResultKey])
 }
 
 model GamePlayer {

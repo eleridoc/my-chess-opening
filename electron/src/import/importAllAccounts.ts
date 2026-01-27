@@ -82,7 +82,7 @@ async function persistGame(params: {
 	const { accountConfigId, game } = params;
 
 	// Perspective must be applied by the importer layer (applyOwnerPerspective).
-	if (!game.myColor || !game.myUsername || !game.opponentUsername) {
+	if (!game.myColor || !game.myUsername || !game.opponentUsername || game.myResultKey == null) {
 		throw new Error(
 			`Missing owner perspective fields for ${game.site}:${game.externalId}. Did you forget applyOwnerPerspective()?`,
 		);
@@ -140,6 +140,7 @@ async function persistGame(params: {
 					opponentElo: game.opponentElo ?? null,
 					myRatingDiff: game.myRatingDiff ?? null,
 					opponentRatingDiff: game.opponentRatingDiff ?? null,
+					myResultKey: game.myResultKey,
 				},
 				select: { id: true },
 			});

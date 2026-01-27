@@ -1,0 +1,50 @@
+/* ResetConfirmDialog (component-specific)
+   - Keep it compact and readable.
+   - Details block is optional and should wrap long ids safely. */
+
+.reset-confirm-dialog__content {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+
+	/* Avoid tiny dialogs while still allowing it to shrink on small screens */
+	min-width: 360px;
+	max-width: 640px;
+}
+
+.reset-confirm-dialog__message {
+	margin: 0;
+	opacity: 0.9;
+}
+
+/* Optional details (e.g. GameId) */
+.reset-confirm-dialog__details {
+	margin: 0;
+	padding: 10px 12px;
+	border-radius: 10px;
+
+	/* Use a code-like appearance without forcing a huge block */
+	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+	font-size: 12px;
+	line-height: 16px;
+
+	opacity: 0.9;
+	white-space: pre-wrap;
+	word-break: break-word;
+	overflow-wrap: anywhere;
+
+	/* Subtle surface (works for both themes with your CSS variables) */
+	background: rgba(0, 0, 0, 0.18);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.reset-confirm-dialog__actions {
+	padding-top: 8px;
+}
+
+/* Small screens: let the dialog shrink naturally */
+@media (max-width: 420px) {
+	.reset-confirm-dialog__content {
+		min-width: 0;
+	}
+}

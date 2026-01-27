@@ -1,40 +1,48 @@
-import type { ImportedGameRaw } from '../types';
+import type { ImportedGameRaw, ResultKey } from '../types';
 
 /**
  * Adds "owner perspective" fields to a normalized game.
- * The owner is the account username currently being imported (AccountConfig.username).
  *
- * This solves multi-accounts / multi-usernames without any global alias mapping:
+ * The owner is the account username currently being imported (AccountConfig.username).
+ * We compute "my*" fields (myColor, myUsername, myResultKey, etc.) relative to that owner.
+ *
+ * This enables multi-accounts / multi-usernames without any global alias mapping:
  * - Each imported game is linked to a specific account (username + site).
- * - We compute myColor/opponent fields relative to that owner username.
+ * - We compute owner-relative fields purely from the PGN player names.
+ *
+ * IMPORTANT:
+ * - `game.resultKey` remains the objective result key from White's perspective:
+ *    1 = White win, 0 = draw/unknown, -1 = Black win
+ * - `game.myResultKey` is the owner perspective:
+ *    1 = owner win, 0 = draw/unknown, -1 = owner loss
  */
 export function applyOwnerPerspective(
 	game: ImportedGameRaw,
 	ownerUsername: string,
 ): ImportedGameRaw {
-	const owner = ownerUsername.toLowerCase();
+	const owner = ownerUsername.trim().toLowerCase();
 
-	const white = game.players[0];
-	const black = game.players[1];
+	const [white, black] = game.players;
 
-	const isWhite = white.username.toLowerCase() === owner;
-	const isBlack = black.username.toLowerCase() === owner;
+	const isWhiteOwner = white.username.trim().toLowerCase() === owner;
+	const isBlackOwner = black.username.trim().toLowerCase() === owner;
 
-	if (!isWhite && !isBlack) {
+	if (!isWhiteOwner && !isBlackOwner) {
 		throw new Error(
 			`[applyOwnerPerspective] Owner is not a player in this game: owner=${ownerUsername} game=${game.site}:${game.externalId}`,
 		);
 	}
 
-	const myColor = isWhite ? 'white' : 'black';
+	const myColor = isWhiteOwner ? 'white' : 'black';
+	const my = isWhiteOwner ? white : black;
+	const opp = isWhiteOwner ? black : white;
 
-	const my = isWhite ? white : black;
-	const opp = isWhite ? black : white;
+	const myResultKey = toOwnerResultKey(game.resultKey, isWhiteOwner);
 
 	return {
 		...game,
 
-		// Objective snapshot (from PGN)
+		// Objective snapshot (from PGN headers)
 		whiteUsername: white.username,
 		blackUsername: black.username,
 		whiteElo: white.elo,
@@ -50,5 +58,23 @@ export function applyOwnerPerspective(
 		opponentElo: opp.elo,
 		myRatingDiff: my.ratingDiff,
 		opponentRatingDiff: opp.ratingDiff,
+		myResultKey,
 	};
+}
+
+/**
+ * Convert a result key from White's perspective to the owner's perspective.
+ *
+ * White POV:
+ *  1 = White win, 0 = draw/unknown, -1 = Black win
+ *
+ * Owner POV:
+ *  1 = owner win, 0 = draw/unknown, -1 = owner loss
+ */
+function toOwnerResultKey(resultKey: ResultKey, ownerIsWhite: boolean): ResultKey {
+	if (resultKey === 0) return 0;
+	if (ownerIsWhite) return resultKey;
+
+	// Owner is Black: invert non-zero keys
+	return (resultKey === 1 ? -1 : 1) as ResultKey;
 }

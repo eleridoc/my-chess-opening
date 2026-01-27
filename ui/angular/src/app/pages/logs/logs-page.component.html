@@ -14,7 +14,7 @@
 				<span>Loading…</span>
 			</div>
 
-			<ng-container *ngIf="!detailsLoading() && selectedDetails() as d">
+			<ng-container *ngIf="!detailsLoading() && selectedDetails() as d; else noDetails">
 				<div class="drawer-section">
 					<div class="kv">
 						<span>ID</span><code>{{ d.id }}</code>
@@ -41,7 +41,14 @@
 					<div class="kv">
 						<span>URL</span>
 						<ng-container *ngIf="d.url; else noUrl">
-							<a class="drawer-link" (click)="openUrl(d.url)">{{ d.url }}</a>
+							<!-- Keep anchor semantics; prevent default and delegate to system open -->
+							<a
+								class="drawer-link"
+								[attr.href]="d.url"
+								(click)="openUrl(d.url); $event.preventDefault()"
+							>
+								{{ d.url }}
+							</a>
 						</ng-container>
 						<ng-template #noUrl><code>(empty)</code></ng-template>
 					</div>
@@ -51,17 +58,22 @@
 					</div>
 
 					<div class="drawer-actions">
-						<button mat-stroked-button (click)="copyToClipboard(d.message)">
+						<button mat-stroked-button type="button" (click)="copyToClipboard(d.message)">
 							<mat-icon>content_copy</mat-icon>
 							Copy message
 						</button>
 
-						<button mat-stroked-button *ngIf="d.data" (click)="copyToClipboard(d.data!)">
+						<button
+							mat-stroked-button
+							type="button"
+							*ngIf="d.data"
+							(click)="copyToClipboard(d.data!)"
+						>
 							<mat-icon>content_copy</mat-icon>
 							Copy data
 						</button>
 
-						<button mat-flat-button (click)="viewRun(d.importRunId)">
+						<button mat-flat-button type="button" (click)="viewRun(d.importRunId)">
 							<mat-icon>filter_alt</mat-icon>
 							View run
 						</button>
@@ -79,9 +91,9 @@
 				</div>
 			</ng-container>
 
-			<ng-container *ngIf="!detailsLoading() && !selectedDetails()">
+			<ng-template #noDetails>
 				<div class="drawer-empty">No details.</div>
-			</ng-container>
+			</ng-template>
 		</div>
 	</mat-sidenav>
 
@@ -89,10 +101,10 @@
 	<mat-sidenav-content class="logs-content">
 		<div class="app-page">
 			<!-- Filters -->
-			<div class="app-filters">
+			<div class="app-filters app-density--5">
 				<!-- Row 1: main filters + single toggle button -->
 				<div class="app-filters__main">
-					<mat-form-field appearance="outline" class="logs-search">
+					<mat-form-field appearance="fill" subscriptSizing="dynamic" class="logs-search">
 						<mat-label>Search</mat-label>
 						<input
 							matInput
@@ -102,7 +114,7 @@
 						/>
 					</mat-form-field>
 
-					<mat-form-field appearance="outline" class="logs-level">
+					<mat-form-field appearance="fill" subscriptSizing="dynamic" class="logs-level">
 						<mat-label>Level</mat-label>
 						<mat-select multiple [ngModel]="levels()" (ngModelChange)="levels.set($event)">
 							<mat-option [value]="'INFO'">INFO</mat-option>
@@ -111,7 +123,7 @@
 						</mat-select>
 					</mat-form-field>
 
-					<mat-form-field appearance="outline" class="logs-time">
+					<mat-form-field appearance="fill" subscriptSizing="dynamic" class="logs-time">
 						<mat-label>Time</mat-label>
 						<mat-select [ngModel]="timePreset()" (ngModelChange)="timePreset.set($event)">
 							<mat-option [value]="'none'">All</mat-option>
@@ -123,6 +135,7 @@
 
 					<button
 						mat-stroked-button
+						type="button"
 						class="logs-advanced-toggle"
 						(click)="toggleAdvanced()"
 						[attr.aria-expanded]="advancedOpen()"
@@ -136,7 +149,7 @@
 				<!-- Row 2: advanced filters (collapsible) -->
 				<div class="app-filters__advanced" *ngIf="advancedOpen()">
 					<div class="app-filters__advanced-grid">
-						<mat-form-field appearance="outline">
+						<mat-form-field appearance="fill" subscriptSizing="dynamic">
 							<mat-label>Site</mat-label>
 							<mat-select multiple [ngModel]="sites()" (ngModelChange)="sites.set($event)">
 								<mat-option [value]="'CHESSCOM'">CHESSCOM</mat-option>
@@ -144,7 +157,7 @@
 							</mat-select>
 						</mat-form-field>
 
-						<mat-form-field appearance="outline">
+						<mat-form-field appearance="fill" subscriptSizing="dynamic">
 							<mat-label>Scope</mat-label>
 							<mat-select
 								multiple
@@ -156,7 +169,7 @@
 							</mat-select>
 						</mat-form-field>
 
-						<mat-form-field appearance="outline">
+						<mat-form-field appearance="fill" subscriptSizing="dynamic">
 							<mat-label>Username</mat-label>
 							<input
 								matInput
@@ -166,7 +179,7 @@
 							/>
 						</mat-form-field>
 
-						<mat-form-field appearance="outline">
+						<mat-form-field appearance="fill" subscriptSizing="dynamic">
 							<mat-label>Run ID</mat-label>
 							<input
 								matInput
@@ -181,9 +194,11 @@
 				<!-- Row 3: quick filters (buttons only) -->
 				<div class="app-filters__quick">
 					<div class="app-filters__quick-buttons">
-						<button mat-stroked-button (click)="setErrorsOnly()">Errors only</button>
-						<button mat-stroked-button (click)="setWarningsAndErrors()">Warn + Error</button>
-						<button mat-stroked-button (click)="clearFilters()">Clear</button>
+						<button mat-stroked-button type="button" (click)="setErrorsOnly()">Errors only</button>
+						<button mat-stroked-button type="button" (click)="setWarningsAndErrors()">
+							Warn + Error
+						</button>
+						<button mat-stroked-button type="button" (click)="clearFilters()">Clear</button>
 					</div>
 
 					<div class="app-filters__spacer"></div>
@@ -222,7 +237,7 @@
 			</div>
 
 			<!-- Table card -->
-			<div class="app-table-card">
+			<div class="app-table-card app-table-card--compact">
 				<div class="app-table-card__scroll">
 					<table mat-table [dataSource]="items()" class="logs-table">
 						<ng-container matColumnDef="createdAt">
@@ -275,23 +290,40 @@
 						</ng-container>
 
 						<ng-container matColumnDef="actions">
-							<th mat-header-cell *matHeaderCellDef class="logs-actions-col"></th>
-							<td mat-cell *matCellDef="let row" class="logs-actions">
-								<button mat-icon-button (click)="openDetails(row)" title="Details">
+							<th mat-header-cell *matHeaderCellDef></th>
+							<td mat-cell *matCellDef="let row" class="app-table-card__actions">
+								<span
+									class="app-table-card__icon-button"
+									role="button"
+									tabindex="0"
+									aria-label="Open details"
+									(click)="openDetails(row)"
+									(keydown.enter)="openDetails(row)"
+									(keydown.space)="openDetails(row)"
+								>
 									<mat-icon>info</mat-icon>
-								</button>
+								</span>
 
-								<button mat-icon-button *ngIf="row.url" (click)="openUrl(row.url)" title="Open URL">
-									<mat-icon>open_in_new</mat-icon>
-								</button>
-
-								<button mat-icon-button (click)="viewRun(row.importRunId)" title="Filter by run">
+								<span
+									class="app-table-card__icon-button"
+									role="button"
+									tabindex="0"
+									aria-label="Filter by run"
+									(click)="viewRun(row.importRunId)"
+									(keydown.enter)="viewRun(row.importRunId)"
+									(keydown.space)="viewRun(row.importRunId)"
+								>
 									<mat-icon>filter_alt</mat-icon>
-								</button>
+								</span>
 							</td>
 						</ng-container>
 
-						<tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+						<!-- Sticky header is applied once on the header row -->
+						<tr
+							mat-header-row
+							*matHeaderRowDef="displayedColumns"
+							class="app-table-card__sticky-header"
+						></tr>
 						<tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
 					</table>
 				</div>

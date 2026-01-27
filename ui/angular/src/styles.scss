@@ -3,6 +3,9 @@
 @use './app/styles/material-overrides';
 
 @use './app/styles/primitives/app-patterns';
+@use './app/styles/primitives/app-card';
+@use './app/styles/primitives/app-filters';
+@use './app/styles/primitives/app-table-card';
 @use './app/styles/integrations/chessboard-markers';
 @use './app/styles/integrations/snackbar';
 

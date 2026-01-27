@@ -1,22 +1,46 @@
-import { ExternalSite, GameSpeed, ImportedGamePlayer, ImportedGameRaw } from '../types';
-import { ParsedPgnGame } from './parsePgn';
+import type {
+	ExternalSite,
+	GameSpeed,
+	ImportedGamePlayer,
+	ImportedGameRaw,
+	ResultKey,
+} from '../types';
+import type { ParsedPgnGame } from './parsePgn';
 import { enrichMovesWithFenAndHash } from './enrichMovesWithFen';
 
+/**
+ * Parse a PGN time control string.
+ *
+ * Expected formats:
+ * - Lichess: often "900+10" (seconds + increment seconds)
+ * - Chess.com: commonly the same
+ *
+ * If parsing fails, returns {0,0} (unknown).
+ */
 function parseTimeControl(tc: string): { initialSeconds: number; incrementSeconds: number } {
-	// Example: "900+10"
-	const m = tc.trim().match(/^(\d+)\+(\d+)$/);
+	const m = (tc ?? '').trim().match(/^(\d+)\+(\d+)$/);
 	if (!m) return { initialSeconds: 0, incrementSeconds: 0 };
 	return { initialSeconds: Number(m[1]), incrementSeconds: Number(m[2]) };
 }
 
+/**
+ * Compute a rough speed bucket from the initial time.
+ * Thresholds are pragmatic (not perfect) but stable and good enough for filtering.
+ */
 function speedFromInitial(initialSeconds: number): GameSpeed {
-	// Pragmatic thresholds
 	if (initialSeconds <= 180) return 'bullet';
 	if (initialSeconds <= 480) return 'blitz';
 	if (initialSeconds <= 1500) return 'rapid';
 	return 'classical';
 }
 
+/**
+ * Parse UTC playedAt from common PGN header combinations.
+ *
+ * Sources observed:
+ * - Lichess: UTCDate + UTCTime
+ * - Chess.com: sometimes Date + StartTime + Timezone=UTC
+ */
 function parseUtcDateTime(headers: Record<string, string>): Date | null {
 	const utcDate = headers['UTCDate']; // "2025.11.25"
 	const utcTime = headers['UTCTime']; // "15:55:12"
@@ -41,11 +65,18 @@ function parseUtcDateTime(headers: Record<string, string>): Date | null {
 	return null;
 }
 
+/**
+ * Extract external id and (optional) site URL from PGN headers.
+ *
+ * Notes:
+ * - Lichess usually provides GameId and/or Site.
+ * - Chess.com provides Link, but can vary by mode (live/daily/etc.).
+ */
 function extractExternalIdentity(
 	site: ExternalSite,
 	headers: Record<string, string>,
 ): { externalId: string; siteUrl?: string } {
-	if (site === ExternalSite.LICHESS) {
+	if (site === 'LICHESS') {
 		const gameId = headers['GameId'];
 		const url = headers['Site']; // "https://lichess.org/JPZ0OVJW"
 		const idFromUrl = url?.match(/lichess\.org\/([a-zA-Z0-9]+)/)?.[1];
@@ -69,9 +100,13 @@ function toNumberOrUndefined(v: string | undefined): number | undefined {
 	return Number.isFinite(n) ? n : undefined;
 }
 
+/**
+ * Parse players from PGN headers.
+ *
+ * We keep a normalized players tuple [white, black], and we also denormalize
+ * white/black fields into ImportedGameRaw for faster persistence/queries.
+ */
 function parsePlayers(headers: Record<string, string>): [ImportedGamePlayer, ImportedGamePlayer] {
-	// We keep players as a normalized structure, but we will also denormalize
-	// white/black info into ImportedGameRaw for faster persistence and queries.
 	const white: ImportedGamePlayer = {
 		color: 'white',
 		username: (headers['White'] || '').trim(),
@@ -89,12 +124,27 @@ function parsePlayers(headers: Record<string, string>): [ImportedGamePlayer, Imp
 	return [white, black];
 }
 
-function resultKeyFromResult(result: string): 1 | 0 | -1 {
+/**
+ * Compute a numeric result key from the PGN Result header.
+ *
+ * White POV:
+ *  1 = White win, 0 = draw/unknown, -1 = Black win
+ *
+ * Owner POV (myResultKey) is computed later by applyOwnerPerspective().
+ */
+function resultKeyFromResult(result: string): ResultKey {
 	if (result === '1-0') return 1;
 	if (result === '0-1') return -1;
 	return 0; // "1/2-1/2" or "*"
 }
 
+/**
+ * Normalize a parsed PGN game into ImportedGameRaw.
+ *
+ * This function is intentionally "objective": it only uses PGN headers and parsed moves,
+ * and does not compute owner-relative fields (myColor/myUsername/myResultKey).
+ * Those are computed later by applyOwnerPerspective().
+ */
 export function normalizeParsedGame(params: {
 	site: ExternalSite;
 	parsed: ParsedPgnGame;
@@ -115,11 +165,11 @@ export function normalizeParsedGame(params: {
 	const speed: GameSpeed = speedFromInitial(initialSeconds);
 
 	const variant = h['Variant'] || variantHint || 'Standard';
+
+	// If no hint is provided, we default to "rated" (conservative).
 	const rated = typeof ratedHint === 'boolean' ? ratedHint : true;
 
-	const players = parsePlayers(h);
-	const white = players[0];
-	const black = players[1];
+	const [white, black] = parsePlayers(h);
 
 	const debugId = `${site}:${externalId}`;
 
@@ -135,9 +185,12 @@ export function normalizeParsedGame(params: {
 	const resultKey = resultKeyFromResult(result);
 
 	return {
+		// External identity
 		site,
 		externalId,
 		siteUrl,
+
+		// Time / meta
 		playedAt,
 		rated,
 		variant,
@@ -146,7 +199,7 @@ export function normalizeParsedGame(params: {
 		initialSeconds,
 		incrementSeconds,
 
-		// Result info (use resultKey for fast aggregations)
+		// Result (objective: White POV)
 		result,
 		resultKey,
 
@@ -155,10 +208,10 @@ export function normalizeParsedGame(params: {
 		opening: h['Opening'],
 		pgn: rawPgn,
 
-		// Players as parsed from PGN
-		players,
+		// Players (objective)
+		players: [white, black],
 
-		// Denormalized snapshot (objective, from PGN headers)
+		// Denormalized snapshot (objective)
 		whiteUsername: white.username,
 		blackUsername: black.username,
 		whiteElo: white.elo,

@@ -1,12 +1,17 @@
 // electron/src/preload.ts
 
 import { contextBridge, ipcRenderer } from 'electron';
-import type { ElectronApi, SaveAccountsInput, ImportRunNowInput } from 'my-chess-opening-core';
 import type {
+	ElectronApi,
+	SaveAccountsInput,
+	ImportRunNowInput,
+	ExplorerGetGameResult,
 	LogsListInput,
 	LogsListResult,
 	LogEntryDetails,
 	LogsFacetsResult,
+	GamesListInput,
+	GamesListResult,
 } from 'my-chess-opening-core';
 
 function invoke<T>(channel: string, ...args: unknown[]): Promise<T> {
@@ -29,6 +34,15 @@ const api: ElectronApi = {
 		list: (input?: LogsListInput) => invoke<LogsListResult>('logs:list', input ?? {}),
 		getEntry: (id: string) => invoke<LogEntryDetails | null>('logs:getEntry', id),
 		facets: () => invoke<LogsFacetsResult>('logs:facets'),
+	},
+	explorer: {
+		getGame: (gameId: string) => invoke<ExplorerGetGameResult>('explorer:getGame', gameId),
+	},
+	games: {
+		list: (input?: GamesListInput) => invoke<GamesListResult>('games:list', input ?? {}),
+	},
+	system: {
+		openExternal: (url: string) => invoke<{ ok: true }>('system:openExternal', url),
 	},
 };
 
