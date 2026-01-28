@@ -1,4 +1,4 @@
-import type { ExternalSite, GameSpeed, PlayerColor } from '../import/types';
+import type { ExternalSite, GameSpeed, PlayerColor } from '../../import/types';
 
 /**
  * Result key encoding used for fast filtering/aggregations.

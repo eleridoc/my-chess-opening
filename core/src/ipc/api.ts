@@ -38,7 +38,7 @@ export type {
 	GamesListItem,
 	GamesListResult,
 	GamesApi,
-} from '../games/types';
+} from './games/types';
 
 // -----------------------------------------------------------------------------
 // Compose ElectronApi from domain APIs
@@ -48,7 +48,7 @@ import type { SetupApi } from './setup/types';
 import type { ImportApi } from './import/types';
 import type { LogsApi } from '../logs/types';
 import type { ExplorerApi } from './explorer/types';
-import type { GamesApi } from '../games/types';
+import type { GamesApi } from './games/types';
 
 /**
  * Small system-level IPC helpers that are not tied to a single domain.

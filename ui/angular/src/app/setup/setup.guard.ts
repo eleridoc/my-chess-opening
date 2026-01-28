@@ -9,6 +9,8 @@ export const setupCompletedGuard: CanMatchFn = async (): Promise<boolean | UrlTr
 	// In pure browser mode, SetupService already returns "completed"
 	const state = await setupService.getState();
 
+	//return router.parseUrl('/setup');
+
 	if (!state.hasAccounts) {
 		return router.parseUrl('/setup');
 	}

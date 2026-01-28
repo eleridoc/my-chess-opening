@@ -1,5 +1,5 @@
 import { CommonModule, DatePipe } from '@angular/common';
-import { Component, effect, signal } from '@angular/core';
+import { Component, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 
@@ -15,6 +15,9 @@ import { MatSortModule, Sort } from '@angular/material/sort';
 
 import type { GamesListItem, PlayerColor } from 'my-chess-opening-core';
 import { GamesService } from '../../services/games.service';
+import { NotificationService } from '../../shared/notifications/notification.service';
+import { ExternalLinkService } from '../../shared/system/external-link.service';
+import { ratedLabel, timeLabel, openingLabel, myResultLabel } from '../../shared/games/game-format';
 
 type Outcome = 'win' | 'loss' | 'draw' | 'unknown';
 
@@ -54,6 +57,12 @@ export class GamesPageComponent {
 		'actions',
 	];
 
+	readonly ratedLabel = ratedLabel;
+	readonly timeLabel = timeLabel;
+	readonly openingLabel = openingLabel;
+	readonly myResultLabel = myResultLabel;
+
+	private readonly externalLink = inject(ExternalLinkService);
 	private readonly COLOR_WHITE: PlayerColor = 'white';
 	private readonly COLOR_BLACK: PlayerColor = 'black';
 
@@ -76,6 +85,7 @@ export class GamesPageComponent {
 	constructor(
 		private readonly games: GamesService,
 		private readonly router: Router,
+		private readonly notify: NotificationService,
 	) {
 		// Auto-load on state changes (with small debounce)
 		effect(() => {
@@ -124,55 +134,8 @@ export class GamesPageComponent {
 
 	trackById = (_: number, item: GamesListItem) => item.id;
 
-	myResultLabel(g: GamesListItem): string {
-		// Preferred: use resultKey (1 win / 0 draw / -1 loss)
-		if (g.myResultKey === 1) return '1';
-		if (g.myResultKey === 0) return '1/2';
-		if (g.myResultKey === -1) return '0';
-		return '—';
-	}
-
-	private parseTimeControl(tc: string): { mins: string; inc: string } {
-		const raw = (tc ?? '').trim();
-		if (!raw) return { mins: '—', inc: '—' };
-
-		// Accept common formats: "10+5", "600+5", "10|5", "10 + 5"
-		const m = raw.match(/^(\d+)\s*(?:\+|\|)\s*(\d+)$/);
-		if (!m) return { mins: raw, inc: '—' };
-
-		const a = Number(m[1]);
-		const b = Number(m[2]);
-
-		// If a looks like seconds, convert to minutes.
-		const mins =
-			a > 60
-				? (a % 60 === 0 ? String(a / 60) : String(Math.round((a / 60) * 10) / 10)).replace(
-						/\.0$/,
-						'',
-					)
-				: String(a);
-
-		return { mins, inc: String(b) };
-	}
-
-	timeLabel(tc: string): string {
-		const t = this.parseTimeControl(tc);
-		return `${t.mins} | ${t.inc}`;
-	}
-
-	openExternal(url: string | null, event?: MouseEvent): void {
-		event?.preventDefault();
-		event?.stopPropagation();
-
-		if (!url) return;
-
-		if (!window.electron) {
-			// Fallback (dev in browser)
-			window.open(url, '_blank', 'noopener,noreferrer');
-			return;
-		}
-
-		void window.electron.system.openExternal(url);
+	openExternal(url: string | null, event?: Event): void {
+		this.externalLink.open(url, event);
 	}
 
 	// --- Player styling helpers ---
@@ -220,7 +183,10 @@ export class GamesPageComponent {
 			this.items.set(res.items);
 			this.total.set(res.total);
 		} catch (e) {
-			console.error('[UI] Failed to load games:', e);
+			this.notify.error('Failed to load games.', {
+				actionLabel: 'Retry',
+				onAction: () => this.reloadNow(),
+			});
 			this.items.set([]);
 			this.total.set(0);
 		} finally {

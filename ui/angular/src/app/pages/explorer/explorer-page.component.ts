@@ -16,6 +16,8 @@ import { ExplorerImportComponent } from '../../explorer/components/explorer-impo
 import { ExplorerQaPanelComponent } from '../../explorer/components/explorer-qa-panel/explorer-qa-panel.component';
 import { MoveListComponent } from '../../explorer/components/move-list/move-list.component';
 import { ExplorerDbService } from '../../services/explorer-db.service';
+import { NotificationService } from '../../shared/notifications/notification.service';
+
 import {
 	ResetConfirmDialogComponent,
 	type ResetConfirmDialogData,
@@ -46,6 +48,7 @@ export class ExplorerPageComponent {
 	private readonly destroyRef = inject(DestroyRef);
 	private readonly explorerDb = inject(ExplorerDbService);
 	private readonly dialog = inject(MatDialog);
+	private readonly notify = inject(NotificationService);
 
 	/** Prevent opening multiple confirm dialogs concurrently. */
 	private resetConfirmOpen = false;
@@ -308,16 +311,24 @@ export class ExplorerPageComponent {
 			if (seq !== this.dbLoadSeq) return;
 
 			if (!res.ok) {
-				console.error(
-					`[Explorer] Failed to load DB game (${gameId}): ${res.error.code} - ${res.error.message}`,
-				);
+				if (this.facade.pendingDbGameId() === gameId) this.facade.setPendingDbGameId(null);
+
+				this.notify.error(`Failed to load DB game: ${res.error.message}`, {
+					actionLabel: 'Retry',
+					onAction: () => void this.loadDbGame(gameId),
+				});
 				return;
 			}
 
 			this.facade.loadDbGameSnapshot(res.snapshot);
 			this.dbLoadSucceededId = gameId;
 		} catch (e) {
-			console.error(`[Explorer] Failed to load DB game (${gameId})`, e);
+			if (this.facade.pendingDbGameId() === gameId) this.facade.setPendingDbGameId(null);
+
+			this.notify.error('Failed to load DB game.', {
+				actionLabel: 'Retry',
+				onAction: () => void this.loadDbGame(gameId),
+			});
 		} finally {
 			// Always release in-flight lock
 			if (this.dbLoadInFlightId === gameId) this.dbLoadInFlightId = null;

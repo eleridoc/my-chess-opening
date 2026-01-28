@@ -21,6 +21,7 @@ import type {
 	LogEntryDetails,
 } from 'my-chess-opening-core';
 import { LogsService } from '../../services/logs.service';
+import { NotificationService } from '../../shared/notifications/notification.service';
 
 type TimePreset = 'none' | '1h' | '24h' | '7d';
 
@@ -125,7 +126,10 @@ export class LogsPageComponent {
 		return out;
 	});
 
-	constructor(private readonly logs: LogsService) {
+	constructor(
+		private readonly logs: LogsService,
+		private readonly notify: NotificationService,
+	) {
 		// Load facets once
 		this.loadFacets();
 
@@ -161,7 +165,10 @@ export class LogsPageComponent {
 			this.usernames.set(f.usernames);
 			this.sitesInData.set(f.sites);
 		} catch (e) {
-			console.error('[UI] Failed to load log facets:', e);
+			this.notify.error('Failed to load log filters.', {
+				actionLabel: 'Retry',
+				onAction: () => void this.loadFacets(),
+			});
 		}
 	}
 
@@ -201,7 +208,10 @@ export class LogsPageComponent {
 			this.total.set(res.total);
 			this.runContext.set(res.runContext ?? null);
 		} catch (e) {
-			console.error('[UI] Failed to load logs:', e);
+			this.notify.error('Failed to load logs.', {
+				actionLabel: 'Retry',
+				onAction: () => void this.loadPage(),
+			});
 			this.items.set([]);
 			this.total.set(0);
 			this.runContext.set(null);
@@ -257,7 +267,10 @@ export class LogsPageComponent {
 			const d = await this.logs.getEntry(row.id);
 			this.selectedDetails.set(d);
 		} catch (e) {
-			console.error('[UI] Failed to load entry details:', e);
+			this.notify.error('Failed to load log details.', {
+				actionLabel: 'Retry',
+				onAction: () => void this.openDetails(row),
+			});
 			this.selectedDetails.set(null);
 		} finally {
 			this.detailsLoading.set(false);
@@ -295,7 +308,7 @@ export class LogsPageComponent {
 		try {
 			await navigator.clipboard.writeText(text);
 		} catch (e) {
-			console.warn('[UI] Clipboard copy failed:', e);
+			this.notify.warn('Clipboard copy failed.');
 		}
 	}
 }
