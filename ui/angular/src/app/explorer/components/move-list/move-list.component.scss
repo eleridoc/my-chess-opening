@@ -24,16 +24,28 @@
 
 .rows {
 	display: grid;
-	gap: 4px;
-	padding: 15px 0;
+	//gap: 4px;
+	//padding: 5px 0;
 }
 
 .row {
 	display: grid;
-	grid-template-columns: 36px 1fr 1fr;
+	grid-template-columns: 50px 1fr 1fr;
 	align-items: center;
 	//gap: 4px;
+	padding: 3px 0;
 }
+
+.rows > .row:nth-child(odd) {
+	background: var(--app-hover-less);
+	//background: color-mix(in srgb, var(--app-bg-less-1) 100%, transparent);
+}
+
+.rows > .row:nth-child(even) {
+	background: var(--app-bg-less-1);
+}
+
+//olor: color-mix(in srgb, var(--app-bg-less-1) 2%, transparent);
 
 /* When we render a split black move as "... | Be7", visually glue it */
 .row--continuation {
@@ -41,10 +53,10 @@
 }
 
 .num {
-	opacity: 0.7;
+	opacity: 0.5;
 	font-size: 12px;
-	text-align: right;
-	padding-right: 6px;
+	text-align: center;
+	font-weight: 900;
 }
 
 /* --------------------------------------------------------------------------
@@ -69,6 +81,11 @@
 	min-width: 0;
 	color: color-mix(in srgb, var(--app-on-surface-variant) 80%, transparent);
 	border-radius: 6px !important;
+}
+.var-move.mat-mdc-button,
+.ply.mat-mdc-button {
+	height: 26px;
+	padding: 0 8px;
 }
 
 /* "…" placeholder (used when black move is split like Lichess) */
@@ -109,11 +126,11 @@
 .var-cell {
 	border-top: 1px solid var(--app-divider);
 	border-bottom: 1px solid var(--app-divider);
-	margin: 5px 0;
+	//margin: 5px 0;
 	padding-left: 10px;
-	padding-top: 2px;
-	padding-bottom: 2px;
-	background: var(--app-bg-less-2);
+	padding-top: 5px;
+	padding-bottom: 5px;
+	background: var(--app-hover);
 }
 
 /* Full-width under mainline row (covers white+black columns) */
@@ -132,10 +149,10 @@
 	flex-wrap: wrap;
 	gap: 2px;
 	align-items: center;
-	min-height: 30px;
+	//min-height: 30px;
 	position: relative;
 	font-size: 8px;
-	padding: 5px 0;
+	padding: 0px 0;
 }
 
 /* Small elbow before each line */
@@ -144,6 +161,11 @@
 	height: 1px;
 	background: var(--app-bg-plus-3);
 	display: inline-block;
+}
+
+.var-line-icon {
+	color: color-mix(in srgb, var(--app-on-surface-variant) 70%, transparent);
+	font-size: 20px;
 }
 
 /* Move tokens inside variation lines */

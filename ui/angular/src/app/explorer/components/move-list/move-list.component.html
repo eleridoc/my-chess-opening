@@ -7,21 +7,21 @@
 			<div class="rows" *ngIf="rows.length">
 				<ng-container *ngFor="let row of rows">
 					<!--
-        We always have a white token for a mainline row (except weird states).
-        We cache variations arrays with `as ...` to avoid calling getVariations repeatedly.
-      -->
+						We always have a white token for a mainline row (except weird states).
+						We cache variations arrays with `as ...` to avoid calling getVariations repeatedly.
+					-->
 					<ng-container *ngIf="row.white as w">
 						<ng-container *ngIf="getVariations(w.nodeId) as wVars">
 							<!-- ============================================================
-             CASE A: row has a black move (normal full-move row)
-             ============================================================ -->
+							CASE A: row has a black move (normal full-move row)
+							============================================================ -->
 							<ng-container *ngIf="row.black as b; else noBlack">
 								<!-- Cache black variations too -->
 								<ng-container *ngIf="getVariations(b.nodeId) as bVars">
 									<!--
-                Main row (white | black)
-                - black cell may be split into "…" placeholder if we want Lichess-like layout
-              -->
+										Main row (white | black)
+										- black cell may be split into "…" placeholder if we want Lichess-like layout
+									-->
 									<div class="row">
 										<div class="num">{{ row.moveNumber }}.</div>
 
@@ -66,9 +66,9 @@
 									</div>
 
 									<!--
-                Variations after WHITE move (i.e. alternative black replies)
-                - Anchored below the row (you chose full width by using `.var-cell` without --black)
-              -->
+										Variations after WHITE move (i.e. alternative black replies)
+										- Anchored below the row (you chose full width by using `.var-cell` without --black)
+									-->
 									<div class="var-block" *ngIf="wVars.length">
 										<div class="var-cell var-cell--white">
 											<!-- variation on black move with ...  -->
@@ -85,8 +85,8 @@
 									</div>
 
 									<!--
-                If split: show the mainline black move AFTER variations as "... | Be7"
-              -->
+										If split: show the mainline black move AFTER variations as "... | Be7"
+									-->
 									<div class="row row--continuation" *ngIf="shouldSplitBlack(row)">
 										<div class="num">{{ row.moveNumber }}.</div>
 
@@ -111,10 +111,10 @@
 									</div>
 
 									<!--
-								Variations after BLACK move (i.e. alternative white replies)
-								- If variation starts with WHITE, use full width (var-cell--white)
-								- Otherwise anchor under black column (var-cell--black)
-							-->
+										Variations after BLACK move (i.e. alternative white replies)
+										- If variation starts with WHITE, use full width (var-cell--white)
+										- Otherwise anchor under black column (var-cell--black)
+									-->
 									<div class="var-block" *ngIf="bVars.length">
 										<!-- variation on white move without ...  -->
 										<!-- variation on white move without ...  -->
@@ -133,8 +133,8 @@
 							</ng-container>
 
 							<!-- ============================================================
-             CASE B: row has no black move (game ended on white move)
-             ============================================================ -->
+							CASE B: row has no black move (game ended on white move)
+							============================================================ -->
 							<ng-template #noBlack>
 								<div class="row">
 									<div class="num">{{ row.moveNumber }}.</div>
@@ -184,7 +184,8 @@
      ============================================================ -->
 	<ng-template #lineTpl let-line let-depth="depth">
 		<div class="var-line" [style.padding-left.px]="(depth - 1) * 15">
-			<span class="var-line__elbow"></span>
+			<!-- <span class="var-line__elbow"></span> -->
+			<mat-icon class="var-line-icon">subdirectory_arrow_right</mat-icon>
 
 			<!-- Tokens in this variation line -->
 			<ng-container *ngFor="let t of line.tokens">
