@@ -40,6 +40,7 @@ export function registerExplorerIpc() {
 						blackUsername: true,
 						whiteElo: true,
 						blackElo: true,
+						myColor: true,
 					},
 				});
 
@@ -56,6 +57,8 @@ export function registerExplorerIpc() {
 					select: { san: true },
 				});
 
+				const myColor: 'white' | 'black' = game.myColor === 'BLACK' ? 'black' : 'white';
+
 				const snapshot = {
 					schemaVersion: 1 as const,
 					kind: 'DB' as const,
@@ -71,6 +74,7 @@ export function registerExplorerIpc() {
 						whiteElo: game.whiteElo != null ? String(game.whiteElo) : undefined,
 						blackElo: game.blackElo != null ? String(game.blackElo) : undefined,
 					},
+					myColor,
 					movesSan: moves
 						.map((m) => (typeof m.san === 'string' ? m.san.trim() : ''))
 						.filter((s) => s.length > 0),

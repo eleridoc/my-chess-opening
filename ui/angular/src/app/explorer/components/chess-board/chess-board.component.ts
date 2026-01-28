@@ -190,6 +190,10 @@ export class ChessBoardComponent implements AfterViewInit, OnDestroy, OnChanges 
 	ngOnChanges(changes: SimpleChanges): void {
 		if (this.destroyed || !this.adapter) return;
 
+		if (changes['orientation'] && !changes['orientation'].firstChange) {
+			this.adapter?.setOrientation?.(this.orientation);
+		}
+
 		if (changes['fen']) {
 			const nextFen = this.fen;
 			if (nextFen && nextFen !== this.lastFenApplied) {

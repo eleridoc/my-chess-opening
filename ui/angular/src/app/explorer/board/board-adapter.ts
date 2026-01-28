@@ -58,6 +58,16 @@ export interface ChessBoardAdapter {
 	setFen(fen: string): void;
 
 	/**
+	 * Updates the board orientation (optional feature).
+	 *
+	 * Notes:
+	 * - This is a UI/display concern only (which side is at the bottom).
+	 * - When implemented, the adapter should preserve the current position and
+	 *   re-apply its current UI state (last move highlight, input enabled/allowed color, etc.).
+	 */
+	setOrientation?(orientation: BoardOrientation): void;
+
+	/**
 	 * Enables/disables user move input (drag&drop and click-to-move).
 	 * When disabled, the adapter must not emit move attempts.
 	 */

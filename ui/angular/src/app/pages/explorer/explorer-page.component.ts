@@ -159,6 +159,10 @@ export class ExplorerPageComponent {
 		void this.applyPgnWithResetGuard(pgn);
 	}
 
+	onRotateBoard(): void {
+		this.facade.toggleBoardOrientation();
+	}
+
 	/**
 	 * Keep it synchronous: core + facade are synchronous today.
 	 * The board adapter can use this to decide whether to "snap back" on failure.

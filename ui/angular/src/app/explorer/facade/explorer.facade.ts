@@ -35,6 +35,8 @@ import type {
 	ExplorerGameSnapshot,
 } from 'my-chess-opening-core/explorer';
 
+import type { BoardOrientation } from '../board/board-adapter';
+
 /**
  * UI-friendly representation of a "promotion required" situation.
  * The UI can decide to:
@@ -73,6 +75,14 @@ export class ExplorerFacade {
 	 * In V1.5.0, this will be "consumed" by IPC loading and cleared on success.
 	 */
 	private readonly _pendingDbGameId = signal<string | null>(null);
+
+	/**
+	 * Board orientation is a pure UI preference:
+	 * - It must NOT affect core state (FEN, moves, legality).
+	 * - It must NOT be reset when loading FEN/PGN/resetting the session.
+	 * - It is only changed by an explicit user action (rotate) or by DB load rule (later).
+	 */
+	private readonly _boardOrientation = signal<BoardOrientation>('white');
 
 	/** Current core mode (CASE1_FREE / CASE2_PGN / CASE2_DB). */
 	private readonly _mode = signal<ExplorerMode>(this.session.getMode());
@@ -147,6 +157,7 @@ export class ExplorerFacade {
 	// ---------------------------------------------------------------------------
 
 	readonly pendingDbGameId = this._pendingDbGameId.asReadonly();
+	readonly boardOrientation = this._boardOrientation.asReadonly();
 
 	readonly mode = this._mode.asReadonly();
 	readonly source = this._source.asReadonly();
@@ -231,6 +242,7 @@ export class ExplorerFacade {
 		positionKey: this._positionKey(),
 		dbGameSnapshot: this._dbGameSnapshot(),
 		pendingDbGameId: this._pendingDbGameId(),
+		boardOrientation: this._boardOrientation(),
 	}));
 
 	constructor() {
@@ -258,6 +270,14 @@ export class ExplorerFacade {
 		this.clearTransientUiState();
 		this.session.loadInitial();
 		this.refreshFromCore();
+	}
+
+	toggleBoardOrientation(): void {
+		this._boardOrientation.set(this._boardOrientation() === 'white' ? 'black' : 'white');
+	}
+
+	setBoardOrientation(orientation: BoardOrientation): void {
+		this._boardOrientation.set(orientation);
 	}
 
 	/** UI-friendly alias for ephemeral import. */
@@ -328,6 +348,14 @@ export class ExplorerFacade {
 			// Snapshot load is a "hard context switch" -> clear UI-side request state.
 			this._lastError.set(null);
 			this.setPendingDbGameId(null);
+
+			// DB-load rule: keep the owner at the bottom when the snapshot provides a perspective color.
+			if (snapshot.kind === 'DB' && (snapshot as any).myColor) {
+				const c = (snapshot as any).myColor;
+				if (c === 'white' || c === 'black') {
+					this.setBoardOrientation(c);
+				}
+			}
 
 			this.refreshFromCore();
 			return;

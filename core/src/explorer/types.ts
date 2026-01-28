@@ -165,6 +165,12 @@ export type ExplorerGameSnapshotV1 = {
 	headers: ExplorerGameHeaders;
 
 	/**
+	 * Owner perspective color (DB-only).
+	 * When present, the UI may use it to orient the board with the owner at the bottom.
+	 */
+	myColor?: 'white' | 'black';
+
+	/**
 	 * Optional raw PGN tags (if available).
 	 * Useful for future UI without forcing schema changes.
 	 */

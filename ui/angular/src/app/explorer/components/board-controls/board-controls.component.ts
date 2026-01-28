@@ -30,6 +30,7 @@ export class BoardControlsComponent {
 	@Output() prev = new EventEmitter<void>();
 	@Output() next = new EventEmitter<void>();
 	@Output() end = new EventEmitter<void>();
+	@Output() rotate = new EventEmitter<void>();
 
 	/** Emit "reset" (hard reset to initial state). */
 	onResetClick(): void {
@@ -54,5 +55,10 @@ export class BoardControlsComponent {
 	/** Emit "end" (jump to end). */
 	onEndClick(): void {
 		this.end.emit();
+	}
+
+	/** Emit "rotate" (toggle board orientation). */
+	onRotateClick(): void {
+		this.rotate.emit();
 	}
 }

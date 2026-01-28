@@ -78,6 +78,8 @@ export class CmChessboardAdapter implements ChessBoardAdapter {
 
 	private destroyed = false;
 
+	private orientation: BoardOrientation;
+
 	/**
 	 * Last FEN we consider as the UI "source of truth" for the board.
 	 * Used to revert after failed move attempts or canceled promotions.
@@ -125,8 +127,6 @@ export class CmChessboardAdapter implements ChessBoardAdapter {
 
 	private readonly onMoveAttempt?: (attempt: BoardMoveAttempt) => void;
 	private readonly validateMoveAttempt?: (attempt: BoardMoveAttempt) => boolean;
-
-	private readonly orientation: BoardOrientation;
 
 	// -------------------------------------------------------------------------
 	// Debug helpers (kept minimal and safe; remove if you want zero logs)
@@ -178,6 +178,17 @@ export class CmChessboardAdapter implements ChessBoardAdapter {
 
 		// Some cm-chessboard operations may clear markers; keep it deterministic.
 		this.applyLastMoveMarkers();
+	}
+
+	setOrientation(orientation: BoardOrientation): void {
+		if (this.destroyed || !this.board) return;
+		if (orientation === this.orientation) return;
+
+		this.orientation = orientation;
+
+		// Rotation is a pure display change; keep the current position.
+		// If a promotion dialog is open, this will implicitly cancel it (hard recreate).
+		this.hardRecreateBoard(this.lastFen);
 	}
 
 	/** Enables/disables user move input. */
@@ -232,24 +243,23 @@ export class CmChessboardAdapter implements ChessBoardAdapter {
 	// -------------------------------------------------------------------------
 
 	/**
-	 * Hard-close the promotion dialog by recreating the board.
+	 * Hard-recreates the board instance (destroy + create).
 	 *
-	 * Why:
-	 * - PromotionDialog is an extension with its own DOM.
-	 * - When user performs another action (navigation / move list click),
-	 *   we must immediately close the dialog to keep UI consistent.
+	 * Used for:
+	 * - Forcibly closing the PromotionDialog (extension DOM cleanup)
+	 * - Applying display-only changes like orientation
+	 *
+	 * Guarantees:
+	 * - Keeps adapter state consistent
+	 * - Re-applies adapter-driven UI state (markers + input state)
 	 */
-	private cancelPromotionDialogAndRecreate(nextFen?: string): void {
-		if (!this.promotionDialogOpen) return;
-
-		// Invalidate any pending callback and mark dialog as closed.
+	private hardRecreateBoard(fenToShow: string): void {
+		// Invalidate any pending promotion callback and force-close the dialog.
 		this.promotionRequestId++;
 		this.promotionDialogOpen = false;
 
 		// Clear temporary hints defensively (even though board is recreated).
 		this.clearHintMarkersAndState();
-
-		const fenToShow = nextFen ?? this.lastFen;
 
 		try {
 			this.board?.destroy();
@@ -263,6 +273,21 @@ export class CmChessboardAdapter implements ChessBoardAdapter {
 		// Re-apply adapter-driven UI state.
 		this.applyLastMoveMarkers();
 		this.applyMoveInputState();
+	}
+
+	/**
+	 * Hard-close the promotion dialog by recreating the board.
+	 *
+	 * Why:
+	 * - PromotionDialog is an extension with its own DOM.
+	 * - When user performs another action (navigation / move list click),
+	 *   we must immediately close the dialog to keep UI consistent.
+	 */
+	private cancelPromotionDialogAndRecreate(nextFen?: string): void {
+		if (!this.promotionDialogOpen) return;
+
+		const fenToShow = nextFen ?? this.lastFen;
+		this.hardRecreateBoard(fenToShow);
 	}
 
 	/**
