@@ -11,6 +11,9 @@ import type { ExternalSite, GameSpeed, PlayerColor } from '../import/types';
  */
 export type ResultKey = 1 | 0 | -1;
 
+// Add near other exported types (e.g. after ResultKey)
+export type SortOrder = 'asc' | 'desc';
+
 export interface GamesListFilters {
 	/** Limit to specific sources (e.g. CHESSCOM, LICHESS). */
 	sites?: ExternalSite[] | null;
@@ -50,6 +53,9 @@ export interface GamesListInput {
 
 	/** Page size (default: 50). */
 	pageSize?: number;
+
+	/** Sort order for playedAt (default: 'desc' = newest first). */
+	playedAtOrder?: SortOrder;
 
 	filters?: GamesListFilters;
 }

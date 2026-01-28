@@ -10,6 +10,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSelectModule } from '@angular/material/select';
+import { MatSortModule, Sort } from '@angular/material/sort';
 
 import type { GamesListItem, PlayerColor } from 'my-chess-opening-core';
 import { GamesService } from '../../services/games.service';
@@ -31,6 +33,8 @@ type Outcome = 'win' | 'loss' | 'draw' | 'unknown';
 		MatButtonModule,
 		MatIconModule,
 		MatProgressSpinnerModule,
+		MatSelectModule,
+		MatSortModule,
 	],
 	templateUrl: './games-page.component.html',
 	styleUrl: './games-page.component.scss',
@@ -65,6 +69,8 @@ export class GamesPageComponent {
 	page = signal(1); // 1-based
 	pageSize = signal(50);
 
+	playedAtOrder = signal<'desc' | 'asc'>('desc');
+
 	private reloadTimer: any = null;
 
 	constructor(
@@ -76,6 +82,7 @@ export class GamesPageComponent {
 			void this.page();
 			void this.pageSize();
 			void this.search();
+			void this.playedAtOrder();
 			this.queueReload();
 		});
 	}
@@ -105,6 +112,14 @@ export class GamesPageComponent {
 			queryParams: { dbGameId: gameId },
 			queryParamsHandling: 'merge',
 		});
+	}
+
+	onSortChange(sort: Sort): void {
+		if (sort.active !== 'playedAt') return;
+
+		const dir = sort.direction === 'asc' ? 'asc' : 'desc'; // fallback desc
+		this.playedAtOrder.set(dir);
+		this.page.set(1);
 	}
 
 	trackById = (_: number, item: GamesListItem) => item.id;
@@ -196,6 +211,7 @@ export class GamesPageComponent {
 			const res = await this.games.list({
 				page: this.page(),
 				pageSize: this.pageSize(),
+				playedAtOrder: this.playedAtOrder(),
 				filters: {
 					search: q.length ? q : null,
 				},

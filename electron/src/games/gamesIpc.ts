@@ -98,14 +98,14 @@ export function registerGamesIpc() {
 			const pageSize = clamp(Number(input?.pageSize ?? 50), 1, 200);
 			const filters = input?.filters ?? {};
 			const where = buildWhere(filters);
-
+			const playedAtOrder = input?.playedAtOrder === 'asc' ? 'asc' : 'desc';
 			const skip = (page - 1) * pageSize;
 
 			const [total, rows] = await Promise.all([
 				prisma.game.count({ where }),
 				prisma.game.findMany({
 					where,
-					orderBy: { playedAt: 'desc' },
+					orderBy: [{ playedAt: playedAtOrder }, { id: playedAtOrder }], // stable ordering
 					skip,
 					take: pageSize,
 					select: {
