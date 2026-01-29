@@ -9,8 +9,9 @@
  * - Core returns explicit results and typed errors (ok/error unions).
  *
  * Notes:
- * - All comments must be in English.
  * - Keep these types stable: they are the contract of the Explorer module.
+ * - Prefer additive changes only to preserve backward compatibility.
+ * - All comments must be in English.
  */
 
 export type ExplorerMode = 'CASE1_FREE' | 'CASE2_DB' | 'CASE2_PGN';
@@ -189,23 +190,85 @@ export type ExplorerGameSnapshotV1 = {
 	importMeta?: ExplorerGameImportMeta;
 };
 
+/**
+ * Normalized headers used by the UI.
+ *
+ * Important:
+ * - This is a best-effort mapping across DB and PGN imports.
+ * - Values are optional and may be absent depending on the source.
+ * - Time-related values should be stored as ISO strings so the UI can format them
+ *   using locale-aware tools (Intl, dayjs, etc.).
+ */
 export type ExplorerGameHeaders = {
+	/** Event or competition name (PGN: Event). */
 	event?: string;
+
+	/** Site label or URL depending on the source (PGN: Site). */
 	site?: string;
-	date?: string;
+
+	/**
+	 * Game timestamp (UTC) in ISO 8601 format.
+	 * Example: "2013-02-04T22:44:30.652Z"
+	 *
+	 * The UI is responsible for formatting it for display.
+	 */
+	playedAtIso?: string;
+
+	/** Round label (PGN: Round). */
 	round?: string;
 
+	/** Player names (PGN: White/Black). */
 	white?: string;
 	black?: string;
+
+	/** Game result (PGN: Result). */
 	result?: '1-0' | '0-1' | '1/2-1/2' | '*';
 
+	/** ECO code and human-friendly opening name (if available). */
 	eco?: string;
 	opening?: string;
 
+	/** Rating information (best effort). */
 	whiteElo?: string;
 	blackElo?: string;
+
+	/** Whether the game was rated (best effort). */
+	rated?: boolean;
+
+	/**
+	 * Normalized speed label for UI.
+	 * Lowercase on purpose (UI-friendly, not DB enum).
+	 */
+	speed?: 'bullet' | 'blitz' | 'rapid' | 'classical';
+
+	/**
+	 * Raw time control (when available).
+	 * Example: "900+10" or "15+10" depending on the source.
+	 */
+	timeControl?: string;
+
+	/** Preferred numeric representation when available (e.g., DB has it). */
+	initialSeconds?: number;
+	incrementSeconds?: number;
+
+	/** Variant label (e.g. "Standard", "Chess960", ...). */
+	variant?: string;
+
+	/**
+	 * Direct URL to the game when available.
+	 * - Lichess PGN often provides it via Site (URL).
+	 * - Chess.com PGN often provides it via Link.
+	 * - DB provides it directly when stored.
+	 */
+	siteUrl?: string;
 };
 
+/**
+ * Import metadata (optional)
+ *
+ * This describes where the DB snapshot came from (external site + ids).
+ * It is not required for ephemeral PGN imports.
+ */
 export type ExplorerGameImportMeta = {
 	site?: 'CHESSCOM' | 'LICHESS';
 	externalGameId?: string;

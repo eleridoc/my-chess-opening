@@ -15,6 +15,8 @@ import { ChessBoardComponent } from '../../explorer/components/chess-board/chess
 import { ExplorerImportComponent } from '../../explorer/components/explorer-import/explorer-import.component';
 import { ExplorerQaPanelComponent } from '../../explorer/components/explorer-qa-panel/explorer-qa-panel.component';
 import { MoveListComponent } from '../../explorer/components/move-list/move-list.component';
+import { ExplorerGameInfoPanelComponent } from '../../explorer/components/explorer-game-info-panel/explorer-game-info-panel.component';
+
 import { ExplorerDbService } from '../../services/explorer-db.service';
 import { NotificationService } from '../../shared/notifications/notification.service';
 
@@ -35,6 +37,7 @@ type ResetReason = 'DB_LOAD' | 'PGN_IMPORT' | 'FEN_IMPORT';
 		MoveListComponent,
 		ExplorerImportComponent,
 		ExplorerQaPanelComponent,
+		ExplorerGameInfoPanelComponent,
 		MatTabsModule,
 		MatIconModule,
 		MatDialogModule,
@@ -69,6 +72,7 @@ export class ExplorerPageComponent {
 	private dbLoadInFlightId: string | null = null;
 	private dbLoadSucceededId: string | null = null;
 
+	/** UI-only state: collapses the QA side panel. */
 	readonly qaCollapsed = signal<boolean>(false);
 
 	/**
@@ -82,7 +86,7 @@ export class ExplorerPageComponent {
 		this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
 			const id = this.normalizeDbGameId(params.get('dbGameId'));
 
-			// Store as "pending". It will only be consumed by the facade when a DB load succeeds.
+			// Store as "pending". It will only be consumed when a DB load succeeds.
 			this.facade.setPendingDbGameId(id);
 
 			if (!id) {
@@ -95,7 +99,7 @@ export class ExplorerPageComponent {
 
 			this.logDbRequestOnce(id);
 
-			// Always handle the presence of dbGameId; guards inside prevent useless calls.
+			// Fire-and-forget: internal guards prevent redundant calls and dialogs.
 			void this.handleDbGameIdFromUrl(id);
 		});
 	}
@@ -109,7 +113,7 @@ export class ExplorerPageComponent {
 
 	/**
 	 * Hard reset the explorer session (returns to CASE1_FREE).
-	 * We also remove dbGameId from the URL to keep routing state consistent.
+	 * Also removes dbGameId from the URL to keep routing state consistent.
 	 */
 	onReset(): void {
 		this.facade.reset();
@@ -165,7 +169,7 @@ export class ExplorerPageComponent {
 
 	/**
 	 * Keep it synchronous: core + facade are synchronous today.
-	 * The board adapter can use this to decide whether to "snap back" on failure.
+	 * The board adapter can use this return value to decide whether to "snap back".
 	 */
 	readonly validateMoveAttempt = (attempt: ExplorerMoveAttempt): boolean => {
 		return this.facade.attemptMove(attempt);
@@ -188,15 +192,16 @@ export class ExplorerPageComponent {
 		if (gameId === this.lastLoggedDbGameId) return;
 		this.lastLoggedDbGameId = gameId;
 
-		// NOTE:
-		// Avoid snackbar/overlays here to prevent UI overlay issues while routing.
+		// Avoid snackbars/overlays here to prevent overlay conflicts while routing.
 		console.info(`[Explorer] DB load requested via URL: ${gameId}`);
 	}
 
 	private resetDbLoadGuards(): void {
 		this.dbLoadInFlightId = null;
 		this.dbLoadSucceededId = null;
-		this.dbLoadSeq++; // cancels any in-flight promise ("last wins")
+
+		// Cancels any in-flight promise ("last wins").
+		this.dbLoadSeq++;
 	}
 
 	private async clearDbGameIdInUrl(): Promise<void> {
@@ -210,11 +215,9 @@ export class ExplorerPageComponent {
 
 	private async openResetConfirmDialog(data: ResetConfirmDialogData): Promise<boolean> {
 		if (this.resetConfirmOpen) return false;
-
 		this.resetConfirmOpen = true;
 
 		// Avoid opening overlays in the middle of a synchronous router emission.
-		// Using a microtask is typically enough and TS-lib compatible.
 		await Promise.resolve();
 
 		try {
@@ -289,7 +292,7 @@ export class ExplorerPageComponent {
 		this.facade.reset();
 		this.resetDbLoadGuards();
 
-		// reset() clears pending, re-set it so it can be consumed by loadDbGameSnapshot on success.
+		// reset() clears pending; re-set it so it can be consumed on success.
 		this.facade.setPendingDbGameId(gameId);
 
 		await this.loadDbGame(gameId);
@@ -311,7 +314,7 @@ export class ExplorerPageComponent {
 		try {
 			const res = await this.explorerDb.getGame(gameId);
 
-			// "Last wins" guard
+			// "Last wins" guard.
 			if (seq !== this.dbLoadSeq) return;
 
 			if (!res.ok) {
@@ -334,7 +337,7 @@ export class ExplorerPageComponent {
 				onAction: () => void this.loadDbGame(gameId),
 			});
 		} finally {
-			// Always release in-flight lock
+			// Always release the in-flight lock.
 			if (this.dbLoadInFlightId === gameId) this.dbLoadInFlightId = null;
 		}
 	}

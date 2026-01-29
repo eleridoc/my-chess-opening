@@ -64,6 +64,52 @@
 			</div>
 
 			<div class="app-card-flat">
+				<div class="app-card-flat-top">Players VM</div>
+				<div class="app-card-flat-content">
+					<div class="qa-row qa-row--wrap">
+						<button mat-stroked-button type="button" (click)="facade.toggleBoardOrientation()">
+							Rotate (QA)
+						</button>
+
+						<button mat-stroked-button type="button" (click)="loadPgnWithElos()">
+							Load PGN (with Elo)
+						</button>
+					</div>
+
+					<div class="qa-kv">
+						<div class="qa-kv__row">
+							<div class="qa-kv__key">boardOrientation</div>
+							<div class="qa-kv__value">{{ facade.boardOrientation() }}</div>
+						</div>
+
+						<div class="qa-kv__row">
+							<div class="qa-kv__key">headers.source</div>
+							<div class="qa-kv__value">
+								{{ facade.dbGameSnapshot() ? 'DB' : facade.source().kind }}
+							</div>
+						</div>
+
+						<div class="qa-kv__row">
+							<div class="qa-kv__key">top</div>
+							<div class="qa-kv__value">
+								{{ facade.playersPanelVm().top.side }} — {{ facade.playersPanelVm().top.name }}
+								<span *ngIf="facade.playersPanelVm().top.elo as e"> ({{ e }})</span>
+							</div>
+						</div>
+
+						<div class="qa-kv__row">
+							<div class="qa-kv__key">bottom</div>
+							<div class="qa-kv__value">
+								{{ facade.playersPanelVm().bottom.side }} —
+								{{ facade.playersPanelVm().bottom.name }}
+								<span *ngIf="facade.playersPanelVm().bottom.elo as e"> ({{ e }})</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="app-card-flat">
 				<div class="app-card-flat-top">DB Snapshot (mock)</div>
 
 				<div class="app-card-flat-content">
@@ -153,6 +199,8 @@
 					>
 						Go /explorer?dbGameId=cmk9td7lm00e825lo3spmn8go
 					</button>
+
+					<button mat-stroked-button (click)="loadPgnWithElos()">Load PGN (with Elo)</button>
 				</div>
 			</div>
 

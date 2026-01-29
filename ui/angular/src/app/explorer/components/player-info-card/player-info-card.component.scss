@@ -1,0 +1,104 @@
+.player-card {
+	display: flex;
+	flex-direction: row;
+	gap: 12px;
+	//padding: 12px;
+
+	align-items: stretch;
+
+	&__left {
+		width: 50px;
+		height: 50px;
+		border-radius: 6px;
+		flex: 0 0 auto;
+		border: 2px solid var(--app-border);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	&__icon {
+		font-size: 35px;
+		width: 35px;
+		height: 35px;
+		line-height: 35px;
+		opacity: 0.3;
+	}
+
+	&--white .player-card__icon {
+		color: black;
+	}
+
+	&--black .player-card__icon {
+		color: white;
+	}
+
+	&__right {
+		display: flex;
+		flex-direction: column;
+		flex: 1 1 auto;
+		min-height: 0;
+		width: 100%;
+	}
+
+	&__right-top {
+		flex: 0 0 auto;
+		display: grid;
+	}
+
+	// placeholder future pieces diff
+	&__right-bottom {
+		flex: 1 1 auto;
+		align-items: center; // vertical
+		display: flex;
+	}
+
+	&__meta {
+		display: flex;
+		align-items: center;
+		font-size: 12px;
+		opacity: 0.85;
+		min-width: 0;
+	}
+
+	&__side {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		min-width: 0;
+	}
+
+	&__side-text {
+		font-weight: 600;
+		font-size: 16px;
+		line-height: 1.2;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	&__dot {
+		width: 20px;
+		height: 20px;
+		border-radius: 999px;
+		border: 2px solid rgba(255, 255, 255, 0.35);
+		background: rgba(255, 255, 255, 0.15);
+	}
+
+	&--white .player-card__left,
+	&--white .player-card__dot {
+		background: rgba(255, 255, 255, 0.85);
+		border-color: rgba(0, 0, 0, 0.15);
+	}
+
+	&--black .player-card__left,
+	&--black .player-card__dot {
+		background: rgba(0, 0, 0, 0.75);
+		border-color: rgba(255, 255, 255, 0.25);
+	}
+
+	&__elo {
+		white-space: nowrap;
+		font-size: 14px;
+	}
+}

@@ -43,12 +43,15 @@ const DEMO_DB_SNAPSHOT_001: ExplorerGameSnapshot = {
 	headers: {
 		event: 'Demo',
 		site: 'Local QA',
-		date: '2026-01-25',
+		playedAtIso: '2013-02-04T22:44:30.652Z',
 		white: 'White Demo',
 		black: 'Black Demo',
 		result: '*',
+		whiteElo: '1200',
+		blackElo: '1350',
 		opening: 'Ruy Lopez (demo)',
 	},
+	myColor: 'white',
 	movesSan: [
 		'e4',
 		'e5',
@@ -80,12 +83,15 @@ const DEMO_DB_SNAPSHOT_002: ExplorerGameSnapshot = {
 	headers: {
 		event: 'Demo',
 		site: 'Local QA',
-		date: '2026-01-25',
+		playedAtIso: '2013-02-04T22:44:30.652Z',
 		white: 'White Demo 2',
 		black: 'Black Demo 2',
 		result: '*',
+		whiteElo: '1200',
+		blackElo: '1350',
 		opening: 'Italian Game (demo)',
 	},
+	myColor: 'black',
 	movesSan: ['e4', 'e5', 'Nf3', 'Nc6', 'Bc4', 'Bc5', 'c3', 'Nf6', 'd4', 'exd4', 'cxd4', 'Bb4+'],
 };
 
@@ -318,6 +324,28 @@ export class ExplorerQaPanelComponent {
 		this.facade.attemptMove({ from: 'c7', to: 'c5' });
 
 		this.addLog('INFO', 'Scenario: variation created at ply 1 (…e5 vs …c5)');
+	}
+
+	loadPgnWithElos(): void {
+		const pgn = `
+[Event "QA Elo"]
+[Site "Local QA"]
+[Date "2026.01.29"]
+[Round "-"]
+[White "Alice"]
+[Black "Bob"]
+[WhiteElo "1532"]
+[BlackElo "1684"]
+[Result "*"]
+[ECO "C50"]
+[Opening "Italian Game"]
+
+1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 *
+`.trim();
+
+		this.facade.reset();
+		this.facade.loadPgn(pgn, { name: 'QA PGN with Elo' });
+		this.addLog('INFO', 'Scenario: load PGN with Elo tags');
 	}
 
 	// -------------------------------------------------------------------------

@@ -122,6 +122,7 @@ export function cloneDbGameSnapshot(snapshot: ExplorerGameSnapshot): ExplorerGam
 		kind: 'DB',
 		gameId: snapshot.gameId,
 		headers: { ...(snapshot.headers ?? {}) },
+		myColor: snapshot.myColor,
 		pgnTags: snapshot.pgnTags ? { ...snapshot.pgnTags } : undefined,
 		movesSan: Array.isArray(snapshot.movesSan) ? [...snapshot.movesSan] : [],
 		analysis: snapshot.analysis

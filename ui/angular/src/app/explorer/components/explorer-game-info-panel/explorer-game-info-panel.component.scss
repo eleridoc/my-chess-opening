@@ -1,0 +1,13 @@
+.game-info-panel {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	min-width: 0;
+
+	&__players {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		min-width: 0;
+	}
+}

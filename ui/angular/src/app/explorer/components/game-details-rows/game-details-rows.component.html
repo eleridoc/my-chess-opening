@@ -1,0 +1,35 @@
+<div class="details-rows">
+	<div class="details-rows__row" *ngFor="let row of rows">
+		<div class="details-rows__label">{{ row.label }}</div>
+
+		<div class="details-rows__value">
+			<!-- Result row has custom rendering -->
+			<span
+				*ngIf="row.kind === 'result'; else defaultRow"
+				class="details-rows__result"
+				[class.details-rows__result--good]="row.tone === 'good'"
+				[class.details-rows__result--bad]="row.tone === 'bad'"
+				[class.details-rows__result--neutral]="row.tone === 'neutral'"
+			>
+				{{ row.value }}
+			</span>
+
+			<ng-template #defaultRow>
+				<a
+					*ngIf="row.href; else plain"
+					class="details-rows__link"
+					[attr.href]="row.href || null"
+					[attr.aria-disabled]="!row.href"
+					[attr.tabindex]="row.href ? 0 : -1"
+					(click)="openExternal(row.href, $event)"
+				>
+					{{ row.value }}
+				</a>
+
+				<ng-template #plain>
+					<span>{{ row.value }}</span>
+				</ng-template>
+			</ng-template>
+		</div>
+	</div>
+</div>
