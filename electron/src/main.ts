@@ -1,8 +1,7 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, session, shell } from 'electron';
 import * as path from 'node:path';
 import { PrismaClient, Prisma, ExternalSite } from '@prisma/client';
 import { coreIsReady } from 'my-chess-opening-core';
-import { testImportSinceYesterday, testImportAllAccountsMax5 } from './dev/testImport';
 import { importAllAccounts } from './import/importAllAccounts';
 import { registerLogsIpc } from './logs/logsIpc';
 import { registerExplorerIpc } from './explorer/explorerIpc';
@@ -17,6 +16,12 @@ app.setAppUserModelId('com.eleridoc.my-chess-opening');
 const prisma = new PrismaClient();
 
 let mainWindow: BrowserWindow | null = null;
+
+/**
+ * Dev server URL (Angular).
+ * Keep it configurable so you can run on another port without touching code.
+ */
+const DEV_SERVER_URL = process.env['MCO_DEV_SERVER_URL'] ?? 'http://localhost:4200';
 
 function getAssetsDir(): string {
 	// In dev, __dirname points to compiled output (usually electron/dist).
@@ -91,6 +96,104 @@ async function saveAccounts(input: SaveAccountsInput) {
 	});
 }
 
+/**
+ * Registers a Content Security Policy (CSP) for the renderer.
+ *
+ * Why:
+ * - Electron warns if the renderer has no CSP or uses "unsafe-eval".
+ * - In production, CSP should be strict.
+ * - In development, CSP must allow the Angular dev server + websocket (live reload).
+ *
+ * Note:
+ * - This injects CSP via response headers. It works even when loading http://localhost:4200.
+ */
+function registerContentSecurityPolicy(): void {
+	const isDev = !app.isPackaged;
+
+	// Toggle if your Angular dev setup really requires eval().
+	// Keeping this OFF removes Electron's "unsafe-eval" warning.
+	const allowUnsafeEvalInDev = false;
+
+	// If you keep Google Fonts links in production builds, keep this ON.
+	// If you self-host fonts/icons, turn it OFF for a stricter CSP.
+	const allowGoogleFontsInProd = true;
+
+	let devOrigin = 'http://localhost:4200';
+	let devWsOrigin = 'ws://localhost:4200';
+
+	try {
+		const u = new URL(DEV_SERVER_URL);
+		devOrigin = u.origin;
+
+		const wsProtocol = u.protocol === 'https:' ? 'wss:' : 'ws:';
+		devWsOrigin = `${wsProtocol}//${u.host}`;
+	} catch {
+		// Keep defaults if URL parsing fails.
+	}
+
+	// Google Fonts origins
+	const googleFontsCss = 'https://fonts.googleapis.com';
+	const googleFontsFiles = 'https://fonts.gstatic.com';
+
+	const cspDev = [
+		`default-src 'self' ${devOrigin}`,
+
+		`script-src 'self' ${devOrigin}${allowUnsafeEvalInDev ? " 'unsafe-eval'" : ''}`,
+
+		// IMPORTANT:
+		// - External stylesheets (Google Fonts) are controlled by style-src-elem.
+		// - Inline styles in dev often require 'unsafe-inline'.
+		`style-src 'self' ${devOrigin} 'unsafe-inline' ${googleFontsCss}`,
+		`style-src-elem 'self' ${devOrigin} 'unsafe-inline' ${googleFontsCss}`,
+
+		// Font files are served from fonts.gstatic.com
+		`font-src 'self' data: ${devOrigin} ${googleFontsFiles}`,
+
+		`img-src 'self' data: blob: ${devOrigin}`,
+		`connect-src 'self' ${devOrigin} ${devWsOrigin}`,
+
+		`object-src 'none'`,
+		`base-uri 'self'`,
+		`frame-ancestors 'none'`,
+	].join('; ');
+
+	const cspProdBase = [
+		`default-src 'self'`,
+		`script-src 'self'`,
+		`style-src 'self' 'unsafe-inline'`,
+		`style-src-elem 'self' 'unsafe-inline'`,
+		`img-src 'self' data: blob:`,
+		`font-src 'self' data:`,
+		`connect-src 'self'`,
+		`object-src 'none'`,
+		`base-uri 'self'`,
+		`frame-ancestors 'none'`,
+	];
+
+	const cspProdWithGoogleFonts = [
+		`default-src 'self'`,
+		`script-src 'self'`,
+		`style-src 'self' 'unsafe-inline' ${googleFontsCss}`,
+		`style-src-elem 'self' 'unsafe-inline' ${googleFontsCss}`,
+		`img-src 'self' data: blob:`,
+		`font-src 'self' data: ${googleFontsFiles}`,
+		`connect-src 'self'`,
+		`object-src 'none'`,
+		`base-uri 'self'`,
+		`frame-ancestors 'none'`,
+	];
+
+	const cspProd = (allowGoogleFontsInProd ? cspProdWithGoogleFonts : cspProdBase).join('; ');
+
+	const csp = isDev ? cspDev : cspProd;
+
+	session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+		const responseHeaders = details.responseHeaders ?? {};
+		responseHeaders['Content-Security-Policy'] = [csp];
+		callback({ responseHeaders });
+	});
+}
+
 function createWindow() {
 	console.log(coreIsReady());
 
@@ -106,20 +209,19 @@ function createWindow() {
 		},
 	});
 
-	mainWindow.loadURL('http://localhost:4200');
+	/**
+	 * Security hardening:
+	 * - Deny window.open() and open links in the OS browser instead.
+	 * This avoids unexpected new BrowserWindows being created by web content.
+	 */
+	mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+		// Open external URLs in the default browser
+		shell.openExternal(url).catch(() => void 0);
+		return { action: 'deny' };
+	});
 
-	// console.error('[TEST IMPORT] start');
-	// testImportSinceYesterday().catch((e) => {
-	// 	console.error('[TEST IMPORT] failed', e);
-	// });
-
-	// (async () => {
-	// 	await testImportAllAccountsMax5();
-	// 	process.exit(0);
-	// })().catch((e) => {
-	// 	console.error(e);
-	// 	process.exit(1);
-	// });
+	// DEV only (current setup)
+	mainWindow.loadURL(DEV_SERVER_URL);
 
 	mainWindow.on('closed', () => {
 		mainWindow = null;
@@ -127,6 +229,9 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+	// Register CSP before creating any BrowserWindow.
+	registerContentSecurityPolicy();
+
 	ipcMain.handle('ping', async () => {
 		return {
 			message: 'pong from main',

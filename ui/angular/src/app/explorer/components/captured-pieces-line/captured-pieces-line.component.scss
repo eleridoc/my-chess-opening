@@ -1,0 +1,79 @@
+.captured-line {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	min-width: 0;
+
+	&__na,
+	&__empty {
+		font-size: 12px;
+		opacity: 0.75;
+		white-space: nowrap;
+	}
+
+	&__adv {
+		font-size: 16px;
+		font-weight: bold;
+		opacity: 0.9;
+		white-space: nowrap;
+		margin-left: auto;
+		color: var(--app-primary);
+	}
+}
+
+.captured-item {
+	display: inline-flex;
+	align-items: center;
+	gap: 2px;
+	white-space: nowrap;
+	opacity: 0.85;
+
+	&__icon {
+		/* SVG icon box (replaces Unicode glyph rendering) */
+		width: 25px;
+		height: 25px;
+		flex: 0 0 auto;
+
+		display: inline-block;
+		vertical-align: middle;
+
+		/*
+		 * Some browsers apply overflow clipping on <svg>.
+		 * Allow drop-shadows to be visible.
+		 */
+		overflow: visible;
+	}
+
+	/**
+	 * When the captured pieces are black, the SVG can become hard to see on dark themes.
+	 * We add a thin "outline" using multiple drop-shadows.
+	 */
+	&__icon--black {
+		filter: drop-shadow(1px 0 0 rgba(255, 255, 255, 0.95))
+			drop-shadow(-1px 0 0 rgba(255, 255, 255, 0.95)) drop-shadow(0 1px 0 rgba(255, 255, 255, 0.95))
+			drop-shadow(0 -1px 0 rgba(255, 255, 255, 0.95));
+	}
+
+	&__icon--white {
+		filter: drop-shadow(1px 0 0 rgba(255, 255, 255, 0.95))
+			drop-shadow(-1px 0 0 rgba(255, 255, 255, 0.95)) drop-shadow(0 1px 0 rgba(255, 255, 255, 0.95))
+			drop-shadow(0 -1px 0 rgba(255, 255, 255, 0.95));
+	}
+
+	&__count {
+		font-size: 14px;
+		line-height: 1;
+		margin-left: -6px;
+
+		/* Reserve a stable slot so pieces align even when ×1 is hidden */
+		display: inline-block;
+		min-width: 18px;
+		opacity: 0.85;
+	}
+
+	/* Hide the text but KEEP reserved width for alignment */
+	&__count.is-hidden {
+		visibility: hidden;
+		//width: 0px;
+	}
+}

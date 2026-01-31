@@ -1,5 +1,14 @@
 import type { ExplorerNodeId } from './ids';
-import type { ExplorerGameSnapshot, ExplorerMode, ExplorerSessionSource } from './types';
+import type {
+	CapturedBySide,
+	CapturedCounts,
+	CapturedPiecesAtCursor,
+	PieceKind,
+	ExplorerGameSnapshot,
+	ExplorerMode,
+	ExplorerSessionSource,
+	MaterialAtCursor,
+} from './types';
 import type {
 	ExplorerMoveToken,
 	ExplorerMoveListRow,
@@ -19,6 +28,19 @@ import {
 } from './session.internals';
 import { cloneDbGameSnapshot, isSquare } from './session.utils';
 import { getVariationContextAtCurrentPly } from './session.variation';
+import { Chess, type Move } from 'chess.js';
+
+/**
+ * Session selectors
+ *
+ * Pure read-only functions that derive UI-friendly data from ExplorerSessionState.
+ *
+ * Notes:
+ * - Selectors must be deterministic and side-effect free.
+ * - When the state tree might be inconsistent (defensive coding), selectors should prefer
+ *   returning safe defaults rather than throwing.
+ * - Keep all comments in English.
+ */
 
 export function getMode(state: ExplorerSessionState): ExplorerMode {
 	return state.mode;
@@ -28,6 +50,9 @@ export function getSource(state: ExplorerSessionState): ExplorerSessionSource {
 	return state.source;
 }
 
+/**
+ * Returns a cloned DB snapshot (so callers can't mutate internal state).
+ */
 export function getDbGameSnapshot(state: ExplorerSessionState): ExplorerGameSnapshot | null {
 	return state.dbSnapshot ? cloneDbGameSnapshot(state.dbSnapshot) : null;
 }
@@ -40,6 +65,10 @@ export function getCurrentNodeId(state: ExplorerSessionState): ExplorerNodeId {
 	return state.currentNodeId;
 }
 
+/**
+ * Alias kept for backward compatibility with older UI code.
+ * Prefer using `getCurrentFen(state)` directly where possible.
+ */
 export function getCurrentFenSelector(state: ExplorerSessionState): string {
 	return getCurrentFen(state);
 }
@@ -56,57 +85,87 @@ export function getCurrentPly(state: ExplorerSessionState): number {
 	return getCurrentNode(state).ply;
 }
 
+/**
+ * Returns the tree reference as readonly.
+ * The returned object should still be treated as immutable by callers.
+ */
 export function getTreeSnapshot(state: ExplorerSessionState): Readonly<ExplorerTree> {
 	return state.tree;
 }
 
-export function getCurrentNodeSelector(state: ExplorerSessionState) {
+export function getCurrentNodeSelector(
+	state: ExplorerSessionState,
+): ReturnType<typeof getCurrentNode> {
 	return getCurrentNode(state);
 }
 
+/**
+ * Returns the node ids from root -> current cursor.
+ *
+ * Defensive behavior:
+ * - If the tree is inconsistent (missing nodes), it returns the longest valid prefix.
+ */
 export function getCurrentPathNodeIds(state: ExplorerSessionState): ExplorerNodeId[] {
 	const path: ExplorerNodeId[] = [];
 	let cursor: ExplorerNodeId | undefined = state.currentNodeId;
 
 	while (cursor) {
+		const node = state.tree.nodesById[cursor];
+		if (!node) break;
+
 		path.push(cursor);
-		cursor = state.tree.nodesById[cursor]?.parentId;
+		cursor = node.parentId as ExplorerNodeId | undefined;
 	}
 
 	path.reverse();
 	return path;
 }
 
+/**
+ * Returns the node ids for the active line from root following activeChildId.
+ *
+ * Defensive behavior:
+ * - Stops if the next node is missing (tree inconsistency).
+ */
 export function getActiveLineNodeIds(state: ExplorerSessionState): ExplorerNodeId[] {
 	const line: ExplorerNodeId[] = [];
 	let cursor: ExplorerNodeId | undefined = state.tree.rootId;
 
 	while (cursor) {
+		const node = state.tree.nodesById[cursor];
+		if (!node) break;
+
 		line.push(cursor);
-		cursor = getNode(state, cursor).activeChildId as ExplorerNodeId | undefined;
+		cursor = node.activeChildId as ExplorerNodeId | undefined;
 	}
 
 	return line;
 }
 
+/**
+ * Returns the mainline node ids.
+ *
+ * Convention:
+ * - The mainline is the "first child" chain: children[0] is considered the main continuation.
+ *
+ * Defensive behavior:
+ * - Stops if a node is missing or has no children.
+ */
 export function getMainlineNodeIds(state: ExplorerSessionState): ExplorerNodeId[] {
 	const line: ExplorerNodeId[] = [];
-	let currentId: ExplorerNodeId = state.tree.rootId;
+	let currentId: ExplorerNodeId | undefined = state.tree.rootId;
 
-	while (true) {
-		line.push(currentId);
-
+	while (currentId) {
 		const currentNode = state.tree.nodesById[currentId];
 		if (!currentNode) break;
+
+		line.push(currentId);
 
 		const children = currentNode.childIds as ExplorerNodeId[] | undefined;
 		if (!children || children.length === 0) break;
 
 		const nextId = children[0] as ExplorerNodeId;
-
-		// Defensive guard: stop if tree is inconsistent
-		const nextNode = state.tree.nodesById[nextId];
-		if (!nextNode) break;
+		if (!state.tree.nodesById[nextId]) break;
 
 		currentId = nextId;
 	}
@@ -130,6 +189,12 @@ export function getCurrentPathMoves(state: ExplorerSessionState): ExplorerMove[]
 		.filter((m): m is ExplorerMove => Boolean(m));
 }
 
+/**
+ * Legacy-friendly mainline list that includes "variationCount" for each mainline move.
+ *
+ * Variation count meaning:
+ * - number of alternative children from the parent position (excluding the mainline continuation).
+ */
 export function getMainlineMovesWithMeta(state: ExplorerSessionState): ExplorerMainlineMove[] {
 	const ids = getMainlineNodeIds(state);
 
@@ -161,19 +226,76 @@ export function getVariationInfoAtCurrentPly(
 	return { index: ctx.index, count: ctx.siblings.length };
 }
 
+/**
+ * Returns captured pieces computed at the current cursor position.
+ *
+ * Rules:
+ * - For FEN imports, captures are not applicable (no move history).
+ * - For PGN/DB/FREE, captures are computed by replaying the current path moves from the root.
+ *
+ * Meaning of "captured by side":
+ * - bySide.white.p = number of black pawns captured by White
+ * - bySide.black.q = number of white queens captured by Black
+ */
+export function getCapturedPiecesAtCursor(state: ExplorerSessionState): CapturedPiecesAtCursor {
+	// FEN has no move history => we cannot know what was captured by whom.
+	if (state.source.kind === 'FEN') {
+		return { availability: 'not_applicable' };
+	}
+
+	const bySide = makeEmptyCapturedBySide();
+
+	// Defensive: root FEN should always be valid if invariants hold.
+	let chess: Chess;
+	try {
+		const rootFen = getNode(state, state.tree.rootId).fen;
+		chess = new Chess(rootFen);
+	} catch {
+		return { availability: 'available', bySide };
+	}
+
+	// Replay the current path (mainline or variation) from the root to the cursor.
+	const pathMoves = getCurrentPathMoves(state);
+
+	for (const m of pathMoves) {
+		const from = (m.from ?? '').toLowerCase();
+		const to = (m.to ?? '').toLowerCase();
+
+		// Defensive guard: should never happen if core invariants hold.
+		if (!isSquare(from) || !isSquare(to)) {
+			return { availability: 'available', bySide: makeEmptyCapturedBySide() };
+		}
+
+		const moveResult: Move | null = m.promotion
+			? chess.move({ from, to, promotion: m.promotion })
+			: chess.move({ from, to });
+
+		if (!moveResult) {
+			// If the move path is inconsistent, return a safe empty payload.
+			return { availability: 'available', bySide: makeEmptyCapturedBySide() };
+		}
+
+		const captured = normalizeCapturedPieceKind(moveResult.captured);
+		if (!captured) continue;
+
+		// chess.js moveResult.color: 'w' or 'b' -> the mover.
+		const side = moveResult.color === 'b' ? 'black' : 'white';
+		bySide[side][captured] += 1;
+	}
+
+	return { availability: 'available', bySide };
+}
+
 export function getMoveListViewModel(state: ExplorerSessionState): ExplorerMoveListViewModel {
-	const vmRows = buildMainlineRows(state);
+	const rows = buildMainlineRows(state);
 	const variationsByNodeId: Record<string, ExplorerVariationLine[]> = {};
 
-	// Build variation lines for every node (small tree => OK and simpler)
+	// Build variation lines for every node (small tree => OK and simpler).
 	for (const id of Object.keys(state.tree.nodesById)) {
 		variationsByNodeId[id] = buildVariationLinesFromNode(state, id as ExplorerNodeId);
 	}
 
-	return {
-		rows: vmRows,
-		variationsByNodeId,
-	};
+	return { rows, variationsByNodeId };
 }
 
 export function getLegalDestinationsFrom(
@@ -227,12 +349,61 @@ export function getLegalCaptureDestinationsFrom(
 	return Array.from(captures).sort();
 }
 
+/**
+ * Returns material information at the current cursor position (board-only).
+ *
+ * Important:
+ * - This is NOT derived from capture history.
+ * - It counts pieces currently present on the board, which makes it promotion-safe.
+ * - Kings are intentionally ignored for material scoring.
+ */
+export function getMaterialAtCursor(state: ExplorerSessionState): MaterialAtCursor {
+	const placement = (getCurrentFen(state).split(' ')[0] ?? '').trim();
+
+	const emptyCounts = () => ({ p: 0, n: 0, b: 0, r: 0, q: 0 });
+
+	const bySide = {
+		white: emptyCounts(),
+		black: emptyCounts(),
+	};
+
+	for (const ch of placement) {
+		if (ch === '/' || (ch >= '1' && ch <= '8')) continue;
+
+		const isWhite = ch === ch.toUpperCase();
+		const piece = ch.toLowerCase();
+
+		// Ignore kings: not part of material evaluation here.
+		if (piece !== 'p' && piece !== 'n' && piece !== 'b' && piece !== 'r' && piece !== 'q') {
+			continue;
+		}
+
+		const side = isWhite ? 'white' : 'black';
+		bySide[side][piece as keyof typeof bySide.white] += 1;
+	}
+
+	const score = (c: { p: number; n: number; b: number; r: number; q: number }) =>
+		c.p * 1 + c.n * 3 + c.b * 3 + c.r * 5 + c.q * 9;
+
+	const whiteScore = score(bySide.white);
+	const blackScore = score(bySide.black);
+
+	const diffSigned = whiteScore - blackScore;
+
+	return {
+		bySide,
+		scoreBySide: { white: whiteScore, black: blackScore },
+		diff: Math.abs(diffSigned),
+		leadingSide: diffSigned === 0 ? undefined : diffSigned > 0 ? 'white' : 'black',
+	};
+}
+
 // ---- Move list builders (private to selectors module) ----
 
 function buildMainlineRows(state: ExplorerSessionState): ExplorerMoveListRow[] {
 	const ids = getMainlineNodeIds(state).slice(1); // exclude root
 	const tokens: ExplorerMoveToken[] = ids
-		.map((id) => nodeToToken(state, id, /*isLineStart*/ false))
+		.map((id) => nodeToToken(state, id, /* isLineStart */ false))
 		.filter((t): t is ExplorerMoveToken => Boolean(t));
 
 	// Group by full-move number (white/black)
@@ -323,4 +494,20 @@ function formatVariationLabel(ply: number, san: string, isLineStart: boolean): s
 
 	// Black move => show "5...c5" only if line starts on black
 	return isLineStart ? `${fullMove}...${san}` : san;
+}
+
+function makeEmptyCapturedCounts(): CapturedCounts {
+	return { p: 0, n: 0, b: 0, r: 0, q: 0 };
+}
+
+function makeEmptyCapturedBySide(): CapturedBySide {
+	return {
+		white: makeEmptyCapturedCounts(),
+		black: makeEmptyCapturedCounts(),
+	};
+}
+
+function normalizeCapturedPieceKind(value?: string): PieceKind | null {
+	const v = (value ?? '').toLowerCase();
+	return v === 'p' || v === 'n' || v === 'b' || v === 'r' || v === 'q' ? v : null;
 }

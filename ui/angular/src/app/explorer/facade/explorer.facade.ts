@@ -263,12 +263,19 @@ export class ExplorerFacade {
 	 * Key goals:
 	 * - Provide structured/raw data (i18n-friendly keys, ISO strings).
 	 * - Do not pre-format "line1/line2" strings here.
-	 * - Keep ordering logic outside: player card decides top/bottom from boardOrientation.
+	 * - Player-card decides top/bottom from `boardOrientation`.
 	 */
 	readonly gameInfoHeaderVm = computed<GameInfoHeaderVm>(() => {
+		// Recompute when cursor-dependent selectors change (navigation, variations, etc.).
+		this._rev();
+
 		const headers = this.gameHeaders();
 		const myColor = this.getPerspectiveColor();
 		const boardOrientation = this.boardOrientation();
+
+		// Cursor-dependent core selectors.
+		const captured = this.session.getCapturedPiecesAtCursor();
+		const material = this.session.getMaterialAtCursor();
 
 		const timeControlVm = this.buildTimeControlVm(headers);
 		const playedAtIso = (headers?.playedAtIso ?? '').trim() || undefined;
@@ -289,7 +296,7 @@ export class ExplorerFacade {
 		const result = this.buildResultVm((headers?.result ?? '').trim() || undefined, myColor);
 		const opening = this.buildOpeningVm(headers);
 
-		const gameInfoHeaderVmTmp = {
+		const vm: GameInfoHeaderVm = {
 			boardOrientation,
 			...(myColor ? { myColor } : {}),
 			meta,
@@ -297,11 +304,11 @@ export class ExplorerFacade {
 			...(site ? { site } : {}),
 			result,
 			...(opening ? { opening } : {}),
+			captured,
+			material,
 		};
 
-		console.log('gameInfoHeaderVmTmp: ', gameInfoHeaderVmTmp);
-
-		return gameInfoHeaderVmTmp;
+		return vm;
 	});
 
 	/**

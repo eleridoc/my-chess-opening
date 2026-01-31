@@ -6,6 +6,7 @@
 	[class.player-card--bottom]="position === 'bottom'"
 >
 	<div class="player-card__left">
+		<!-- "Me" marker is only available for DB snapshots (facade sets player.isMe) -->
 		<mat-icon class="player-card__icon" *ngIf="player.isMe; else unknown">person</mat-icon>
 		<ng-template #unknown>
 			<mat-icon class="player-card__icon">question_mark</mat-icon>
@@ -24,7 +25,14 @@
 			</div>
 		</div>
 
-		<!-- Reserved for later (V1.5.7 captured pieces, etc.) -->
-		<div class="player-card__right-bottom">pieces todo</div>
+		<div class="player-card__right-bottom">
+			<!-- Captures are shown when available; material advantage is shown as "+X" for the leading side only -->
+			<app-captured-pieces-line
+				[playerSide]="side"
+				[availability]="capturedAvailability"
+				[counts]="capturedCounts"
+				[materialAdvantage]="materialAdvantage"
+			></app-captured-pieces-line>
+		</div>
 	</div>
 </div>

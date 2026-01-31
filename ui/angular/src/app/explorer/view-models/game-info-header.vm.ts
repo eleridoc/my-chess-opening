@@ -1,14 +1,27 @@
+import type {
+	PieceKind,
+	CapturedCounts,
+	CapturedBySide,
+	CapturedAvailability,
+	CapturedPiecesAtCursor,
+	MaterialAtCursor,
+} from 'my-chess-opening-core/explorer';
+
 /**
  * Explorer "Game Info Header" view-model types (UI)
  *
  * Goal:
  * - Provide a SINGLE VM that represents all "header" information displayed in the left panel:
- *   meta header + players + details (site/result/opening).
+ *   meta header + players + details (site/result/opening) + captured/material.
  *
  * Design principles:
  * - Prefer raw/structured data over pre-formatted strings (i18n-ready).
  * - Avoid "line1/line2" style fields: components decide how to render.
  * - Keep templates/components dumb: no domain logic in HTML.
+ *
+ * Note:
+ * - For some domains (captured/material), we intentionally reuse the core types directly.
+ *   This avoids duplication and prevents UI/core shape drift over time.
  */
 
 export type PlayerSide = 'white' | 'black';
@@ -26,7 +39,7 @@ export type GameRatedKey = 'rated' | 'casual' | 'unknown';
 
 /**
  * Normalized result key (translation-ready).
- * - Prefer these keys over raw PGN result codes ("1-0", "0-1", "1/2-1/2", "*").
+ * Prefer these keys over raw PGN result codes ("1-0", "0-1", "1/2-1/2", "*").
  */
 export type GameResultKey = 'white_win' | 'black_win' | 'draw' | 'ongoing' | 'unknown';
 
@@ -37,10 +50,27 @@ export type GameResultKey = 'white_win' | 'black_win' | 'draw' | 'ongoing' | 'un
 export type GameResultTone = 'normal' | 'good' | 'bad' | 'neutral';
 
 /**
- * Time control representation.
- * - `initialSeconds` / `incrementSeconds` are the "raw" structured values when known.
+ * Captured pieces types (reused from the core).
+ * - PieceKind excludes kings here (p/n/b/r/q).
+ * - Counts represent pieces CAPTURED BY a side (not pieces lost).
+ */
+export type CapturedPieceKind = PieceKind;
+export type CapturedCountsVm = CapturedCounts;
+export type CapturedBySideVm = CapturedBySide;
+export type CapturedAvailabilityKey = CapturedAvailability;
+
+/**
+ * Captured pieces payload at the current cursor position (core).
+ * UI treats it as read-only.
+ */
+export type GameInfoCapturedVm = CapturedPiecesAtCursor;
+
+/**
+ * Time control representation (UI).
+ *
+ * - `initialSeconds` / `incrementSeconds` are raw structured values when known.
  * - `text` is an optional normalized display hint (e.g. "15+10").
- * - `raw` can keep the original source string when parsing isn't possible.
+ * - `raw` keeps the original source string when parsing isn't possible.
  */
 export type GameTimeControlVm = {
 	initialSeconds?: number;
@@ -144,4 +174,19 @@ export type GameInfoHeaderVm = {
 
 	/** Optional opening info (name + ECO). */
 	opening?: GameInfoOpeningVm;
+
+	/**
+	 * Captured pieces computed at the current cursor position.
+	 *
+	 * Availability rules:
+	 * - PGN / DB: "available"
+	 * - FEN: "not_applicable" (no move history)
+	 */
+	captured?: GameInfoCapturedVm;
+
+	/**
+	 * Material state at the current cursor (core).
+	 * Used to compute "+X" advantage correctly (promotion-safe).
+	 */
+	material?: MaterialAtCursor;
 };

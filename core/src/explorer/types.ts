@@ -297,3 +297,76 @@ export type ExplorerGameAnalysisV1 = {
 		bestSan?: string;
 	}>;
 };
+
+/**
+ * Captured pieces (CORE)
+ *
+ * Important:
+ * - "Captured by side" means: pieces taken by that side across the move history
+ *   leading to the current cursor position.
+ * - This cannot be derived from a FEN alone (no move history).
+ *
+ * PieceKind uses lowercase piece letters:
+ * - p = pawn, n = knight, b = bishop, r = rook, q = queen
+ */
+export type PieceKind = 'p' | 'n' | 'b' | 'r' | 'q';
+
+export type CapturedCounts = Record<PieceKind, number>;
+
+/**
+ * Captured pieces grouped by the capturing side.
+ * Example:
+ * - bySide.white.n = number of black knights captured by White
+ */
+export type CapturedBySide = {
+	white: CapturedCounts;
+	black: CapturedCounts;
+};
+
+/**
+ * Captured pieces availability depends on the session source:
+ * - PGN / DB: available (history exists)
+ * - FEN: not_applicable (no history)
+ */
+export type CapturedAvailability = 'available' | 'not_applicable';
+
+/**
+ * Availability-aware payload returned by selectors (later).
+ * `bySide` is present only when availability === 'available'.
+ */
+export type CapturedPiecesAtCursor = {
+	availability: CapturedAvailability;
+	bySide?: CapturedBySide;
+};
+
+/**
+ * Material counts by piece kind (no kings).
+ * Keys match chess.js piece codes: p, n, b, r, q.
+ */
+export type PieceCounts = {
+	p: number;
+	n: number;
+	b: number;
+	r: number;
+	q: number;
+};
+
+/**
+ * Material state at the current cursor position.
+ * - bySide: piece counts currently present on the board
+ * - scoreBySide: normalized material points (p=1, n/b=3, r=5, q=9)
+ * - leadingSide: side currently ahead in material (undefined when equal)
+ * - diff: absolute score difference (0 when equal)
+ */
+export type MaterialAtCursor = {
+	bySide: {
+		white: PieceCounts;
+		black: PieceCounts;
+	};
+	scoreBySide: {
+		white: number;
+		black: number;
+	};
+	leadingSide?: 'white' | 'black';
+	diff: number;
+};

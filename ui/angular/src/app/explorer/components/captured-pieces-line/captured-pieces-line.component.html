@@ -1,0 +1,37 @@
+<div class="captured-line">
+	<ng-container [ngSwitch]="availability">
+		<span *ngSwitchCase="'not_applicable'" class="captured-line__na">N/A</span>
+
+		<ng-container *ngSwitchDefault>
+			<ng-container *ngIf="hasCaptures; else empty">
+				<span class="captured-item" *ngFor="let e of entries">
+					<svg
+						class="captured-item__icon"
+						[class.captured-item__icon--black]="capturedIsBlack"
+						[class.captured-item__icon--white]="!capturedIsBlack"
+						viewBox="0 0 40 40"
+						aria-hidden="true"
+					>
+						<use
+							[attr.href]="getSpriteHref(e.spriteId)"
+							[attr.xlink:href]="getSpriteHref(e.spriteId)"
+						></use>
+					</svg>
+
+					<!-- Keep layout stable: hide ×1 but preserve its width -->
+					<span class="captured-item__count" [class.is-hidden]="e.count === 1">
+						×{{ e.count }}
+					</span>
+				</span>
+
+				<span *ngIf="hasMaterialAdvantage" class="captured-line__adv">
+					+{{ materialAdvantage }}
+				</span>
+			</ng-container>
+
+			<ng-template #empty>
+				<span class="captured-line__empty">—</span>
+			</ng-template>
+		</ng-container>
+	</ng-container>
+</div>
