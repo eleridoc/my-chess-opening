@@ -1,12 +1,14 @@
 .game-meta-card {
-	display: flex;
+	display: inline-flex;
 	flex-direction: row;
 	gap: 12px;
 	align-items: stretch;
 
+	//background-color: darkolivegreen;
+
 	&__left {
-		width: 50px;
-		height: 50px;
+		width: 55px;
+		height: 55px;
 		border-radius: 6px;
 		flex: 0 0 auto;
 
@@ -15,14 +17,14 @@
 		align-items: center;
 		justify-content: center;
 
-		// background: var(--app-card);
+		//background: var(--app-card);
 	}
 
 	&__icon {
-		font-size: 32px;
-		width: 32px;
-		height: 32px;
-		line-height: 32px;
+		font-size: 50px;
+		width: 50px;
+		height: 50px;
+		line-height: 50px;
 		opacity: 0.55;
 	}
 
@@ -35,19 +37,21 @@
 
 	&__line1 {
 		font-weight: 600;
-		font-size: 14px;
+		font-size: 18px;
 		line-height: 1.2;
-
+		padding-top: 6px;
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
+		text-align: left;
+		//background-color: slateblue;
 	}
 
 	&__line2 {
 		margin-top: 3px;
 		font-size: 13px;
 		opacity: 0.7;
-
+		text-align: left;
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;

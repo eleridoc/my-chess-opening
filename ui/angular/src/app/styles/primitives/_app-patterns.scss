@@ -46,3 +46,8 @@
 	border-color: rgba(244, 67, 54, 0.35);
 	background: rgba(244, 67, 54, 0.12);
 }
+
+.app-separator {
+	margin: 15px 0px;
+	border-bottom: 1px solid var(--app-sep);
+}
