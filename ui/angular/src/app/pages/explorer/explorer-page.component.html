@@ -1,13 +1,6 @@
 <div class="app-page">
 	<div class="explorer-layout" [class.explorer-layout--qa-collapsed]="qaCollapsed()">
 		<section class="explorer-col explorer-col--qa">
-			<!-- <div>
-				<app-game-meta-header-card [vm]="facade.gameMetaHeaderVm()"></app-game-meta-header-card>
-				<app-player-info-card [vm]="facade.playersPanelVm().top"></app-player-info-card>
-				<app-player-info-card [vm]="facade.playersPanelVm().bottom"></app-player-info-card>
-				<app-game-details-rows [rows]="facade.gameDetailsRowsVm()"></app-game-details-rows>
-			</div> -->
-
 			<app-explorer-game-info-panel [facade]="facade"></app-explorer-game-info-panel>
 
 			<app-explorer-qa-panel (collapsedChange)="qaCollapsed.set($event)" />

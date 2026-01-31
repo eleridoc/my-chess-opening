@@ -20,6 +20,7 @@ import { MatIconModule } from '@angular/material/icon';
 
 import type { PromotionPiece, ExplorerGameSnapshot } from 'my-chess-opening-core/explorer';
 import { ExplorerFacade } from '../../facade/explorer.facade';
+import type { PlayerSide } from '../../view-models/game-info-header.vm';
 
 type QaLogLevel = 'INFO' | 'WARN' | 'ERROR';
 
@@ -170,6 +171,23 @@ export class ExplorerQaPanelComponent {
 		const fen = this.facade.fen();
 		return fen.length > 40 ? `${fen.slice(0, 40)}…` : fen;
 	});
+
+	/**
+	 * QA helpers derived from the single header VM.
+	 * This replaces legacy "playersPanelVm()" usage.
+	 */
+	readonly headerVm = computed(() => this.facade.gameInfoHeaderVm());
+
+	readonly qaBottomSide = computed<PlayerSide>(() => this.headerVm().boardOrientation);
+
+	readonly qaTopSide = computed<PlayerSide>(() => {
+		const bottom = this.qaBottomSide();
+		return bottom === 'white' ? 'black' : 'white';
+	});
+
+	readonly qaTopPlayer = computed(() => this.headerVm().players[this.qaTopSide()]);
+
+	readonly qaBottomPlayer = computed(() => this.headerVm().players[this.qaBottomSide()]);
 
 	constructor(public readonly facade: ExplorerFacade) {
 		// Emit initial collapsed state so parent can adapt layout if needed.

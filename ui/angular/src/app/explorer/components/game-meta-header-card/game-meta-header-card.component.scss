@@ -4,20 +4,15 @@
 	gap: 12px;
 	align-items: stretch;
 
-	//background-color: darkolivegreen;
-
 	&__left {
 		width: 55px;
 		height: 55px;
 		border-radius: 6px;
 		flex: 0 0 auto;
 
-		// border: 2px solid var(--app-border);
 		display: flex;
 		align-items: center;
 		justify-content: center;
-
-		//background: var(--app-card);
 	}
 
 	&__icon {
@@ -35,7 +30,7 @@
 		min-width: 0;
 	}
 
-	&__line1 {
+	&__meta {
 		font-weight: 600;
 		font-size: 18px;
 		line-height: 1.2;
@@ -44,10 +39,18 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 		text-align: left;
-		//background-color: slateblue;
 	}
 
-	&__line2 {
+	&__meta-part {
+		white-space: nowrap;
+	}
+
+	&__sep {
+		margin: 0 6px;
+		opacity: 0.7;
+	}
+
+	&__date {
 		margin-top: 3px;
 		font-size: 13px;
 		opacity: 0.7;

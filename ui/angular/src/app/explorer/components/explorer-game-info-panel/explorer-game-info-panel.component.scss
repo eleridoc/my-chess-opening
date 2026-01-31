@@ -16,6 +16,63 @@
 	}
 }
 
+.game-details {
+	display: grid;
+	gap: 8px;
+	min-width: 0;
+
+	&__row {
+		display: grid;
+		grid-template-columns: 90px 1fr;
+		gap: 10px;
+		align-items: center;
+		min-width: 0;
+	}
+
+	&__label {
+		font-size: 12px;
+		opacity: 0.7;
+		white-space: nowrap;
+	}
+
+	&__value {
+		min-width: 0;
+		font-size: 13px;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	&__link {
+		text-decoration: none;
+		opacity: 0.9;
+
+		&:hover {
+			text-decoration: underline;
+		}
+	}
+
+	&__result {
+		font-weight: 600;
+	}
+
+	&__result--good {
+		color: var(--app-success, #2e7d32);
+	}
+
+	&__result--bad {
+		color: var(--app-danger, #c62828);
+	}
+
+	&__result--neutral {
+		opacity: 0.85;
+	}
+
+	&__eco {
+		opacity: 0.85;
+	}
+}
+
 // .game-info-panel .game-meta-header {
 // 	text-align: center;
 // }

@@ -19,8 +19,8 @@
  *
  * Notes:
  * - Keep all comments in English.
- * - This file may format *labels* (English strings) but should not do localization.
- *   For dates, we pass through ISO strings and let UI format later using a dedicated lib.
+ * - This file may expose *keys* (enum-like values) that UI can map to i18n later.
+ * - For dates, we pass through ISO strings and let UI format later using a dedicated layer.
  */
 
 import { Injectable, computed, signal } from '@angular/core';
@@ -47,8 +47,19 @@ import {
 } from 'my-chess-opening-core/explorer';
 
 import type { ExplorerGameHeaders } from 'my-chess-opening-core/explorer';
-import type { PlayerInfoVm, PlayersPanelVm, PlayerSide } from '../view-models/player-info.vm';
-import type { GameMetaHeaderVm, GameDetailsRowVm } from '../view-models/game-meta.vm';
+
+import type {
+	GameInfoHeaderVm,
+	GameInfoOpeningVm,
+	GameInfoPlayerVm,
+	GameInfoResultVm,
+	GameInfoSiteVm,
+	GameRatedKey,
+	GameResultKey,
+	GameSpeedKey,
+	GameTimeControlVm,
+	PlayerSide,
+} from '../view-models/game-info-header.vm';
 
 import type { BoardOrientation } from '../board/board-adapter';
 
@@ -247,72 +258,50 @@ export class ExplorerFacade {
 	});
 
 	/**
-	 * View-model for the top "meta" card (icon + 2 lines).
-	 * - line2 is intentionally not formatted: it is the raw ISO string for now.
+	 * Single header VM used by the whole game-info-panel and its sub-components.
+	 *
+	 * Key goals:
+	 * - Provide structured/raw data (i18n-friendly keys, ISO strings).
+	 * - Do not pre-format "line1/line2" strings here.
+	 * - Keep ordering logic outside: player card decides top/bottom from boardOrientation.
 	 */
-	readonly gameMetaHeaderVm = computed<GameMetaHeaderVm>(() => {
-		const h = this.gameHeaders();
-
-		const tc = this.formatTimeControl(h);
-		const rated = h?.rated === true ? 'Rated' : h?.rated === false ? 'Casual' : null;
-		const speed = this.speedLabel(h?.speed);
-
-		const parts = [tc, rated, speed].filter((x): x is string => !!x);
-		const line1 = parts.length ? parts.join(' • ') : '—';
-
-		// Keep ISO as-is for now (UI will format later with a proper library).
-		const line2 = (h?.playedAtIso ?? '').trim() || '—';
-
-		return {
-			icon: this.speedIcon(h?.speed),
-			line1,
-			line2,
-		};
-	});
-
-	/**
-	 * Rows used by the "details" section (label/value with optional external link).
-	 * - Result row also contains a "tone" used by UI to colorize the outcome.
-	 */
-	readonly gameDetailsRowsVm = computed<GameDetailsRowVm[]>(() => {
-		const h = this.gameHeaders();
-
-		const siteValue = (h?.site ?? '').trim() || '—';
-		const href = this.pickFirstHttpUrl(h?.siteUrl, h?.site);
-
-		const myColor = this.getPerspectiveColor();
-		const resultCode = (h?.result ?? '').trim() || undefined;
-
-		const resultText = this.formatResultText(resultCode);
-		const tone = this.computeResultTone(resultCode, myColor);
-
-		const opening = this.formatOpening(h);
-
-		return [
-			{ kind: 'site', label: 'Site', value: siteValue, ...(href ? { href } : {}) },
-			{ kind: 'result', label: 'Result', value: resultText, tone },
-			{ kind: 'opening', label: 'Opening', value: opening },
-		];
-	});
-
-	/**
-	 * Players panel view-model.
-	 * The actual order (top/bottom) depends on current board orientation.
-	 */
-	readonly playersPanelVm = computed<PlayersPanelVm>(() => {
+	readonly gameInfoHeaderVm = computed<GameInfoHeaderVm>(() => {
 		const headers = this.gameHeaders();
 		const myColor = this.getPerspectiveColor();
+		const boardOrientation = this.boardOrientation();
 
-		const white = this.buildPlayerVm('white', headers, myColor);
-		const black = this.buildPlayerVm('black', headers, myColor);
+		const timeControlVm = this.buildTimeControlVm(headers);
+		const playedAtIso = (headers?.playedAtIso ?? '').trim() || undefined;
 
-		const bottomSide = this.boardOrientation(); // 'white' | 'black'
-		const topSide: PlayerSide = bottomSide === 'white' ? 'black' : 'white';
-
-		return {
-			top: topSide === 'white' ? white : black,
-			bottom: bottomSide === 'white' ? white : black,
+		const meta = {
+			...(timeControlVm ? { timeControl: timeControlVm } : {}),
+			ratedKey: this.toRatedKey(headers?.rated),
+			speedKey: this.toSpeedKey(headers?.speed),
+			...(playedAtIso ? { playedAtIso } : {}),
 		};
+
+		const players: Record<PlayerSide, GameInfoPlayerVm> = {
+			white: this.buildGameInfoPlayerVm('white', headers, myColor),
+			black: this.buildGameInfoPlayerVm('black', headers, myColor),
+		};
+
+		const site = this.buildSiteVm(headers);
+		const result = this.buildResultVm((headers?.result ?? '').trim() || undefined, myColor);
+		const opening = this.buildOpeningVm(headers);
+
+		const gameInfoHeaderVmTmp = {
+			boardOrientation,
+			...(myColor ? { myColor } : {}),
+			meta,
+			players,
+			...(site ? { site } : {}),
+			result,
+			...(opening ? { opening } : {}),
+		};
+
+		console.log('gameInfoHeaderVmTmp: ', gameInfoHeaderVmTmp);
+
+		return gameInfoHeaderVmTmp;
 	});
 
 	/**
@@ -537,8 +526,8 @@ export class ExplorerFacade {
 	 * Node-based navigation (required for clicking moves inside variations).
 	 *
 	 * Note:
-	 * Core uses ExplorerNodeId; UI keeps node ids as string. We cast locally to keep
-	 * the facade API ergonomic without leaking core types into templates.
+	 * Core uses an opaque node id type; UI keeps node ids as string.
+	 * We cast locally to keep the facade API ergonomic without leaking core types into templates.
 	 */
 	goToNode(nodeId: string): void {
 		this.clearTransientUiState();
@@ -714,56 +703,24 @@ export class ExplorerFacade {
 		return db?.kind === 'DB' ? db.myColor : undefined;
 	}
 
-	private buildPlayerVm(
+	/**
+	 * Builds a minimal player VM for the header panel.
+	 * This is UI-focused (no chess logic).
+	 */
+	private buildGameInfoPlayerVm(
 		side: PlayerSide,
 		headers: ExplorerGameHeaders | null,
-		myColor?: 'white' | 'black',
-	): PlayerInfoVm {
-		const name =
-			(side === 'white' ? headers?.white : headers?.black)?.trim() ||
-			(side === 'white' ? 'White' : 'Black');
+		myColor?: PlayerSide,
+	): GameInfoPlayerVm {
+		const nameRaw = side === 'white' ? headers?.white : headers?.black;
+		const eloRaw = side === 'white' ? headers?.whiteElo : headers?.blackElo;
 
-		const elo = (side === 'white' ? headers?.whiteElo : headers?.blackElo)?.trim() || undefined;
+		const name = (nameRaw ?? '').trim() || (side === 'white' ? 'White' : 'Black');
+		const elo = (eloRaw ?? '').trim() || undefined;
 
-		// Keep the VM minimal: only include isMe when true (helps templates and avoids noise).
 		const isMe = myColor === side;
 
-		return { side, name, ...(elo ? { elo } : {}), ...(isMe ? { isMe: true } : {}) };
-	}
-
-	private formatTimeControl(headers: ExplorerGameHeaders | null): string | null {
-		if (!headers) return null;
-
-		const a = headers.initialSeconds;
-		const b = headers.incrementSeconds;
-
-		// DB imports usually have numeric values (preferred).
-		if (typeof a === 'number' && typeof b === 'number') {
-			const minutes = Math.round(a / 60);
-			return `${minutes}+${b}`;
-		}
-
-		// PGN imports may only have a raw string.
-		const raw = (headers.timeControl ?? '').trim();
-		return raw.length ? raw : null;
-	}
-
-	private speedLabel(speed: ExplorerGameHeaders['speed']): string | null {
-		if (!speed) return null;
-		if (speed === 'bullet') return 'Bullet';
-		if (speed === 'blitz') return 'Blitz';
-		if (speed === 'rapid') return 'Rapid';
-		if (speed === 'classical') return 'Classical';
-		return null;
-	}
-
-	private speedIcon(speed: ExplorerGameHeaders['speed']): string {
-		// Material icons are UI-level choices; keeping them here avoids duplicating mapping in templates.
-		if (speed === 'bullet') return 'flash_on';
-		if (speed === 'blitz') return 'bolt';
-		if (speed === 'rapid') return 'timer';
-		if (speed === 'classical') return 'hourglass_bottom';
-		return 'help';
+		return { name, ...(elo ? { elo } : {}), ...(isMe ? { isMe: true } : {}) };
 	}
 
 	private isHttpUrl(v: string | undefined): boolean {
@@ -780,26 +737,6 @@ export class ExplorerFacade {
 			if (s && this.isHttpUrl(s)) return s;
 		}
 		return undefined;
-	}
-
-	private formatOpening(h: ExplorerGameHeaders | null): string {
-		if (!h) return '—';
-
-		const opening = (h.opening ?? '').trim();
-		const eco = (h.eco ?? '').trim();
-
-		if (!opening && !eco) return '—';
-		if (opening && eco) return `${opening} (${eco})`;
-		return opening || eco;
-	}
-
-	private formatResultText(result?: string): string {
-		// Keep the labels in English for now (no translations yet).
-		if (result === '1-0') return 'White wins';
-		if (result === '0-1') return 'Black wins';
-		if (result === '1/2-1/2') return 'Draw';
-		if (result === '*') return 'Ongoing';
-		return '—';
 	}
 
 	/**
@@ -820,5 +757,137 @@ export class ExplorerFacade {
 		if (result === '0-1') return myColor === 'black' ? 'good' : 'bad';
 
 		return 'normal';
+	}
+
+	private toSpeedKey(speed: ExplorerGameHeaders['speed'] | undefined): GameSpeedKey {
+		if (speed === 'bullet') return 'bullet';
+		if (speed === 'blitz') return 'blitz';
+		if (speed === 'rapid') return 'rapid';
+		if (speed === 'classical') return 'classical';
+		return 'unknown';
+	}
+
+	private toRatedKey(rated: boolean | undefined): GameRatedKey {
+		if (rated === true) return 'rated';
+		if (rated === false) return 'casual';
+		return 'unknown';
+	}
+
+	/**
+	 * Builds a structured time control VM.
+	 *
+	 * Goals:
+	 * - Keep numeric fields when known (DB snapshot).
+	 * - Accept PGN raw strings (e.g. "900+10" or "15+10").
+	 * - Provide a normalized display hint (text) when we can safely do so.
+	 */
+	private buildTimeControlVm(headers: ExplorerGameHeaders | null): GameTimeControlVm | undefined {
+		if (!headers) return undefined;
+
+		const a = headers.initialSeconds;
+		const b = headers.incrementSeconds;
+
+		// DB snapshots usually have preferred numeric values.
+		if (typeof a === 'number' && typeof b === 'number') {
+			const minutes = Math.round(a / 60);
+			return { initialSeconds: a, incrementSeconds: b, text: `${minutes}+${b}` };
+		}
+
+		const raw = (headers.timeControl ?? '').trim();
+		if (!raw) return undefined;
+
+		const m = raw.match(/^(\d+)\+(\d+)$/);
+		if (!m) return { raw };
+
+		const initial = Number(m[1]);
+		const inc = Number(m[2]);
+
+		if (!Number.isFinite(initial) || !Number.isFinite(inc)) return { raw };
+
+		// Heuristics:
+		// - If initial is divisible by 60 and >= 60, it is likely seconds (e.g. "900+10").
+		// - If initial < 60, it is likely minutes (e.g. "15+10").
+		if (initial >= 60 && initial % 60 === 0) {
+			return {
+				initialSeconds: initial,
+				incrementSeconds: inc,
+				raw,
+				text: `${initial / 60}+${inc}`,
+			};
+		}
+
+		if (initial < 60) {
+			return {
+				initialSeconds: initial * 60,
+				incrementSeconds: inc,
+				raw,
+				text: `${initial}+${inc}`,
+			};
+		}
+
+		// Unknown unit: keep structured values but don't force a formatted hint.
+		return { initialSeconds: initial, incrementSeconds: inc, raw };
+	}
+
+	private inferSiteKey(label?: string, url?: string): 'lichess' | 'chesscom' | 'unknown' {
+		const a = (label ?? '').toLowerCase();
+		const b = (url ?? '').toLowerCase();
+
+		if (b.includes('lichess.org') || a.includes('lichess')) return 'lichess';
+		if (b.includes('chess.com') || a.includes('chess.com') || a.includes('chesscom'))
+			return 'chesscom';
+
+		return 'unknown';
+	}
+
+	private buildSiteVm(headers: ExplorerGameHeaders | null): GameInfoSiteVm | undefined {
+		if (!headers) return undefined;
+
+		const label = (headers.site ?? '').trim() || undefined;
+		const url = this.pickFirstHttpUrl(headers.siteUrl, headers.site);
+
+		if (!label && !url) return undefined;
+
+		return {
+			siteKey: this.inferSiteKey(label, url),
+			...(label ? { label } : {}),
+			...(url ? { url } : {}),
+		};
+	}
+
+	private toResultKey(result?: string): GameResultKey {
+		if (result === '1-0') return 'white_win';
+		if (result === '0-1') return 'black_win';
+		if (result === '1/2-1/2') return 'draw';
+		if (result === '*') return 'ongoing';
+		return 'unknown';
+	}
+
+	private buildResultVm(
+		resultRaw: string | undefined,
+		myColor?: 'white' | 'black',
+	): GameInfoResultVm {
+		const raw = resultRaw && resultRaw.length ? resultRaw : undefined;
+		const key = this.toResultKey(raw);
+
+		return {
+			key,
+			...(raw ? { raw } : {}),
+			tone: this.computeResultTone(raw, myColor),
+		};
+	}
+
+	private buildOpeningVm(headers: ExplorerGameHeaders | null): GameInfoOpeningVm | undefined {
+		if (!headers) return undefined;
+
+		const name = (headers.opening ?? '').trim() || undefined;
+		const eco = (headers.eco ?? '').trim() || undefined;
+
+		if (!name && !eco) return undefined;
+
+		return {
+			...(name ? { name } : {}),
+			...(eco ? { eco } : {}),
+		};
 	}
 }

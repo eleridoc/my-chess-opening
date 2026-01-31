@@ -2,24 +2,31 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 
-import type { PlayerInfoVm } from '../../view-models/player-info.vm';
+import type {
+	GameInfoHeaderVm,
+	GameInfoPlayerVm,
+	PlayerSide,
+} from '../../view-models/game-info-header.vm';
+
+export type PlayerCardPosition = 'top' | 'bottom';
 
 /**
  * PlayerInfoCardComponent (UI / Angular)
  *
- * Renders one player "card" (either White or Black) in the Explorer left panel.
+ * Renders one player "card" in the Explorer left panel.
  *
- * The component is presentation-only:
- * - It receives a PlayerInfoVm precomputed by the facade.
- * - It derives a few convenience booleans/labels for template bindings.
+ * Refactor note (V1.5.6.13):
+ * - The component receives the SINGLE header VM (GameInfoHeaderVm)
+ *   and a position ("top" | "bottom").
+ * - The component decides which side (white/black) to render based on:
+ *   header.boardOrientation (bottom side) + requested position.
  *
  * Responsibilities:
  * - Render the player identity line (name + optional elo).
- * - Render a left icon block (e.g., "me" indicator) based on vm.isMe.
- * - Provide a reserved area for future content (captured pieces / material diff).
+ * - Render a left icon block (e.g., "me" indicator) based on player.isMe.
+ * - Keep a reserved area for future content (captured pieces / material diff).
  *
  * Non-responsibilities:
- * - Determining who "me" is (handled by facade + DB snapshot perspective).
  * - Any chess logic (captures, evaluation, etc.).
  */
 @Component({
@@ -31,19 +38,29 @@ import type { PlayerInfoVm } from '../../view-models/player-info.vm';
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PlayerInfoCardComponent {
-	/** View-model to render (precomputed by the facade). */
-	@Input({ required: true }) vm!: PlayerInfoVm;
+	/** Single header VM (computed by the facade). */
+	@Input({ required: true }) header!: GameInfoHeaderVm;
 
-	/** Convenience: true when this card represents the White side. */
-	get isWhite(): boolean {
-		return this.vm.side === 'white';
-	}
+	/** Desired position within the panel. */
+	@Input({ required: true }) position!: PlayerCardPosition;
 
 	/**
-	 * Human-friendly side label.
-	 * Keep it in English (no translations yet).
+	 * Side to render for this card.
+	 * - bottom side = header.boardOrientation
+	 * - top side = opposite
 	 */
-	get sideLabel(): string {
-		return this.isWhite ? 'White' : 'Black';
+	get side(): PlayerSide {
+		const bottom: PlayerSide = this.header.boardOrientation;
+		const top: PlayerSide = bottom === 'white' ? 'black' : 'white';
+
+		return this.position === 'bottom' ? bottom : top;
+	}
+
+	get player(): GameInfoPlayerVm {
+		return this.header.players[this.side];
+	}
+
+	get isWhite(): boolean {
+		return this.side === 'white';
 	}
 }

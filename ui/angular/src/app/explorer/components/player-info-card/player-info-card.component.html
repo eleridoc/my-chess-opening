@@ -1,21 +1,29 @@
-<div class="player-card" [class.player-card--white]="isWhite" [class.player-card--black]="!isWhite">
+<div
+	class="player-card"
+	[class.player-card--white]="isWhite"
+	[class.player-card--black]="!isWhite"
+	[class.player-card--top]="position === 'top'"
+	[class.player-card--bottom]="position === 'bottom'"
+>
 	<div class="player-card__left">
-		<mat-icon class="player-card__icon" *ngIf="vm.isMe; else unknown">person</mat-icon>
+		<mat-icon class="player-card__icon" *ngIf="player.isMe; else unknown">person</mat-icon>
 		<ng-template #unknown>
 			<mat-icon class="player-card__icon">question_mark</mat-icon>
 		</ng-template>
 	</div>
+
 	<div class="player-card__right">
 		<div class="player-card__right-top">
 			<div class="player-card__meta">
 				<span class="player-card__side">
 					<span class="player-card__dot" aria-hidden="true"></span>
-					<span class="player-card__side-text">{{ vm.name }} ~{{ vm.isMe }}~</span>
+					<span class="player-card__side-text">{{ player.name }}</span>
 				</span>
 
-				<span class="player-card__elo" *ngIf="vm.elo as elo"> ({{ elo }})</span>
+				<span class="player-card__elo" *ngIf="player.elo as elo"> ({{ elo }})</span>
 			</div>
 		</div>
+
 		<!-- Reserved for later (V1.5.7 captured pieces, etc.) -->
 		<div class="player-card__right-bottom">pieces todo</div>
 	</div>

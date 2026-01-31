@@ -1,10 +1,22 @@
 <div class="game-meta-card">
 	<div class="game-meta-card__left">
-		<mat-icon class="game-meta-card__icon">{{ vm.icon }}</mat-icon>
+		<mat-icon class="game-meta-card__icon">{{ icon }}</mat-icon>
 	</div>
 
 	<div class="game-meta-card__right">
-		<div class="game-meta-card__line1">{{ vm.line1 }}</div>
-		<div class="game-meta-card__line2">{{ vm.line2 }}</div>
+		<div class="game-meta-card__meta">
+			<ng-container *ngIf="metaParts.length; else emptyMeta">
+				<ng-container *ngFor="let part of metaParts; let last = last">
+					<span class="game-meta-card__meta-part" [attr.data-kind]="part.kind">{{
+						part.text
+					}}</span>
+					<span class="game-meta-card__sep" *ngIf="!last">•</span>
+				</ng-container>
+			</ng-container>
+
+			<ng-template #emptyMeta>—</ng-template>
+		</div>
+
+		<div class="game-meta-card__date">{{ playedAtIso }}</div>
 	</div>
 </div>

@@ -92,17 +92,16 @@
 						<div class="qa-kv__row">
 							<div class="qa-kv__key">top</div>
 							<div class="qa-kv__value">
-								{{ facade.playersPanelVm().top.side }} — {{ facade.playersPanelVm().top.name }}
-								<span *ngIf="facade.playersPanelVm().top.elo as e"> ({{ e }})</span>
+								{{ qaTopSide() }} — {{ qaTopPlayer().name }}
+								<span *ngIf="qaTopPlayer().elo as e"> ({{ e }})</span>
 							</div>
 						</div>
 
 						<div class="qa-kv__row">
 							<div class="qa-kv__key">bottom</div>
 							<div class="qa-kv__value">
-								{{ facade.playersPanelVm().bottom.side }} —
-								{{ facade.playersPanelVm().bottom.name }}
-								<span *ngIf="facade.playersPanelVm().bottom.elo as e"> ({{ e }})</span>
+								{{ qaBottomSide() }} — {{ qaBottomPlayer().name }}
+								<span *ngIf="qaBottomPlayer().elo as e"> ({{ e }})</span>
 							</div>
 						</div>
 					</div>
