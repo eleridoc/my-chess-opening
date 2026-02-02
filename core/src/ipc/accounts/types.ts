@@ -58,9 +58,8 @@ export type AccountsResult<T> = ({ ok: true } & T) | { ok: false; error: Account
 
 export type AccountsListResult = AccountsResult<{ rows: ChessAccountRow[] }>;
 
-export type AccountsSetEnabledResult = AccountsResult<Record<string, never>>;
-
-export type AccountsDeleteResult = AccountsResult<Record<string, never>>;
+export type AccountsSetEnabledResult = AccountsResult<{}>;
+export type AccountsDeleteResult = AccountsResult<{}>;
 
 export type AccountsCreateResult = AccountsResult<{ accountId: string }>;
 

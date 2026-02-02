@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, ViewChild, inject, signal } from '@angular/core';
 
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { firstValueFrom } from 'rxjs';
@@ -10,12 +10,14 @@ import type { ConfirmDialogData } from '../../shared/dialogs/confirm-dialog/conf
 import { NotificationService } from '../../shared/notifications/notification.service';
 import { ChessAccountsService } from '../../services/chess-accounts.service';
 import { AccountsTableComponent } from './components/accounts-table/accounts-table.component';
+import { AddAccountFormComponent } from './components/add-account-form/add-account-form.component';
 import type { ChessAccountRowVm } from './models/chess-account-row.vm';
+import type { ExternalSite } from 'my-chess-opening-core';
 
 @Component({
 	standalone: true,
 	selector: 'app-chess-accounts-page',
-	imports: [CommonModule, AccountsTableComponent, MatDialogModule],
+	imports: [CommonModule, AddAccountFormComponent, AccountsTableComponent, MatDialogModule],
 	templateUrl: './chess-accounts-page.component.html',
 	styleUrl: './chess-accounts-page.component.scss',
 })
@@ -23,6 +25,9 @@ export class ChessAccountsPageComponent implements OnInit {
 	private readonly notify = inject(NotificationService);
 	private readonly accounts = inject(ChessAccountsService);
 	private readonly dialog = inject(MatDialog);
+
+	@ViewChild(AddAccountFormComponent)
+	private addForm?: AddAccountFormComponent;
 
 	/** True while list is being loaded. */
 	readonly loading = signal(false);
@@ -69,6 +74,35 @@ export class ChessAccountsPageComponent implements OnInit {
 			this.notify.error(msg);
 		} finally {
 			this.loading.set(false);
+		}
+	}
+
+	/**
+	 * Create an account (IPC) then refresh the list.
+	 */
+	async onAddRequested(payload: { site: ExternalSite; username: string }): Promise<void> {
+		if (this.actionsDisabled()) return;
+
+		this.actionsDisabled.set(true);
+
+		try {
+			const res = await this.accounts.create(payload.site, payload.username);
+
+			if (!res.ok) {
+				this.notify.error(res.error.message);
+				return;
+			}
+
+			this.notify.success('Account added.');
+
+			// Reset the form (best effort) then reload the list from DB.
+			this.addForm?.reset();
+			await this.refresh();
+		} catch (e) {
+			const msg = e instanceof Error ? e.message : 'Unknown error while creating account.';
+			this.notify.error(msg);
+		} finally {
+			this.actionsDisabled.set(false);
 		}
 	}
 

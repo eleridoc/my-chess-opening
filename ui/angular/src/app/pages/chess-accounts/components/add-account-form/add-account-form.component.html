@@ -1,0 +1,47 @@
+<!--
+  AddAccountForm (UI-only in V1.5.9.0)
+  - Site: select (LICHESS / CHESSCOM)
+  - Username: text input
+  - Add: emits addRequested(site, username) when valid
+-->
+
+<div class="add-account-form" [class.add-account-form--disabled]="disabled">
+	<div class="add-account-form__title">Add a chess account</div>
+
+	<form class="add-account-form__grid" [formGroup]="form" (ngSubmit)="onSubmit()">
+		<mat-form-field appearance="outline">
+			<mat-label>Site</mat-label>
+			<mat-select formControlName="site" [disabled]="disabled" required>
+				<mat-option *ngFor="let s of sites" [value]="s.value">{{ s.label }}</mat-option>
+			</mat-select>
+			<mat-error *ngIf="form.controls.site.touched && form.controls.site.invalid">
+				Site is required.
+			</mat-error>
+		</mat-form-field>
+
+		<mat-form-field appearance="outline">
+			<mat-label>Username</mat-label>
+			<input
+				matInput
+				formControlName="username"
+				[disabled]="disabled"
+				autocomplete="off"
+				spellcheck="false"
+				required
+			/>
+			<mat-hint align="end">{{ form.controls.username.value.length }}/40</mat-hint>
+			<mat-error *ngIf="form.controls.username.touched && usernameTrimmed().length === 0">
+				Username is required.
+			</mat-error>
+			<mat-error
+				*ngIf="form.controls.username.touched && form.controls.username.hasError('maxlength')"
+			>
+				Username is too long.
+			</mat-error>
+		</mat-form-field>
+
+		<div class="add-account-form__actions">
+			<button mat-flat-button color="primary" type="submit" [disabled]="!canSubmit">Add</button>
+		</div>
+	</form>
+</div>

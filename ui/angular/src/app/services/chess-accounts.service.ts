@@ -3,6 +3,8 @@ import type {
 	AccountsListResult,
 	AccountsSetEnabledResult,
 	AccountsDeleteResult,
+	AccountsCreateResult,
+	ExternalSite,
 } from 'my-chess-opening-core';
 
 /**
@@ -42,6 +44,17 @@ export class ChessAccountsService {
 		}
 
 		return window.electron.accounts.delete(accountId);
+	}
+
+	/**
+	 * Create a new account configuration.
+	 */
+	async create(site: ExternalSite, username: string): Promise<AccountsCreateResult> {
+		if (!window.electron?.accounts?.create) {
+			return this.notImplemented();
+		}
+
+		return window.electron.accounts.create(site, username);
 	}
 
 	private notImplemented(): {

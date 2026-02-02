@@ -15,6 +15,7 @@ import type {
 
 type AccountsSetEnabledPayload = { accountId: string; isEnabled: boolean };
 type AccountsDeletePayload = { accountId: string };
+type AccountsCreatePayload = { site: unknown; username: string };
 
 /**
  * Register IPC handlers for chess account management.
@@ -119,10 +120,75 @@ export function registerAccountsIpc(): void {
 		},
 	);
 
-	ipcMain.handle('accounts:create', async (): Promise<AccountsCreateResult> => {
-		// Will be implemented in V1.5.9.x.
-		return notImplemented('accounts:create');
-	});
+	ipcMain.handle(
+		'accounts:create',
+		async (_evt, payload: AccountsCreatePayload): Promise<AccountsCreateResult> => {
+			const username = payload?.username?.trim();
+			if (!username) {
+				return {
+					ok: false,
+					error: { code: 'VALIDATION_ERROR', message: 'Username is required.' },
+				};
+			}
+
+			// Keep aligned with UI maxLength.
+			if (username.length > 40) {
+				return {
+					ok: false,
+					error: { code: 'VALIDATION_ERROR', message: 'Username is too long.' },
+				};
+			}
+
+			// Accept both:
+			// - core enum values (string or numeric depending on TS enum output)
+			// - plain strings coming from UI casts ("LICHESS" / "CHESSCOM")
+			const site = normalizePrismaSite(payload?.site);
+			if (!site) {
+				return {
+					ok: false,
+					error: { code: 'VALIDATION_ERROR', message: 'Unsupported site.' },
+				};
+			}
+
+			try {
+				// Uniqueness is enforced at application level for now.
+				// Later we can add a DB unique constraint (site + username).
+				const existing = await prisma.accountConfig.findFirst({
+					where: { site, username },
+					select: { id: true },
+				});
+
+				if (existing) {
+					return {
+						ok: false,
+						error: { code: 'ALREADY_EXISTS', message: 'This account already exists.' },
+					};
+				}
+
+				const created = await prisma.accountConfig.create({
+					data: {
+						site,
+						username,
+						isEnabled: true,
+						lastSyncAt: null,
+					},
+					select: { id: true },
+				});
+
+				return { ok: true, accountId: created.id };
+			} catch (e: unknown) {
+				if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+					return {
+						ok: false,
+						error: { code: 'ALREADY_EXISTS', message: 'This account already exists.' },
+					};
+				}
+
+				console.error('[IPC][Accounts] accounts:create failed', e);
+				return { ok: false, error: dbError(e) };
+			}
+		},
+	);
 }
 
 function requireAccountId(payload: { accountId?: string } | null | undefined): string | null {
@@ -146,6 +212,26 @@ function dbError(e: unknown): AccountsError {
 }
 
 /**
+ * Normalize incoming `site` value into the Prisma enum union.
+ *
+ * We need this because:
+ * - The Angular UI currently sends string literals (casts) to avoid bundling core runtime code.
+ * - The core also exposes an enum, which may be string or numeric depending on compilation.
+ */
+function normalizePrismaSite(site: unknown): PrismaExternalSite | null {
+	// UI-cast or string enum case
+	if (site === 'LICHESS' || site === 'CHESSCOM') {
+		return site;
+	}
+
+	// Core enum (string enum or numeric enum) case
+	if (site === CoreExternalSite.LICHESS) return 'LICHESS';
+	if (site === CoreExternalSite.CHESSCOM) return 'CHESSCOM';
+
+	return null;
+}
+
+/**
  * Prisma enum -> Core enum adapter.
  *
  * Prisma Client types enums as string unions, while the core uses a TS enum.
@@ -163,14 +249,4 @@ function toCoreExternalSite(site: PrismaExternalSite): CoreExternalSite {
 			throw new Error(`Unsupported ExternalSite value: ${String(_exhaustiveCheck)}`);
 		}
 	}
-}
-
-function notImplemented(action: string): { ok: false; error: AccountsError } {
-	return {
-		ok: false,
-		error: {
-			code: 'NOT_IMPLEMENTED',
-			message: `${action} is not implemented yet.`,
-		},
-	};
 }

@@ -1,0 +1,49 @@
+.add-account-form {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding: 12px;
+	border-radius: 12px;
+
+	/* Keep it neutral and compatible with your theme variables. */
+	background: rgba(0, 0, 0, 0.12);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.add-account-form__title {
+	font-weight: 600;
+	opacity: 0.95;
+}
+
+.add-account-form__grid {
+	display: grid;
+	grid-template-columns: 220px 1fr auto;
+	gap: 12px;
+	align-items: start;
+}
+
+.add-account-form__actions {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	padding-top: 2px;
+}
+
+.add-account-form--disabled {
+	opacity: 0.75;
+	pointer-events: none;
+}
+
+@media (max-width: 900px) {
+	.add-account-form__grid {
+		grid-template-columns: 1fr;
+	}
+
+	.add-account-form__actions {
+		justify-content: stretch;
+
+		button {
+			width: 100%;
+		}
+	}
+}

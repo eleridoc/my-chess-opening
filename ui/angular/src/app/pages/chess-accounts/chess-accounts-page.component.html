@@ -5,6 +5,11 @@
 	<div class="app-card-flat">
 		<div class="app-card-flat-top">Accounts</div>
 		<div class="app-card-flat-content">
+			<app-add-account-form
+				[disabled]="loading() || actionsDisabled()"
+				(addRequested)="onAddRequested($event)"
+			></app-add-account-form>
+
 			<app-accounts-table
 				[rows]="rows()"
 				[loading]="loading()"
