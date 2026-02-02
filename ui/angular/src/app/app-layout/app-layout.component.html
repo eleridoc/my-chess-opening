@@ -36,9 +36,22 @@
 			</mat-icon>
 		</button>
 
-		<a mat-icon-button routerLink="/settings" aria-label="Settings">
+		<!-- Settings menu -->
+		<button mat-icon-button [matMenuTriggerFor]="settingsMenu" aria-label="Settings and accounts">
 			<mat-icon aria-hidden="true">settings</mat-icon>
-		</a>
+		</button>
+
+		<mat-menu #settingsMenu="matMenu">
+			<button mat-menu-item routerLink="/settings">
+				<mat-icon aria-hidden="true">settings</mat-icon>
+				<span>Settings</span>
+			</button>
+
+			<button mat-menu-item routerLink="/chess-accounts">
+				<mat-icon aria-hidden="true">manage_accounts</mat-icon>
+				<span>Chess accounts</span>
+			</button>
+		</mat-menu>
 
 		<button mat-icon-button [matMenuTriggerFor]="helpMenu" aria-label="Help and more">
 			<mat-icon aria-hidden="true">help_outline</mat-icon>

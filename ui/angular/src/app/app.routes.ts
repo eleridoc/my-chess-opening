@@ -7,10 +7,10 @@ import { DashboardPageComponent } from './pages/dashboard/dashboard-page.compone
 import { GamesPageComponent } from './pages/games/games-page.component';
 import { ExplorerPageComponent } from './pages/explorer/explorer-page.component';
 import { ImportPageComponent } from './pages/import/import-page.component';
-import { LogsPageComponent } from './pages/logs/logs-page.component';
 import { SettingsPageComponent } from './pages/settings/settings-page.component';
 import { AboutPageComponent } from './pages/about/about-page.component';
 import { FaqPageComponent } from './pages/faq/faq-page.component';
+import { ChessAccountsPageComponent } from './pages/chess-accounts/chess-accounts-page.component';
 
 export const routes: Routes = [
 	{
@@ -42,7 +42,7 @@ export const routes: Routes = [
 					import('./pages/logs/logs-page.component').then((m) => m.LogsPageComponent),
 			},
 			{ path: 'settings', component: SettingsPageComponent },
-
+			{ path: 'chess-accounts', component: ChessAccountsPageComponent },
 			{ path: 'about', component: AboutPageComponent },
 			{ path: 'faq', component: FaqPageComponent },
 		],

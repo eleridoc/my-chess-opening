@@ -1,0 +1,76 @@
+<div class="accounts-table">
+	@if (loading) {
+		<div class="accounts-table__state">Loading…</div>
+	} @else if (error) {
+		<div class="accounts-table__state accounts-table__state--error">{{ error }}</div>
+	} @else if (rows.length === 0) {
+		<div class="accounts-table__state">No chess accounts configured.</div>
+	} @else {
+		<table mat-table [dataSource]="rows" class="accounts-table__table" [trackBy]="trackById">
+			<!-- site -->
+			<ng-container matColumnDef="site">
+				<th mat-header-cell *matHeaderCellDef>Site</th>
+				<td mat-cell *matCellDef="let r">{{ r.site }}</td>
+			</ng-container>
+
+			<!-- username -->
+			<ng-container matColumnDef="username">
+				<th mat-header-cell *matHeaderCellDef>Username</th>
+				<td mat-cell *matCellDef="let r">{{ r.username }}</td>
+			</ng-container>
+
+			<!-- isEnabled -->
+			<ng-container matColumnDef="isEnabled">
+				<th mat-header-cell *matHeaderCellDef>Enabled</th>
+				<td mat-cell *matCellDef="let r">
+					<span class="accounts-table__enabled" [class.accounts-table__enabled--off]="!r.isEnabled">
+						{{ r.isEnabled ? 'Yes' : 'No' }}
+					</span>
+				</td>
+			</ng-container>
+
+			<!-- lastSyncAt (raw ISO; no formatting) -->
+			<ng-container matColumnDef="lastSyncAt">
+				<th mat-header-cell *matHeaderCellDef>Last sync (ISO)</th>
+				<td mat-cell *matCellDef="let r">{{ r.lastSyncAt ?? '—' }}</td>
+			</ng-container>
+
+			<!-- gamesTotal -->
+			<ng-container matColumnDef="gamesTotal">
+				<th mat-header-cell *matHeaderCellDef>Total games</th>
+				<td mat-cell *matCellDef="let r">{{ r.gamesTotal }}</td>
+			</ng-container>
+
+			<!-- actions -->
+			<ng-container matColumnDef="actions">
+				<th mat-header-cell *matHeaderCellDef class="accounts-table__actions-h">Actions</th>
+				<td mat-cell *matCellDef="let r" class="accounts-table__actions">
+					<button
+						mat-icon-button
+						type="button"
+						(click)="requestToggle(r)"
+						[matTooltip]="r.isEnabled ? 'Disable account' : 'Enable account'"
+						aria-label="Toggle account"
+						[disabled]="actionsDisabled"
+					>
+						<mat-icon aria-hidden="true">{{ r.isEnabled ? 'toggle_on' : 'toggle_off' }}</mat-icon>
+					</button>
+
+					<button
+						mat-icon-button
+						type="button"
+						(click)="requestDelete(r)"
+						matTooltip="Delete account"
+						aria-label="Delete account"
+						[disabled]="actionsDisabled"
+					>
+						<mat-icon aria-hidden="true">delete</mat-icon>
+					</button>
+				</td>
+			</ng-container>
+
+			<tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+			<tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+		</table>
+	}
+</div>

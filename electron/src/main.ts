@@ -1,18 +1,28 @@
 import { app, BrowserWindow, ipcMain, session, shell } from 'electron';
 import * as path from 'node:path';
-import { PrismaClient, Prisma, ExternalSite } from '@prisma/client';
+import { PrismaClient, ExternalSite } from '@prisma/client';
 import { coreIsReady } from 'my-chess-opening-core';
+
 import { importAllAccounts } from './import/importAllAccounts';
+import { registerAccountsIpc } from './accounts/accountsIpc';
 import { registerLogsIpc } from './logs/logsIpc';
 import { registerExplorerIpc } from './explorer/explorerIpc';
 import { registerGamesIpc } from './games/gamesIpc';
 import { registerSystemIpc } from './system/systemIpc';
 
+/**
+ * In-app guard to prevent concurrent imports from being triggered via IPC.
+ * This is intentionally kept in-memory (not persisted).
+ */
 let isImportRunning = false;
 
 app.setName('My Chess Opening');
 app.setAppUserModelId('com.eleridoc.my-chess-opening');
 
+/**
+ * Prisma client used by the main process.
+ * Keep a single instance for the whole process lifetime.
+ */
 const prisma = new PrismaClient();
 
 let mainWindow: BrowserWindow | null = null;
@@ -45,11 +55,13 @@ function getIconPath(): string {
 	return path.join(assetsDir, 'icon.png'); // linux
 }
 
-async function getSetupState() {
+async function getSetupState(): Promise<{ hasAccounts: boolean; hasCompletedSetup: boolean }> {
 	const accountsCount = await prisma.accountConfig.count();
 
 	return {
 		hasAccounts: accountsCount > 0,
+		// Current "setup" is considered complete when at least one account exists.
+		// (This may evolve when we introduce a richer onboarding flow.)
 		hasCompletedSetup: accountsCount > 0,
 	};
 }
@@ -59,7 +71,16 @@ type SaveAccountsInput = {
 	chesscomUsername?: string | null;
 };
 
-async function saveAccounts(input: SaveAccountsInput) {
+/**
+ * Initial setup strategy:
+ * - For each site, keep a single configured account.
+ * - Replace existing entries per site.
+ *
+ * When the app supports multiple accounts per site, this logic will move to:
+ * - create/update/delete by id
+ * - plus a dedicated "accounts" screen (V1.5.8+)
+ */
+async function saveAccounts(input: SaveAccountsInput): Promise<void> {
 	const lichess = input.lichessUsername?.trim() || null;
 	const chesscom = input.chesscomUsername?.trim() || null;
 
@@ -67,11 +88,7 @@ async function saveAccounts(input: SaveAccountsInput) {
 		throw new Error('At least one account (Lichess or Chess.com) is required');
 	}
 
-	await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-		// Initial setup strategy (2 fields):
-		// - Replace the single configured account for each site.
-		// Later, when you support multiple accounts per site, you'll switch to add/remove by id.
-
+	await prisma.$transaction(async (tx) => {
 		// Lichess
 		await tx.accountConfig.deleteMany({ where: { site: ExternalSite.LICHESS } });
 		if (lichess) {
@@ -105,7 +122,8 @@ async function saveAccounts(input: SaveAccountsInput) {
  * - In development, CSP must allow the Angular dev server + websocket (live reload).
  *
  * Note:
- * - This injects CSP via response headers. It works even when loading http://localhost:4200.
+ * - CSP is injected via response headers. It works even when loading http://localhost:4200.
+ * - Google Fonts are handled explicitly (style-src-elem + font-src).
  */
 function registerContentSecurityPolicy(): void {
 	const isDev = !app.isPackaged;
@@ -183,9 +201,9 @@ function registerContentSecurityPolicy(): void {
 		`frame-ancestors 'none'`,
 	];
 
-	const cspProd = (allowGoogleFontsInProd ? cspProdWithGoogleFonts : cspProdBase).join('; ');
-
-	const csp = isDev ? cspDev : cspProd;
+	const csp = isDev
+		? cspDev
+		: (allowGoogleFontsInProd ? cspProdWithGoogleFonts : cspProdBase).join('; ');
 
 	session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
 		const responseHeaders = details.responseHeaders ?? {};
@@ -194,9 +212,7 @@ function registerContentSecurityPolicy(): void {
 	});
 }
 
-function createWindow() {
-	console.log(coreIsReady());
-
+function createWindow(): void {
 	mainWindow = new BrowserWindow({
 		width: 1000,
 		height: 700,
@@ -215,12 +231,12 @@ function createWindow() {
 	 * This avoids unexpected new BrowserWindows being created by web content.
 	 */
 	mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-		// Open external URLs in the default browser
 		shell.openExternal(url).catch(() => void 0);
 		return { action: 'deny' };
 	});
 
 	// DEV only (current setup)
+	// In production, you will likely load a local file (Angular build output).
 	mainWindow.loadURL(DEV_SERVER_URL);
 
 	mainWindow.on('closed', () => {
@@ -232,6 +248,10 @@ app.whenReady().then(() => {
 	// Register CSP before creating any BrowserWindow.
 	registerContentSecurityPolicy();
 
+	/**
+	 * Minimal health-check used to validate IPC wiring from the renderer.
+	 * "core" is the version string from the shared core package.
+	 */
 	ipcMain.handle('ping', async () => {
 		return {
 			message: 'pong from main',
@@ -255,6 +275,7 @@ app.whenReady().then(() => {
 			input?: { sinceOverrideIso?: string | null; maxGamesPerAccount?: number | null },
 		) => {
 			if (isImportRunning) {
+				// Idempotent behavior: do not start a second import.
 				return { ok: true, message: 'Import already running' };
 			}
 
@@ -284,6 +305,8 @@ app.whenReady().then(() => {
 		},
 	);
 
+	// Domain IPC registrations
+	registerAccountsIpc();
 	registerLogsIpc();
 	registerExplorerIpc();
 	registerGamesIpc();
@@ -292,6 +315,7 @@ app.whenReady().then(() => {
 	createWindow();
 
 	app.on('activate', () => {
+		// macOS convention: re-create a window when the dock icon is clicked.
 		if (BrowserWindow.getAllWindows().length === 0) {
 			createWindow();
 		}
@@ -299,6 +323,7 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', () => {
+	// macOS convention: keep app running until the user quits explicitly.
 	if (process.platform !== 'darwin') {
 		app.quit();
 	}

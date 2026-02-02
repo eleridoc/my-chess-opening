@@ -1,0 +1,28 @@
+.accounts-table__table {
+	width: 100%;
+}
+
+.accounts-table__state {
+	padding: 10px 0;
+	opacity: 0.8;
+}
+
+.accounts-table__state--error {
+	opacity: 1;
+}
+
+.accounts-table__actions-h {
+	width: 110px;
+}
+
+.accounts-table__actions {
+	white-space: nowrap;
+}
+
+.accounts-table__enabled {
+	font-weight: 600;
+}
+
+.accounts-table__enabled--off {
+	opacity: 0.6;
+}
