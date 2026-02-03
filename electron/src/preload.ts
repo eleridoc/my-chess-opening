@@ -3,7 +3,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type {
 	ElectronApi,
-	SaveAccountsInput,
 	ImportRunNowInput,
 	ExplorerGetGameResult,
 	LogsListInput,
@@ -37,11 +36,6 @@ type OkTrue = { ok: true };
  */
 const api: ElectronApi = {
 	ping: () => invoke<PingResult>('ping'),
-
-	setup: {
-		getState: () => invoke('setup:getState'),
-		saveAccounts: (input: SaveAccountsInput) => invoke<OkTrue>('setup:saveAccounts', input),
-	},
 
 	import: {
 		// Normalize optional input to a plain object for IPC payload stability.

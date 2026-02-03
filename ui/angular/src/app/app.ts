@@ -1,5 +1,7 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+
+import { AccountsStateService } from './services/accounts-state.service';
 
 @Component({
 	selector: 'app-root',
@@ -9,8 +11,11 @@ import { RouterOutlet } from '@angular/router';
 })
 export class App implements OnInit {
 	protected readonly title = signal('angular');
+	private readonly accountsState = inject(AccountsStateService);
 
 	async ngOnInit(): Promise<void> {
+		await this.accountsState.refresh();
+
 		if (window.electron) {
 			try {
 				const res = await window.electron.ping();

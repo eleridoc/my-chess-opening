@@ -6,9 +6,11 @@ import { firstValueFrom } from 'rxjs';
 
 import { ConfirmDialogComponent } from '../../shared/dialogs/confirm-dialog/confirm-dialog.component';
 import type { ConfirmDialogData } from '../../shared/dialogs/confirm-dialog/confirm-dialog.component';
-
 import { NotificationService } from '../../shared/notifications/notification.service';
+
+import { AccountsStateService } from '../../services/accounts-state.service';
 import { ChessAccountsService } from '../../services/chess-accounts.service';
+
 import { AccountsTableComponent } from './components/accounts-table/accounts-table.component';
 import { AddAccountFormComponent } from './components/add-account-form/add-account-form.component';
 import type { ChessAccountRowVm } from './models/chess-account-row.vm';
@@ -22,6 +24,7 @@ import type { ExternalSite } from 'my-chess-opening-core';
 	styleUrl: './chess-accounts-page.component.scss',
 })
 export class ChessAccountsPageComponent implements OnInit {
+	private readonly accountsState = inject(AccountsStateService);
 	private readonly notify = inject(NotificationService);
 	private readonly accounts = inject(ChessAccountsService);
 	private readonly dialog = inject(MatDialog);
@@ -98,6 +101,7 @@ export class ChessAccountsPageComponent implements OnInit {
 			// Reset the form (best effort) then reload the list from DB.
 			this.addForm?.reset();
 			await this.refresh();
+			await this.accountsState.refresh();
 		} catch (e) {
 			const msg = e instanceof Error ? e.message : 'Unknown error while creating account.';
 			this.notify.error(msg);
@@ -164,7 +168,7 @@ export class ChessAccountsPageComponent implements OnInit {
 
 			// Fast UX: remove locally. We can switch to refresh() later if needed.
 			this.removeRowLocal(row.id);
-
+			await this.accountsState.refresh();
 			this.notify.success('Account deleted.');
 		} catch (e) {
 			const msg = e instanceof Error ? e.message : 'Unknown error while deleting account.';

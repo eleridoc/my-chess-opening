@@ -66,53 +66,6 @@ async function getSetupState(): Promise<{ hasAccounts: boolean; hasCompletedSetu
 	};
 }
 
-type SaveAccountsInput = {
-	lichessUsername?: string | null;
-	chesscomUsername?: string | null;
-};
-
-/**
- * Initial setup strategy:
- * - For each site, keep a single configured account.
- * - Replace existing entries per site.
- *
- * When the app supports multiple accounts per site, this logic will move to:
- * - create/update/delete by id
- * - plus a dedicated "accounts" screen (V1.5.8+)
- */
-async function saveAccounts(input: SaveAccountsInput): Promise<void> {
-	const lichess = input.lichessUsername?.trim() || null;
-	const chesscom = input.chesscomUsername?.trim() || null;
-
-	if (!lichess && !chesscom) {
-		throw new Error('At least one account (Lichess or Chess.com) is required');
-	}
-
-	await prisma.$transaction(async (tx) => {
-		// Lichess
-		await tx.accountConfig.deleteMany({ where: { site: ExternalSite.LICHESS } });
-		if (lichess) {
-			await tx.accountConfig.create({
-				data: {
-					site: ExternalSite.LICHESS,
-					username: lichess,
-				},
-			});
-		}
-
-		// Chess.com
-		await tx.accountConfig.deleteMany({ where: { site: ExternalSite.CHESSCOM } });
-		if (chesscom) {
-			await tx.accountConfig.create({
-				data: {
-					site: ExternalSite.CHESSCOM,
-					username: chesscom,
-				},
-			});
-		}
-	});
-}
-
 /**
  * Registers a Content Security Policy (CSP) for the renderer.
  *
@@ -257,15 +210,6 @@ app.whenReady().then(() => {
 			message: 'pong from main',
 			core: coreIsReady(),
 		};
-	});
-
-	ipcMain.handle('setup:getState', async () => {
-		return getSetupState();
-	});
-
-	ipcMain.handle('setup:saveAccounts', async (_event, input: SaveAccountsInput) => {
-		await saveAccounts(input);
-		return { ok: true };
 	});
 
 	ipcMain.handle(

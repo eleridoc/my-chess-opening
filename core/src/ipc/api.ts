@@ -19,8 +19,6 @@
 // to import shared IPC contracts from a single entry-point.
 //
 
-export type { SetupState, SaveAccountsInput, SetupApi } from './setup/types';
-
 export type { ImportRunNowInput, ImportRunNowResult, ImportApi } from './import/types';
 
 export type {
@@ -59,7 +57,6 @@ export type {
 // Compose ElectronApi from domain APIs
 // -----------------------------------------------------------------------------
 
-import type { SetupApi } from './setup/types';
 import type { ImportApi } from './import/types';
 import type { LogsApi } from '../logs/types';
 import type { ExplorerApi } from './explorer/types';
@@ -88,9 +85,6 @@ export interface ElectronApi {
 	 * "core" is the version string of the shared core package.
 	 */
 	ping: () => Promise<{ message: string; core: string }>;
-
-	/** App setup / bootstrap APIs. */
-	setup: SetupApi;
 
 	/** Import orchestration APIs (run now, etc.). */
 	import: ImportApi;

@@ -1,6 +1,10 @@
 <div class="app-shell">
 	<mat-toolbar class="app-topbar" role="banner">
-		<a class="app-topbar__logo" routerLink="/dashboard" aria-label="My Chess Opening">
+		<a
+			class="app-topbar__logo"
+			[routerLink]="hasAccounts() ? '/dashboard' : '/getting-started'"
+			aria-label="My Chess Opening"
+		>
 			<img src="/app-logo-256.png" alt="My Chess Opening" />
 		</a>
 
@@ -10,7 +14,7 @@
 			aria-label="Primary navigation"
 			[tabPanel]="tabPanel"
 		>
-			@for (item of topNav; track item.path) {
+			@for (item of topNav(); track item.path) {
 				<a
 					mat-tab-link
 					[routerLink]="item.path"
@@ -25,10 +29,12 @@
 
 		<span class="app-topbar__spacer"></span>
 
-		<button mat-stroked-button (click)="onImportNowClick()" [disabled]="isImporting()">
-			<mat-icon>download</mat-icon>
-			<span>{{ isImporting() ? 'Importing…' : 'Import now' }}</span>
-		</button>
+		@if (hasAccounts()) {
+			<button mat-stroked-button (click)="onImportNowClick()" [disabled]="isImporting()">
+				<mat-icon>download</mat-icon>
+				<span>{{ isImporting() ? 'Importing…' : 'Import now' }}</span>
+			</button>
+		}
 
 		<button mat-icon-button (click)="theme.toggle()" aria-label="Open menu">
 			<mat-icon aria-hidden="true">
@@ -42,10 +48,12 @@
 		</button>
 
 		<mat-menu #settingsMenu="matMenu">
-			<button mat-menu-item routerLink="/settings">
-				<mat-icon aria-hidden="true">settings</mat-icon>
-				<span>Settings</span>
-			</button>
+			@if (hasAccounts()) {
+				<button mat-menu-item routerLink="/settings">
+					<mat-icon aria-hidden="true">settings</mat-icon>
+					<span>Settings</span>
+				</button>
+			}
 
 			<button mat-menu-item routerLink="/chess-accounts">
 				<mat-icon aria-hidden="true">manage_accounts</mat-icon>
@@ -58,10 +66,12 @@
 		</button>
 
 		<mat-menu #helpMenu="matMenu">
-			<button mat-menu-item routerLink="/logs">
-				<mat-icon aria-hidden="true">receipt_long</mat-icon>
-				<span>Logs</span>
-			</button>
+			@if (hasAccounts()) {
+				<button mat-menu-item routerLink="/logs">
+					<mat-icon aria-hidden="true">receipt_long</mat-icon>
+					<span>Logs</span>
+				</button>
+			}
 			<button mat-menu-item routerLink="/about">
 				<mat-icon aria-hidden="true">info</mat-icon>
 				<span>About</span>
