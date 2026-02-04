@@ -66,12 +66,12 @@ export class SectionLoaderComponent implements OnDestroy {
 	 * Anti-flicker: delay before showing the loader (ms).
 	 * If loading ends before this delay, the loader is never shown.
 	 */
-	@Input() showDelayMs = 120;
+	@Input() showDelayMs = 0;
 
 	/**
 	 * Anti-flicker: once shown, keep the loader visible for at least this duration (ms).
 	 */
-	@Input() minVisibleMs = 2000;
+	@Input() minVisibleMs = 500;
 
 	/** Internal "actually shown" state (signal for reliable rendering). */
 	readonly displayedLoading = signal(false);
@@ -94,13 +94,12 @@ export class SectionLoaderComponent implements OnDestroy {
 		// Already visible => nothing to do.
 		if (this.displayedLoading()) return;
 
-		// Schedule show with delay (or show immediately if delay is 0).
 		if (this.showTimer) clearTimeout(this.showTimer);
 
 		const delay = Math.max(0, this.showDelayMs);
 
+		// ✅ IMPORTANT: if delay is 0, show synchronously (no timer)
 		if (delay === 0) {
-			// Show synchronously so very fast operations can still display the loader.
 			this.displayedLoading.set(true);
 			this.shownAtMs = performance.now();
 			return;

@@ -57,10 +57,13 @@ export class ChessAccountsService {
 		return window.electron.accounts.create(site, username);
 	}
 
-	private notImplemented(): {
+	private async notImplemented(): Promise<{
 		ok: false;
 		error: { code: 'NOT_IMPLEMENTED'; message: string };
-	} {
+	}> {
+		// Yield one macrotask so UI loaders can render (signals can batch microtasks).
+		await new Promise<void>((resolve) => setTimeout(resolve, 0));
+
 		return {
 			ok: false,
 			error: {
