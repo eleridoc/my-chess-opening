@@ -21,9 +21,9 @@ import { ExplorerDbService } from '../../services/explorer-db.service';
 import { NotificationService } from '../../shared/notifications/notification.service';
 
 import {
-	ResetConfirmDialogComponent,
-	type ResetConfirmDialogData,
-} from '../../shared/dialogs/reset-confirm-dialog/reset-confirm-dialog.component';
+	ConfirmDialogComponent,
+	type ConfirmDialogData,
+} from '../../shared/dialogs/confirm-dialog/confirm-dialog.component';
 
 type ResetReason = 'DB_LOAD' | 'PGN_IMPORT' | 'FEN_IMPORT';
 
@@ -213,7 +213,7 @@ export class ExplorerPageComponent {
 		});
 	}
 
-	private async openResetConfirmDialog(data: ResetConfirmDialogData): Promise<boolean> {
+	private async openResetConfirmDialog(data: ConfirmDialogData): Promise<boolean> {
 		if (this.resetConfirmOpen) return false;
 		this.resetConfirmOpen = true;
 
@@ -221,9 +221,8 @@ export class ExplorerPageComponent {
 		await Promise.resolve();
 
 		try {
-			const ref = this.dialog.open(ResetConfirmDialogComponent, {
+			const ref = this.dialog.open(ConfirmDialogComponent, {
 				data,
-				disableClose: true,
 				width: '520px',
 			});
 
@@ -264,6 +263,8 @@ export class ExplorerPageComponent {
 			details,
 			confirmLabel: 'Reset & Continue',
 			cancelLabel: 'Cancel',
+			confirmColor: 'warn',
+			disableClose: true,
 		});
 	}
 

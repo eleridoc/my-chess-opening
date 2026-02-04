@@ -75,7 +75,7 @@ export class AppLayoutComponent {
 
 		try {
 			await this.loading.runGlobal(
-				() => electron.import.runNow({ maxGamesPerAccount: 30 }),
+				() => electron.import.runNow({ maxGamesPerAccount: 1 }),
 				'Import now',
 			);
 		} catch (e) {
