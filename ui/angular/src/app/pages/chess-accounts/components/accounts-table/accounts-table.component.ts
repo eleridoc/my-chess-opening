@@ -7,10 +7,19 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 
 import type { ChessAccountRowVm } from '../../models/chess-account-row.vm';
 
+import { IsoDateTimePipe } from '../../../../shared/dates/pipes';
+
 @Component({
 	standalone: true,
 	selector: 'app-accounts-table',
-	imports: [CommonModule, MatTableModule, MatButtonModule, MatIconModule, MatTooltipModule],
+	imports: [
+		CommonModule,
+		MatTableModule,
+		MatButtonModule,
+		MatIconModule,
+		MatTooltipModule,
+		IsoDateTimePipe,
+	],
 	templateUrl: './accounts-table.component.html',
 	styleUrl: './accounts-table.component.scss',
 })

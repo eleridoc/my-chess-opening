@@ -8,6 +8,8 @@ import type {
 	GameSpeedKey,
 } from '../../view-models/game-info-header.vm';
 
+import { IsoDateTimePipe } from '../../../shared/dates/pipes';
+
 type MetaPartKind = 'timeControl' | 'rated' | 'speed';
 type MetaPart = { kind: MetaPartKind; text: string };
 
@@ -28,7 +30,7 @@ type MetaPart = { kind: MetaPartKind; text: string };
 @Component({
 	selector: 'app-game-meta-header-card',
 	standalone: true,
-	imports: [CommonModule, MatIconModule],
+	imports: [CommonModule, MatIconModule, IsoDateTimePipe],
 	templateUrl: './game-meta-header-card.component.html',
 	styleUrls: ['./game-meta-header-card.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush,

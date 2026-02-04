@@ -32,7 +32,7 @@
 			<!-- lastSyncAt (raw ISO; no formatting) -->
 			<ng-container matColumnDef="lastSyncAt">
 				<th mat-header-cell *matHeaderCellDef>Last sync (ISO)</th>
-				<td mat-cell *matCellDef="let r">{{ r.lastSyncAt ?? '—' }}</td>
+				<td mat-cell *matCellDef="let r">{{ r.lastSyncAt | appIsoDateTime }}</td>
 			</ng-container>
 
 			<!-- gamesTotal -->

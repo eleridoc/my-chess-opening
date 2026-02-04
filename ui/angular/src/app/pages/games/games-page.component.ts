@@ -19,6 +19,8 @@ import { NotificationService } from '../../shared/notifications/notification.ser
 import { ExternalLinkService } from '../../shared/system/external-link.service';
 import { ratedLabel, timeLabel, openingLabel, myResultLabel } from '../../shared/games/game-format';
 
+import { IsoDateTimePipe } from '../../shared/dates/pipes';
+
 type Outcome = 'win' | 'loss' | 'draw' | 'unknown';
 
 @Component({
@@ -27,8 +29,7 @@ type Outcome = 'win' | 'loss' | 'draw' | 'unknown';
 	imports: [
 		CommonModule,
 		FormsModule,
-		DatePipe,
-
+		IsoDateTimePipe,
 		MatTableModule,
 		MatPaginatorModule,
 		MatFormFieldModule,

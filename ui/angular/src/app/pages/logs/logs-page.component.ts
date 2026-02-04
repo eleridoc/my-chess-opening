@@ -1,5 +1,5 @@
 import { Component, computed, effect, signal } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { MatTableModule } from '@angular/material/table';
@@ -23,6 +23,8 @@ import type {
 import { LogsService } from '../../services/logs.service';
 import { NotificationService } from '../../shared/notifications/notification.service';
 
+import { IsoDateTimePipe } from '../../shared/dates/pipes';
+
 type TimePreset = 'none' | '1h' | '24h' | '7d';
 
 @Component({
@@ -31,8 +33,7 @@ type TimePreset = 'none' | '1h' | '24h' | '7d';
 	imports: [
 		CommonModule,
 		FormsModule,
-		DatePipe,
-
+		IsoDateTimePipe,
 		MatTableModule,
 		MatPaginatorModule,
 		MatFormFieldModule,
