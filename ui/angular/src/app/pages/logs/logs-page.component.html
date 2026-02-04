@@ -236,107 +236,115 @@
 				</div>
 			</div>
 
-			<!-- Table card -->
-			<div class="app-table-card app-table-card--compact">
-				<div class="app-table-card__scroll">
-					<table mat-table [dataSource]="items()" class="logs-table">
-						<ng-container matColumnDef="createdAt">
-							<th mat-header-cell *matHeaderCellDef>Date</th>
-							<td mat-cell *matCellDef="let row">
-								{{ row.createdAtIso | appIsoDateTime }}
-							</td>
-						</ng-container>
+			<app-section-loader
+				[loading]="loading()"
+				mode="overlay"
+				[mask]="true"
+				[blocking]="true"
+				label="Loading…"
+			>
+				<!-- Table card -->
+				<div class="app-table-card app-table-card--compact">
+					<div class="app-table-card__scroll">
+						<table mat-table [dataSource]="items()" class="logs-table">
+							<ng-container matColumnDef="createdAt">
+								<th mat-header-cell *matHeaderCellDef>Date</th>
+								<td mat-cell *matCellDef="let row">
+									{{ row.createdAtIso | appIsoDateTime }}
+								</td>
+							</ng-container>
 
-						<ng-container matColumnDef="level">
-							<th mat-header-cell *matHeaderCellDef>Level</th>
-							<td mat-cell *matCellDef="let row">
-								<span
-									class="app-pill"
-									[class.app-pill--error]="row.level === 'ERROR'"
-									[class.app-pill--warn]="row.level === 'WARN'"
-								>
-									{{ row.level }}
-								</span>
-							</td>
-						</ng-container>
+							<ng-container matColumnDef="level">
+								<th mat-header-cell *matHeaderCellDef>Level</th>
+								<td mat-cell *matCellDef="let row">
+									<span
+										class="app-pill"
+										[class.app-pill--error]="row.level === 'ERROR'"
+										[class.app-pill--warn]="row.level === 'WARN'"
+									>
+										{{ row.level }}
+									</span>
+								</td>
+							</ng-container>
 
-						<ng-container matColumnDef="scope">
-							<th mat-header-cell *matHeaderCellDef>Scope</th>
-							<td mat-cell *matCellDef="let row">{{ row.scope ?? '' }}</td>
-						</ng-container>
+							<ng-container matColumnDef="scope">
+								<th mat-header-cell *matHeaderCellDef>Scope</th>
+								<td mat-cell *matCellDef="let row">{{ row.scope ?? '' }}</td>
+							</ng-container>
 
-						<ng-container matColumnDef="site">
-							<th mat-header-cell *matHeaderCellDef>Site</th>
-							<td mat-cell *matCellDef="let row">{{ row.site ?? '' }}</td>
-						</ng-container>
+							<ng-container matColumnDef="site">
+								<th mat-header-cell *matHeaderCellDef>Site</th>
+								<td mat-cell *matCellDef="let row">{{ row.site ?? '' }}</td>
+							</ng-container>
 
-						<ng-container matColumnDef="username">
-							<th mat-header-cell *matHeaderCellDef>User</th>
-							<td mat-cell *matCellDef="let row">{{ row.username ?? '' }}</td>
-						</ng-container>
+							<ng-container matColumnDef="username">
+								<th mat-header-cell *matHeaderCellDef>User</th>
+								<td mat-cell *matCellDef="let row">{{ row.username ?? '' }}</td>
+							</ng-container>
 
-						<ng-container matColumnDef="message">
-							<th mat-header-cell *matHeaderCellDef>Message</th>
-							<td mat-cell *matCellDef="let row" class="logs-message" [title]="row.message">
-								{{ row.message }}
-							</td>
-						</ng-container>
+							<ng-container matColumnDef="message">
+								<th mat-header-cell *matHeaderCellDef>Message</th>
+								<td mat-cell *matCellDef="let row" class="logs-message" [title]="row.message">
+									{{ row.message }}
+								</td>
+							</ng-container>
 
-						<ng-container matColumnDef="externalId">
-							<th mat-header-cell *matHeaderCellDef>ExternalId</th>
-							<td mat-cell *matCellDef="let row" class="logs-external-id">
-								{{ row.externalId ?? '' }}
-							</td>
-						</ng-container>
+							<ng-container matColumnDef="externalId">
+								<th mat-header-cell *matHeaderCellDef>ExternalId</th>
+								<td mat-cell *matCellDef="let row" class="logs-external-id">
+									{{ row.externalId ?? '' }}
+								</td>
+							</ng-container>
 
-						<ng-container matColumnDef="actions">
-							<th mat-header-cell *matHeaderCellDef></th>
-							<td mat-cell *matCellDef="let row" class="app-table-card__actions">
-								<span
-									class="app-table-card__icon-button"
-									role="button"
-									tabindex="0"
-									aria-label="Open details"
-									(click)="openDetails(row)"
-									(keydown.enter)="openDetails(row)"
-									(keydown.space)="openDetails(row)"
-								>
-									<mat-icon>info</mat-icon>
-								</span>
+							<ng-container matColumnDef="actions">
+								<th mat-header-cell *matHeaderCellDef></th>
+								<td mat-cell *matCellDef="let row" class="app-table-card__actions">
+									<span
+										class="app-table-card__icon-button"
+										role="button"
+										tabindex="0"
+										aria-label="Open details"
+										(click)="openDetails(row)"
+										(keydown.enter)="openDetails(row)"
+										(keydown.space)="openDetails(row)"
+									>
+										<mat-icon>info</mat-icon>
+									</span>
 
-								<span
-									class="app-table-card__icon-button"
-									role="button"
-									tabindex="0"
-									aria-label="Filter by run"
-									(click)="viewRun(row.importRunId)"
-									(keydown.enter)="viewRun(row.importRunId)"
-									(keydown.space)="viewRun(row.importRunId)"
-								>
-									<mat-icon>filter_alt</mat-icon>
-								</span>
-							</td>
-						</ng-container>
+									<span
+										class="app-table-card__icon-button"
+										role="button"
+										tabindex="0"
+										aria-label="Filter by run"
+										(click)="viewRun(row.importRunId)"
+										(keydown.enter)="viewRun(row.importRunId)"
+										(keydown.space)="viewRun(row.importRunId)"
+									>
+										<mat-icon>filter_alt</mat-icon>
+									</span>
+								</td>
+							</ng-container>
 
-						<!-- Sticky header is applied once on the header row -->
-						<tr
-							mat-header-row
-							*matHeaderRowDef="displayedColumns"
-							class="app-table-card__sticky-header"
-						></tr>
-						<tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-					</table>
+							<!-- Sticky header is applied once on the header row -->
+							<tr
+								mat-header-row
+								*matHeaderRowDef="displayedColumns"
+								class="app-table-card__sticky-header"
+							></tr>
+							<tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+						</table>
+					</div>
+
+					<mat-paginator
+						class="app-table-card__paginator"
+						[length]="total()"
+						[pageSize]="pageSize()"
+						[pageIndex]="page() - 1"
+						[pageSizeOptions]="[25, 50, 100]"
+						(page)="onPage($event)"
+					></mat-paginator>
 				</div>
-
-				<mat-paginator
-					class="app-table-card__paginator"
-					[length]="total()"
-					[pageSize]="pageSize()"
-					[pageIndex]="page() - 1"
-					[pageSizeOptions]="[25, 50, 100]"
-					(page)="onPage($event)"
-				></mat-paginator>
-			</div>
+			</app-section-loader>
 		</mat-sidenav-content>
 	</mat-sidenav-container>
 </div>

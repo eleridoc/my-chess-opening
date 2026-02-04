@@ -24,6 +24,7 @@ import { LogsService } from '../../services/logs.service';
 import { NotificationService } from '../../shared/notifications/notification.service';
 
 import { IsoDateTimePipe } from '../../shared/dates/pipes';
+import { SectionLoaderComponent } from '../../shared/loading/section-loader/section-loader.component';
 
 type TimePreset = 'none' | '1h' | '24h' | '7d';
 
@@ -45,6 +46,7 @@ type TimePreset = 'none' | '1h' | '24h' | '7d';
 		MatSidenavModule,
 		MatProgressSpinnerModule,
 		MatExpansionModule,
+		SectionLoaderComponent,
 	],
 	templateUrl: './logs-page.component.html',
 	styleUrls: ['./logs-page.component.scss'],
@@ -156,7 +158,11 @@ export class LogsPageComponent {
 
 	private queueReload(): void {
 		if (this.reloadTimer) clearTimeout(this.reloadTimer);
-		this.reloadTimer = setTimeout(() => this.loadPage(), 250);
+
+		// Optional UX: show loader immediately while debounce is pending
+		this.loading.set(true);
+
+		this.reloadTimer = setTimeout(() => this.loadPage(), 200);
 	}
 
 	async loadFacets(): Promise<void> {

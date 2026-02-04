@@ -3,28 +3,36 @@
 	<p class="page-subtitle">Manage chess accounts used by the app (Lichess and Chess.com).</p>
 
 	<div class="app-card-flat">
-		<div class="app-card-flat-top">Accounts</div>
+		<div class="app-card-flat-top">Add a chess account</div>
 		<div class="app-card-flat-content">
 			<app-add-account-form
 				[disabled]="loading() || actionsDisabled()"
 				(addRequested)="onAddRequested($event)"
 			></app-add-account-form>
-
-			<app-accounts-table
-				[rows]="rows()"
-				[loading]="loading()"
-				[error]="error()"
-				[actionsDisabled]="actionsDisabled()"
-				(toggleRequested)="onToggleRequested($event)"
-				(deleteRequested)="onDeleteRequested($event)"
-			></app-accounts-table>
 		</div>
 	</div>
 
 	<div class="app-card-flat">
-		<div class="app-card-flat-top">Add account</div>
+		<div class="app-card-flat-top">Accounts</div>
 		<div class="app-card-flat-content">
-			<p class="page-note">The add-account form will be implemented in V1.5.9.0.</p>
+			<app-section-loader
+				class="accounts-loader"
+				[loading]="loading()"
+				mode="overlay"
+				[mask]="true"
+				[blocking]="true"
+				label="Loading accounts…"
+				[showDelayMs]="0"
+				[minVisibleMs]="250"
+			>
+				<app-accounts-table
+					[rows]="rows()"
+					[error]="error()"
+					[actionsDisabled]="actionsDisabled()"
+					(toggleRequested)="onToggleRequested($event)"
+					(deleteRequested)="onDeleteRequested($event)"
+				></app-accounts-table>
+			</app-section-loader>
 		</div>
 	</div>
 </div>

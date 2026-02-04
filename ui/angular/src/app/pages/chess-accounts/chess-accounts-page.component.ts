@@ -16,10 +16,18 @@ import { AddAccountFormComponent } from './components/add-account-form/add-accou
 import type { ChessAccountRowVm } from './models/chess-account-row.vm';
 import type { ExternalSite } from 'my-chess-opening-core';
 
+import { SectionLoaderComponent } from '../../shared/loading/section-loader/section-loader.component';
+
 @Component({
 	standalone: true,
 	selector: 'app-chess-accounts-page',
-	imports: [CommonModule, AddAccountFormComponent, AccountsTableComponent, MatDialogModule],
+	imports: [
+		CommonModule,
+		AddAccountFormComponent,
+		AccountsTableComponent,
+		MatDialogModule,
+		SectionLoaderComponent,
+	],
 	templateUrl: './chess-accounts-page.component.html',
 	styleUrl: './chess-accounts-page.component.scss',
 })
@@ -86,6 +94,8 @@ export class ChessAccountsPageComponent implements OnInit {
 	async onAddRequested(payload: { site: ExternalSite; username: string }): Promise<void> {
 		if (this.actionsDisabled()) return;
 
+		this.loading.set(true);
+
 		this.actionsDisabled.set(true);
 
 		try {
@@ -107,6 +117,7 @@ export class ChessAccountsPageComponent implements OnInit {
 			this.notify.error(msg);
 		} finally {
 			this.actionsDisabled.set(false);
+			this.loading.set(false);
 		}
 	}
 
@@ -117,6 +128,7 @@ export class ChessAccountsPageComponent implements OnInit {
 	async onToggleRequested(row: ChessAccountRowVm): Promise<void> {
 		if (this.actionsDisabled()) return;
 
+		this.loading.set(true);
 		this.actionsDisabled.set(true);
 
 		const nextEnabled = !row.isEnabled;
@@ -138,6 +150,7 @@ export class ChessAccountsPageComponent implements OnInit {
 			this.notify.error(msg);
 		} finally {
 			this.actionsDisabled.set(false);
+			this.loading.set(false);
 		}
 	}
 
@@ -155,6 +168,8 @@ export class ChessAccountsPageComponent implements OnInit {
 
 		const confirmed = await firstValueFrom(ref.afterClosed());
 		if (confirmed !== true) return;
+
+		this.loading.set(true);
 
 		this.actionsDisabled.set(true);
 
@@ -175,6 +190,7 @@ export class ChessAccountsPageComponent implements OnInit {
 			this.notify.error(msg);
 		} finally {
 			this.actionsDisabled.set(false);
+			this.loading.set(false);
 		}
 	}
 

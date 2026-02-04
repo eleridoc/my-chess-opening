@@ -1,7 +1,5 @@
 <div class="accounts-table">
-	@if (loading) {
-		<div class="accounts-table__state">Loading…</div>
-	} @else if (error) {
+	@if (error) {
 		<div class="accounts-table__state accounts-table__state--error">{{ error }}</div>
 	} @else if (rows.length === 0) {
 		<div class="accounts-table__state">No chess accounts configured.</div>

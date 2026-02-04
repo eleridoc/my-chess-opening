@@ -1,0 +1,31 @@
+<div
+	class="section-loader"
+	[class.section-loader--masked]="displayedLoading() && mask"
+	[class.section-loader--inline]="mode === 'inline'"
+	[attr.aria-busy]="displayedLoading()"
+>
+	<div class="section-loader__content">
+		<ng-content />
+	</div>
+
+	@if (displayedLoading() && mode === 'overlay') {
+		<div
+			class="section-loader__overlay"
+			[class.section-loader__overlay--blocking]="blocking"
+			role="status"
+			aria-live="polite"
+		>
+			<div class="section-loader__panel">
+				<mat-spinner [diameter]="spinnerSize"></mat-spinner>
+				<div class="section-loader__text">{{ label }}</div>
+			</div>
+		</div>
+	}
+
+	@if (displayedLoading() && mode === 'inline') {
+		<div class="section-loader__inline" role="status" aria-live="polite">
+			<mat-spinner [diameter]="spinnerSize"></mat-spinner>
+			<div class="section-loader__text">{{ label }}</div>
+		</div>
+	}
+</div>

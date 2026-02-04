@@ -30,9 +30,6 @@ export class AccountsTableComponent {
 	 */
 	@Input({ required: true }) rows: ChessAccountRowVm[] = [];
 
-	/** True while the parent is fetching data from IPC. */
-	@Input() loading = false;
-
 	/** Optional error message (already user-friendly) displayed by the template. */
 	@Input() error: string | null = null;
 
@@ -66,12 +63,12 @@ export class AccountsTableComponent {
 	}
 
 	requestToggle(row: ChessAccountRowVm): void {
-		if (this.loading || this.actionsDisabled) return;
+		if (this.actionsDisabled) return;
 		this.toggleRequested.emit(row);
 	}
 
 	requestDelete(row: ChessAccountRowVm): void {
-		if (this.loading || this.actionsDisabled) return;
+		if (this.actionsDisabled) return;
 		this.deleteRequested.emit(row);
 	}
 }

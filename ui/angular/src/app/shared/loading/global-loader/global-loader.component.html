@@ -1,0 +1,14 @@
+@if (loading.isGlobalLoading()) {
+	<div
+		class="global-loader"
+		[class.global-loader--blocking]="blocking"
+		role="status"
+		aria-live="polite"
+		aria-busy="true"
+	>
+		<div class="global-loader__panel">
+			<mat-spinner diameter="46"></mat-spinner>
+			<div class="global-loader__text">{{ label }}</div>
+		</div>
+	</div>
+}

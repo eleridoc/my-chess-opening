@@ -1,4 +1,4 @@
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Component, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -9,7 +9,6 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSortModule, Sort } from '@angular/material/sort';
 
@@ -20,6 +19,7 @@ import { ExternalLinkService } from '../../shared/system/external-link.service';
 import { ratedLabel, timeLabel, openingLabel, myResultLabel } from '../../shared/games/game-format';
 
 import { IsoDateTimePipe } from '../../shared/dates/pipes';
+import { SectionLoaderComponent } from '../../shared/loading/section-loader/section-loader.component';
 
 type Outcome = 'win' | 'loss' | 'draw' | 'unknown';
 
@@ -36,9 +36,9 @@ type Outcome = 'win' | 'loss' | 'draw' | 'unknown';
 		MatInputModule,
 		MatButtonModule,
 		MatIconModule,
-		MatProgressSpinnerModule,
 		MatSelectModule,
 		MatSortModule,
+		SectionLoaderComponent,
 	],
 	templateUrl: './games-page.component.html',
 	styleUrl: './games-page.component.scss',
@@ -100,6 +100,10 @@ export class GamesPageComponent {
 
 	private queueReload(): void {
 		if (this.reloadTimer) clearTimeout(this.reloadTimer);
+
+		// Optional UX: show loader immediately while debounce is pending
+		this.loading.set(true);
+
 		this.reloadTimer = setTimeout(() => void this.loadPage(), 200);
 	}
 

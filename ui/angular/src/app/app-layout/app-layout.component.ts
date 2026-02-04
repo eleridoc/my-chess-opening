@@ -10,6 +10,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 
+import { GlobalLoaderComponent } from '../shared/loading/global-loader/global-loader.component';
+
+import { LoadingService } from '../shared/loading/loading.service';
+import { NotificationService } from '../shared/notifications/notification.service';
+
 type TopNavItem = {
 	label: string;
 	path: string;
@@ -22,7 +27,7 @@ type TopNavItem = {
 		RouterOutlet,
 		RouterLink,
 		RouterLinkActive,
-
+		GlobalLoaderComponent,
 		MatToolbarModule,
 		MatTabsModule,
 		MatButtonModule,
@@ -35,7 +40,10 @@ type TopNavItem = {
 export class AppLayoutComponent {
 	readonly accountsState = inject(AccountsStateService);
 	readonly theme = inject(ThemeService);
+	readonly loading = inject(LoadingService);
+	private readonly notify = inject(NotificationService);
 
+	readonly globalLoaderLabel = computed(() => (this.isImporting() ? 'Importing…' : 'Loading…'));
 	readonly hasAccounts = this.accountsState.hasAccounts;
 	readonly topNav = computed<TopNavItem[]>(() => {
 		if (!this.hasAccounts()) {
@@ -58,13 +66,20 @@ export class AppLayoutComponent {
 	isImporting = signal(false);
 
 	async onImportNowClick(): Promise<void> {
-		if (!window.electron) return;
+		const electron = window.electron;
+		if (!electron) return;
+
 		if (this.isImporting()) return;
 
 		this.isImporting.set(true);
+
 		try {
-			const res = await window.electron.import.runNow({ maxGamesPerAccount: 1 });
-			//console.log('[UI] Import result:', res);
+			await this.loading.runGlobal(
+				() => electron.import.runNow({ maxGamesPerAccount: 30 }),
+				'Import now',
+			);
+		} catch (e) {
+			this.notify.error('Import failed. Check Logs for details.');
 		} finally {
 			this.isImporting.set(false);
 		}

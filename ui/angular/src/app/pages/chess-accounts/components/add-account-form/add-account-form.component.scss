@@ -1,18 +1,14 @@
 .add-account-form {
 	display: flex;
 	flex-direction: column;
-	gap: 12px;
-	padding: 12px;
-	border-radius: 12px;
+
+	// gap: 12px;
+	// padding: 12px;
+	// border-radius: 12px;
 
 	/* Keep it neutral and compatible with your theme variables. */
-	background: rgba(0, 0, 0, 0.12);
-	border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.add-account-form__title {
-	font-weight: 600;
-	opacity: 0.95;
+	// background: rgba(0, 0, 0, 0.12);
+	// border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .add-account-form__grid {

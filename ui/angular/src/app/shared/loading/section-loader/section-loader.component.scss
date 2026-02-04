@@ -1,0 +1,97 @@
+:host {
+	/*
+	 * IMPORTANT:
+	 * The host element (<app-section-loader>) is the actual flex item in the DOM.
+	 * If the host is not flex-compatible, inner components (like table scroll areas)
+	 * won't receive a constrained height and scrolling will break.
+	 */
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 auto;
+	min-height: 0;
+}
+
+/*
+ * IMPORTANT:
+ * The section loader is often used inside flex layouts (pages/cards).
+ * We must preserve the flex chain so inner content can properly scroll
+ * (e.g. table card with a scroll area).
+ */
+.section-loader {
+	position: relative;
+
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 auto;
+}
+
+.section-loader__content {
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 auto;
+	min-height: 0;
+}
+
+/* Masked content: keep layout stable while hiding content */
+.section-loader--masked .section-loader__content {
+	visibility: hidden;
+}
+
+/* Inline mode should behave like a normal block in the flow */
+.section-loader--inline {
+	display: block;
+	min-height: initial;
+}
+
+.section-loader--inline .section-loader__content {
+	display: block;
+	min-height: initial;
+}
+
+/* Overlay */
+.section-loader__overlay {
+	position: absolute;
+	inset: 0;
+	z-index: 9999;
+
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	background: rgba(0, 0, 0, 0.12);
+	backdrop-filter: blur(1px);
+
+	/* Non-blocking by default (click-through) */
+	pointer-events: none;
+}
+
+.section-loader__overlay--blocking {
+	pointer-events: auto;
+	cursor: progress;
+}
+
+.section-loader__panel {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+
+	padding: 12px 14px;
+	border-radius: var(--app-button-radius);
+
+	background: var(--app-bg-plus-2);
+	border: 1px solid var(--app-divider);
+	box-shadow: var(--app-shadow-panel);
+}
+
+.section-loader__inline {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+
+	padding: 10px 0;
+}
+
+.section-loader__text {
+	font-weight: 600;
+	letter-spacing: 0.2px;
+}
