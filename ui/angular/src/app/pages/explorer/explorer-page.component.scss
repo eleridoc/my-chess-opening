@@ -70,23 +70,64 @@
 }
 
 /* ---------------------------------------------------------------------------
-   Center column: board + controls fixed, bottom workspace fills the rest
+   Center column: 
    --------------------------------------------------------------------------- */
 
 .explorer-col--center {
-	overflow: hidden; /* prevent column-level scrolling */
+	overflow: hidden; /* center column must never scroll */
+	min-height: 0;
 }
 
-.explorer-center-bottom {
+/* Rows (player cards + controls) keep natural height */
+.explorer-center-row {
+	flex: 0 0 auto;
+	min-height: 0;
+}
+
+/* The board area is a strict square (size is set in px from TS) */
+.explorer-board-area {
+	flex: 0 0 auto;
+	align-self: center; /* center the square horizontally */
+	min-width: 0;
+	min-height: 0;
+	overflow: hidden;
+	display: flex;
+}
+
+/* Make the chess board component fill the square */
+.explorer-board-area > app-chess-board {
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	min-height: 0;
+}
+
+/* Remaining blank space goes below controls, not between cards and board */
+.explorer-center-spacer {
 	flex: 1 1 auto;
-	min-height: 0; /* critical for inner scroll */
-	overflow: auto; /* scroll only here when content grows */
-	border-radius: 12px; /* optional: keeps it visually clean */
+	min-height: 0;
 }
 
-.explorer-center-bottom__placeholder {
-	padding: 12px;
-	opacity: 0.7;
+/* ---------------------------------------------------------------------------
+   Controls row: takes remaining height and centers controls without affecting board sizing
+   --------------------------------------------------------------------------- */
+
+.explorer-center-row--controls {
+	flex: 1 1 auto; /* takes remaining height */
+	min-height: 0;
+
+	/*
+	  Use CSS Grid centering instead of flex pseudo-spacers.
+	  This avoids side effects where pseudo elements can steal layout space and
+	  reduce the board size even when there is enough room.
+	*/
+	display: grid;
+	place-items: center;
+}
+
+.explorer-center-row--controls.app-container-fit {
+	padding-top: 10px;
+	padding-bottom: 10px;
 }
 
 /* ---------------------------------------------------------------------------
@@ -110,7 +151,7 @@
 	min-height: 0;
 }
 
-.explorer-right-block--bottom > .app-card {
+.explorer-right-block--bottom > .app-card-flat {
 	flex: 1 1 auto;
 	min-height: 0;
 	display: flex;
@@ -167,6 +208,11 @@
 .explorer-board-center > app-chess-board {
 	display: block;
 	width: min(100%, 680px); /* tweak 680px to taste */
+}
+
+.explorer-board-center > app-player-info-card {
+	display: block;
+	width: min(100%, 680px);
 }
 
 /* ---------------------------------------------------------------------------

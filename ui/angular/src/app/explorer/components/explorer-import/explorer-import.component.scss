@@ -1,5 +1,7 @@
 :host {
 	display: block;
+	height: 100%;
+	min-height: 0;
 	padding: 12px 0;
 }
 
@@ -9,7 +11,11 @@
 	- Visual feedback (success/error/info) is handled globally via the snackbar system.
 */
 .import {
-	display: grid;
+	height: 100%;
+	min-height: 0;
+
+	display: flex;
+	flex-direction: column;
 	gap: 12px;
 }
 
@@ -18,6 +24,18 @@
 	display: flex;
 	flex-direction: column;
 	gap: 10px;
+	min-height: 0;
+}
+
+/* FEN section keeps natural height */
+.import__section--fen {
+	flex: 0 0 auto;
+}
+
+/* PGN section takes all remaining height */
+.import__section--pgn {
+	flex: 1 1 auto;
+	min-height: 0;
 }
 
 .import__field {
@@ -37,6 +55,46 @@
 /* PGN field container (so we can anchor the action buttons) */
 .import__pgn-wrap {
 	position: relative;
+
+	/* Make the wrap fill remaining height */
+	flex: 1 1 auto;
+	min-height: 0;
+
+	display: flex;
+	flex-direction: column;
+}
+
+/* Ensure the textarea form-field stretches to available height */
+.import__pgn-field {
+	flex: 1 1 auto;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.import__pgn-wrap {
+	min-height: 220px;
+}
+
+/* Material internals: stretch the infix to allow textarea to grow */
+.import__pgn-wrap ::ng-deep .mat-mdc-form-field {
+	flex: 1 1 auto;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.import__pgn-wrap ::ng-deep .mat-mdc-form-field-flex,
+.import__pgn-wrap ::ng-deep .mat-mdc-form-field-infix {
+	flex: 1 1 auto;
+	min-height: 0;
+}
+
+/* Make the textarea fill the remaining height of the form-field */
+.import__pgn-field textarea[matInput] {
+	height: 100%;
+	min-height: 0;
+	resize: none;
 }
 
 /* Bottom-right actions for the PGN textarea */
@@ -53,4 +111,12 @@
 	border: 1px solid var(--app-border);
 	border-radius: 6px;
 	background: var(--app-surface-2);
+}
+
+/* ---------------------------------------------------------------------------
+   Material form-field: remove the empty hint/error reserved area (Import only)
+   --------------------------------------------------------------------------- */
+
+:host ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+	display: none !important;
 }

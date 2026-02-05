@@ -1,12 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, Input, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 
 import { ExplorerFacade } from '../../facade/explorer.facade';
 
 import { GameMetaHeaderCardComponent } from '../game-meta-header-card/game-meta-header-card.component';
-import { PlayerInfoCardComponent } from '../player-info-card/player-info-card.component';
 
-import { ExternalLinkService } from '../../../shared/system/external-link.service';
 import type { GameResultKey, GameSpeedKey } from '../../view-models/game-info-header.vm';
 
 /**
@@ -28,13 +26,13 @@ import type { GameResultKey, GameSpeedKey } from '../../view-models/game-info-he
 @Component({
 	selector: 'app-explorer-game-info-panel',
 	standalone: true,
-	imports: [CommonModule, GameMetaHeaderCardComponent, PlayerInfoCardComponent],
+	imports: [CommonModule, GameMetaHeaderCardComponent],
 	templateUrl: './explorer-game-info-panel.component.html',
 	styleUrls: ['./explorer-game-info-panel.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ExplorerGameInfoPanelComponent {
-	private readonly externalLink = inject(ExternalLinkService);
+	//private readonly externalLink = inject(ExternalLinkService);
 
 	/**
 	 * Facade instance provided by the parent (page/shell).
@@ -43,14 +41,14 @@ export class ExplorerGameInfoPanelComponent {
 	 */
 	@Input({ required: true }) facade!: ExplorerFacade;
 
-	/**
-	 * Opens an external URL using the Electron-safe external link service.
-	 * The template may forward the click event to prevent default navigation.
-	 */
-	openExternal(url: string | undefined, event?: Event): void {
-		if (!url) return;
-		this.externalLink.open(url, event);
-	}
+	// /**
+	//  * Opens an external URL using the Electron-safe external link service.
+	//  * The template may forward the click event to prevent default navigation.
+	//  */
+	// openExternal(url: string | undefined, event?: Event): void {
+	// 	if (!url) return;
+	// 	this.externalLink.open(url, event);
+	// }
 
 	/**
 	 * Temporary English label mapping (will be replaced by i18n later).
@@ -63,12 +61,12 @@ export class ExplorerGameInfoPanelComponent {
 		return '—';
 	}
 
-	/**
-	 * Temporary English label mapping (will be replaced by i18n later).
-	 */
-	siteFallbackLabel(siteKey: 'lichess' | 'chesscom' | 'unknown' | undefined): string {
-		if (siteKey === 'lichess') return 'Lichess';
-		if (siteKey === 'chesscom') return 'Chess.com';
-		return '—';
-	}
+	// /**
+	//  * Temporary English label mapping (will be replaced by i18n later).
+	//  */
+	// siteFallbackLabel(siteKey: 'lichess' | 'chesscom' | 'unknown' | undefined): string {
+	// 	if (siteKey === 'lichess') return 'Lichess';
+	// 	if (siteKey === 'chesscom') return 'Chess.com';
+	// 	return '—';
+	// }
 }

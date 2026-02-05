@@ -21,18 +21,19 @@
 	flex-direction: column;
 }
 
-.move-list > .app-card {
+.move-list > .app-card-flat {
 	height: 100%;
 	min-height: 0;
 	display: flex;
 	flex-direction: column;
 }
 
-.move-list > .app-card > .app-card-top {
+.move-list > .app-card-flat > .app-card-flat-top {
 	flex: 0 0 auto;
+	border-bottom: 0px;
 }
 
-.move-list > .app-card > .app-card-content-fit {
+.move-list > .app-card-flat > .app-card-flat-content-fit {
 	flex: 1 1 auto;
 	min-height: 0;
 	overflow: auto; /* ONLY scrollbar for move list */
@@ -64,33 +65,40 @@
 
 .row {
 	display: grid;
-	grid-template-columns: 50px 1fr 1fr;
+	//grid-template-columns: 50px 1fr 1fr;
+	grid-template-columns: 50px 150px 150px 1fr;
 	align-items: center;
 	//gap: 4px;
-	padding: 3px 0;
+	//padding: 3px 0;
 }
 
 .rows > .row:nth-child(odd) {
-	background: var(--app-hover-less);
+	//--app-hover-less
+	background: var(--app-bg-plus-1);
 	//background: color-mix(in srgb, var(--app-bg-less-1) 100%, transparent);
 }
 
 .rows > .row:nth-child(even) {
-	background: var(--app-bg-less-1);
+	background: var(--app-bg-plus-1);
 }
 
 //olor: color-mix(in srgb, var(--app-bg-less-1) 2%, transparent);
 
 /* When we render a split black move as "... | Be7", visually glue it */
 .row--continuation {
-	margin-top: -2px;
+	//margin-top: -2px;
 }
 
 .num {
-	opacity: 0.5;
 	font-size: 12px;
 	text-align: center;
 	font-weight: 900;
+	background: var(--app-bg-plus-2);
+	height: 100%;
+	color: color-mix(in srgb, var(--app-on-surface-variant) 60%, transparent);
+	display: flex;
+	align-items: center; /* vertical */
+	justify-content: center; /* horizontal */
 }
 
 /* --------------------------------------------------------------------------
@@ -103,16 +111,22 @@
 	align-items: center;
 	gap: 6px;
 	min-width: 0;
+	padding: 3px 10px;
 }
 
 .ply-group--placeholder {
 	opacity: 0.85;
 }
 
+.ply-after {
+	background-color: var(--app-bg-plus-2);
+	height: 100%;
+}
+
 /* SAN buttons (mainline + variations reuse mat-button reset) */
 .ply {
 	justify-content: flex-start;
-	min-width: 0;
+	min-width: 75px;
 	color: color-mix(in srgb, var(--app-on-surface-variant) 80%, transparent);
 	border-radius: 6px !important;
 }
@@ -151,7 +165,7 @@
 
 .var-block {
 	display: grid;
-	grid-template-columns: 36px 1fr 1fr;
+	grid-template-columns: 36px 1fr 1fr 1fr;
 	align-items: start;
 	gap: 4px;
 }
@@ -164,7 +178,7 @@
 	padding-left: 10px;
 	padding-top: 5px;
 	padding-bottom: 5px;
-	background: var(--app-hover);
+	background: var(--app-bg-plus-2);
 }
 
 /* Full-width under mainline row (covers white+black columns) */
@@ -217,6 +231,6 @@
 	font-weight: 800;
 	text-decoration: none;
 	color: var(--app-primary);
-	background: var(--app-bg-plus-3);
+	background: var(--app-bg-plus-5);
 	border-radius: 6px !important;
 }

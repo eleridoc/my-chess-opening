@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, inject } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
+import { ExternalLinkService } from '../../../shared/system/external-link.service';
 
 import type {
 	GameInfoHeaderVm,
@@ -36,6 +37,8 @@ type MetaPart = { kind: MetaPartKind; text: string };
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GameMetaHeaderCardComponent {
+	private readonly externalLink = inject(ExternalLinkService);
+
 	/** Single header VM (computed by the facade). */
 	@Input({ required: true }) header!: GameInfoHeaderVm;
 
@@ -60,6 +63,34 @@ export class GameMetaHeaderCardComponent {
 		if (speed) parts.push({ kind: 'speed', text: speed });
 
 		return parts;
+	}
+
+	get siteLabel(): string | null {
+		const site = this.header?.site;
+		if (!site) return null;
+
+		const label = (site.label ?? '').trim();
+		if (label) return label;
+
+		const fallback = this.siteFallbackLabel(site.siteKey);
+		return fallback === '—' ? null : fallback;
+	}
+
+	get siteUrl(): string | null {
+		const url = (this.header?.site?.url ?? '').trim();
+		return url || null;
+	}
+
+	/** Opens an external URL using the Electron-safe external link service. */
+	openExternal(url: string | undefined, event?: Event): void {
+		if (!url) return;
+		this.externalLink.open(url, event);
+	}
+
+	private siteFallbackLabel(siteKey: 'lichess' | 'chesscom' | 'unknown' | undefined): string {
+		if (siteKey === 'lichess') return 'Lichess';
+		if (siteKey === 'chesscom') return 'Chess.com';
+		return '—';
 	}
 
 	private getTimeControlText(): string | null {

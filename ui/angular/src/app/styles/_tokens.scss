@@ -43,16 +43,26 @@ body.theme-dark {
 	color-scheme: dark;
 
 	/* Background + main surfaces */
-	--app-bg: #242424;
-	--app-bg-plus-1: #282828;
+	--app-bg: #1f1f1f;
+	--app-bg-plus-1: #272727;
 	--app-bg-plus-2: #2b2b2b;
-	--app-bg-plus-3: #383838;
-	--app-bg-less-1: #202020;
-	--app-bg-less-2: #1b1b1b;
+	--app-bg-plus-3: #2f2f2f;
+	--app-bg-plus-4: #333333;
+	--app-bg-plus-5: #373737;
 
-	--app-card: #1f1f1f;
-	--app-divider: #383838;
-	--app-border: rgba(255, 255, 255, 0.08);
+	--app-bg-plus-6: #3b3b3b;
+	--app-bg-plus-7: #3f3f3f;
+	--app-bg-plus-8: #434343;
+	--app-bg-plus-9: #474747;
+
+	--app-bg-less-1: #232323;
+	--app-bg-less-2: #1f1f1f;
+
+	--app-card: #272727;
+	--app-divider: #373737;
+	--app-border: #373737;
+
+	--app-mat-border: #474747;
 
 	--app-primary: #abc7ff;
 	--app-on-surface-variant: #c6c6cb;

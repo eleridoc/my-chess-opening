@@ -62,6 +62,16 @@
 }
 
 .app-separator {
-	margin: 15px 0px;
+	//margin: 15px 0px;
 	border-bottom: 1px solid var(--app-sep);
+}
+
+.app-container-fit,
+.app-container {
+	border-radius: 6px;
+	background: var(--app-bg-plus-1);
+}
+
+.app-container {
+	padding: 15px 15px;
 }

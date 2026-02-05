@@ -1,12 +1,15 @@
 .app-card-flat {
-	border-radius: 5px;
-	background: var(--app-bg-less-1);
+	border-top-left-radius: 6px;
+	border-top-right-radius: 6px;
+	background: var(--app-bg-plus-3);
 	//border: 1px solid var(--app-border);
 }
 
 .app-card-flat-top {
 	padding: 10px 15px;
 
+	border-top-left-radius: 6px;
+	border-top-right-radius: 6px;
 	font-weight: 700;
 	font-size: 14px;
 	border-bottom: 1px solid var(--app-border);
@@ -16,6 +19,19 @@
 
 .app-card-flat-content {
 	padding: 15px 15px;
+}
+
+.app-card-flat-content-fit {
+	padding: 0px 0px;
+}
+
+.app-card-flat-bottom {
+	padding: 10px 15px;
+}
+
+.app-card-flat-bottom,
+.app-card-flat-bottom-fit {
+	background: var(--app-bg-plus-1);
 }
 
 /* Generic card used for small blocks (run context, etc.) */

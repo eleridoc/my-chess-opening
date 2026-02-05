@@ -1,7 +1,7 @@
 <div class="app-page">
 	<div class="explorer-layout">
 		<!-- Left column: game info + tabs -->
-		<section class="explorer-col explorer-col--left">
+		<section class="explorer-col explorer-col--left app-container">
 			<app-explorer-game-info-panel [facade]="facade"></app-explorer-game-info-panel>
 
 			<div class="explorer-left-tabs">
@@ -33,14 +33,6 @@
 
 					<mat-tab disabled>
 						<ng-template mat-tab-label>
-							<mat-icon class="app-tab-icon">timer</mat-icon>
-							Time
-						</ng-template>
-						Content 2
-					</mat-tab>
-
-					<mat-tab disabled>
-						<ng-template mat-tab-label>
 							<mat-icon class="app-tab-icon">share</mat-icon>
 							Export
 						</ng-template>
@@ -51,9 +43,21 @@
 			</div>
 		</section>
 
-		<!-- Center column: board + controls -->
-		<section class="explorer-col explorer-col--center">
-			<div class="explorer-board-center">
+		<!-- Center column: players + board + controls -->
+		<section class="explorer-col explorer-col--center" #centerCol>
+			<div #topPlayerWrap class="explorer-center-row">
+				<app-player-info-card
+					position="top"
+					[header]="facade.gameInfoHeaderVm()"
+				></app-player-info-card>
+			</div>
+
+			<div
+				#boardArea
+				class="explorer-board-area"
+				[style.width.px]="boardSizePx()"
+				[style.height.px]="boardSizePx()"
+			>
 				<app-chess-board
 					[fen]="facade.fen()"
 					[orientation]="facade.boardOrientation()"
@@ -65,23 +69,34 @@
 				/>
 			</div>
 
-			<app-board-controls
-				[canStart]="facade.canStart()"
-				[canPrev]="facade.canPrev()"
-				[canNext]="facade.canNext()"
-				[canEnd]="facade.canEnd()"
-				(rotate)="onRotateBoard()"
-				(reset)="onReset()"
-				(start)="onStart()"
-				(prev)="onPrev()"
-				(next)="onNext()"
-				(end)="onEnd()"
-			/>
-
-			<div class="explorer-center-bottom">
-				<!-- Placeholder: this area will host future panels (analysis, notes, etc.) -->
-				<div class="explorer-center-bottom__placeholder"></div>
+			<div #bottomPlayerWrap class="explorer-center-row">
+				<app-player-info-card
+					position="bottom"
+					[header]="facade.gameInfoHeaderVm()"
+				></app-player-info-card>
 			</div>
+
+			<div
+				#controlsWrap
+				class="explorer-center-row explorer-center-row--controls app-container-fit"
+			>
+				<app-board-controls
+					#boardControls
+					[canStart]="facade.canStart()"
+					[canPrev]="facade.canPrev()"
+					[canNext]="facade.canNext()"
+					[canEnd]="facade.canEnd()"
+					(rotate)="onRotateBoard()"
+					(reset)="onReset()"
+					(start)="onStart()"
+					(prev)="onPrev()"
+					(next)="onNext()"
+					(end)="onEnd()"
+				/>
+			</div>
+
+			<!-- Optional: keep a spacer at the bottom to absorb remaining height -->
+			<!-- <div class="explorer-center-spacer"></div> -->
 		</section>
 
 		<!-- Right column: split into 2 equal blocks (top/bottom) -->
@@ -96,9 +111,9 @@
 			</div>
 
 			<div class="explorer-right-block explorer-right-block--bottom">
-				<div class="app-card">
-					<div class="app-card-top">Details</div>
-					<div class="app-card-content-fit">
+				<div class="app-card-flat">
+					<div class="app-card-flat-top">Movements played</div>
+					<div class="app-card-flat-content-fit">
 						<div class="explorer-right-bottom__placeholder">Coming soon…</div>
 					</div>
 				</div>

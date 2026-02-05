@@ -17,6 +17,25 @@
 			<ng-template #emptyMeta>—</ng-template>
 		</div>
 
-		<div class="game-meta-card__date">{{ playedAtIso | appIsoDateTime }}</div>
+		<div class="game-meta-card__date-row">
+			<span class="game-meta-card__date-text">{{ playedAtIso | appIsoDateTime }}</span>
+
+			<ng-container *ngIf="siteLabel as label">
+				<span class="game-meta-card__sep">•</span>
+
+				<a
+					*ngIf="siteUrl; else sitePlain"
+					class="game-meta-card__site-link"
+					[attr.href]="siteUrl"
+					(click)="openExternal(siteUrl, $event)"
+				>
+					{{ label }}
+				</a>
+
+				<ng-template #sitePlain>
+					<span class="game-meta-card__site">{{ label }}</span>
+				</ng-template>
+			</ng-container>
+		</div>
 	</div>
 </div>

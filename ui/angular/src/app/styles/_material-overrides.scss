@@ -1,0 +1,14 @@
+/* ---------------------------------------------------------------------------
+   Angular Material (MDC): filled text-field underline (line ripple)
+   Global override to avoid bright/white underlines in dark theme.
+   --------------------------------------------------------------------------- */
+
+/* Idle underline */
+.mdc-text-field--filled .mdc-line-ripple::before {
+	border-bottom-color: var(--app-mat-border) !important;
+}
+
+/* Focused underline */
+.mdc-text-field--filled .mdc-line-ripple::after {
+	border-bottom-color: var(--app-primary) !important;
+}

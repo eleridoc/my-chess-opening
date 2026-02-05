@@ -1,5 +1,15 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, computed, inject } from '@angular/core';
+import {
+	Component,
+	DestroyRef,
+	computed,
+	inject,
+	AfterViewInit,
+	ElementRef,
+	ViewChild,
+	signal,
+} from '@angular/core';
+
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -16,8 +26,9 @@ import { ChessBoardComponent } from '../../explorer/components/chess-board/chess
 import { ExplorerImportComponent } from '../../explorer/components/explorer-import/explorer-import.component';
 import { MoveListComponent } from '../../explorer/components/move-list/move-list.component';
 import { ExplorerGameInfoPanelComponent } from '../../explorer/components/explorer-game-info-panel/explorer-game-info-panel.component';
-import { ExplorerDbService } from '../../services/explorer-db.service';
+import { PlayerInfoCardComponent } from '../../explorer/components/player-info-card/player-info-card.component';
 
+import { ExplorerDbService } from '../../services/explorer-db.service';
 import { NotificationService } from '../../shared/notifications/notification.service';
 import {
 	ConfirmDialogComponent,
@@ -36,6 +47,7 @@ type ResetReason = 'DB_LOAD' | 'PGN_IMPORT' | 'FEN_IMPORT';
 		MoveListComponent,
 		ExplorerImportComponent,
 		ExplorerGameInfoPanelComponent,
+		PlayerInfoCardComponent,
 		MatTabsModule,
 		MatIconModule,
 		MatDialogModule,
@@ -43,13 +55,24 @@ type ResetReason = 'DB_LOAD' | 'PGN_IMPORT' | 'FEN_IMPORT';
 	templateUrl: './explorer-page.component.html',
 	styleUrl: './explorer-page.component.scss',
 })
-export class ExplorerPageComponent {
+export class ExplorerPageComponent implements AfterViewInit {
 	private readonly route = inject(ActivatedRoute);
 	private readonly router = inject(Router);
 	private readonly destroyRef = inject(DestroyRef);
 	private readonly explorerDb = inject(ExplorerDbService);
 	private readonly dialog = inject(MatDialog);
 	private readonly notify = inject(NotificationService);
+
+	@ViewChild('centerCol', { read: ElementRef }) private centerCol!: ElementRef<HTMLElement>;
+	@ViewChild('topPlayerWrap', { read: ElementRef }) private topPlayerWrap!: ElementRef<HTMLElement>;
+	@ViewChild('bottomPlayerWrap', { read: ElementRef })
+	private bottomPlayerWrap!: ElementRef<HTMLElement>;
+	@ViewChild('controlsWrap', { read: ElementRef }) private controlsWrap!: ElementRef<HTMLElement>;
+	@ViewChild('boardControls', { read: ElementRef }) private boardControls!: ElementRef<HTMLElement>;
+
+	readonly boardSizePx = signal<number>(0);
+
+	private centerResizeObserver?: ResizeObserver;
 
 	/** Prevent opening multiple confirm dialogs concurrently. */
 	private resetConfirmOpen = false;
@@ -97,6 +120,22 @@ export class ExplorerPageComponent {
 			// Fire-and-forget: internal guards prevent redundant calls and dialogs.
 			void this.handleDbGameIdFromUrl(id);
 		});
+	}
+
+	ngAfterViewInit(): void {
+		// Observe size changes that can impact board sizing (layout + content).
+		this.centerResizeObserver = new ResizeObserver(() => this.recomputeBoardSize());
+
+		this.centerResizeObserver.observe(this.centerCol.nativeElement);
+		this.centerResizeObserver.observe(this.topPlayerWrap.nativeElement);
+		this.centerResizeObserver.observe(this.bottomPlayerWrap.nativeElement);
+		this.centerResizeObserver.observe(this.controlsWrap.nativeElement);
+		this.centerResizeObserver.observe(this.boardControls.nativeElement);
+
+		// Initial compute
+		this.recomputeBoardSize();
+
+		this.destroyRef.onDestroy(() => this.centerResizeObserver?.disconnect());
 	}
 
 	/** Navigate to the selected ply from the move list. */
@@ -364,5 +403,59 @@ export class ExplorerPageComponent {
 		this.resetDbLoadGuards();
 
 		this.facade.loadPgn(pgn);
+	}
+
+	/**
+	 * Computes the largest square size that can fit in the center column
+	 * while keeping player cards and controls always visible (no center scroll).
+	 */
+	private recomputeBoardSize(): void {
+		const centerEl = this.centerCol?.nativeElement;
+		if (!centerEl) return;
+
+		// Use client box sizes for stable results.
+		const availableWidth = Math.floor(centerEl.clientWidth);
+		const availableHeight = Math.floor(centerEl.clientHeight);
+
+		const topH = this.topPlayerWrap?.nativeElement.offsetHeight ?? 0;
+		const bottomH = this.bottomPlayerWrap?.nativeElement.offsetHeight ?? 0;
+
+		// Reserve enough height for controls, including wrapper padding/min-height.
+		const controlsEl = this.boardControls?.nativeElement;
+		const controlsWrapEl = this.controlsWrap?.nativeElement;
+
+		let controlsRequiredH = controlsEl?.offsetHeight ?? 0;
+
+		if (controlsWrapEl) {
+			const s = getComputedStyle(controlsWrapEl);
+
+			const paddingTop = parseFloat(s.paddingTop) || 0;
+			const paddingBottom = parseFloat(s.paddingBottom) || 0;
+			const paddingY = paddingTop + paddingBottom;
+
+			const minH = parseFloat(s.minHeight) || 0;
+
+			// Wrapper can have extra vertical space requirements (padding/min-height),
+			// especially if it uses "fit" container utilities.
+			controlsRequiredH = Math.max(minH, controlsRequiredH + paddingY);
+		}
+
+		// Flex column uses "gap". We need to account for the vertical gaps between rows.
+		const centerStyles = getComputedStyle(centerEl);
+		const gapStr = centerStyles.rowGap || centerStyles.gap || '0px';
+		const gapPx = Math.floor(parseFloat(gapStr)) || 0;
+
+		// Rows: top -> board -> bottom -> controls => 3 gaps
+		const fixedHeight = topH + bottomH + controlsRequiredH + gapPx * 3;
+
+		const availableHeightForBoard = Math.floor(availableHeight - fixedHeight);
+
+		// Largest square that fits both width and remaining height.
+		const size = Math.max(0, Math.min(availableWidth, availableHeightForBoard));
+
+		// Avoid churn
+		if (size !== this.boardSizePx()) {
+			this.boardSizePx.set(size);
+		}
 	}
 }

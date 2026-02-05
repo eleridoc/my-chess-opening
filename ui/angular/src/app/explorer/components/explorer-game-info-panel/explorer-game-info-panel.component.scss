@@ -4,64 +4,35 @@
 	gap: 14px;
 	min-width: 0;
 
-	&__players {
-		display: flex;
-		flex-direction: column;
-		gap: 10px;
-		min-width: 0;
-	}
+	// &__players {
+	// 	display: flex;
+	// 	flex-direction: column;
+	// 	gap: 10px;
+	// 	min-width: 0;
+	// }
 
 	&__meta-header {
 		text-align: center;
 	}
 }
 
-.game-details {
-	display: grid;
-	gap: 8px;
+.game-info {
 	min-width: 0;
-
-	&__row {
-		display: grid;
-		grid-template-columns: 90px 1fr;
-		gap: 10px;
-		align-items: center;
-		min-width: 0;
-	}
-
-	&__label {
-		font-size: 12px;
-		opacity: 0.7;
-		white-space: nowrap;
-	}
-
-	&__value {
-		min-width: 0;
-		font-size: 13px;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
-
-	&__link {
-		text-decoration: none;
-		opacity: 0.9;
-
-		&:hover {
-			text-decoration: underline;
-		}
-	}
+	text-align: center;
 
 	&__result {
 		font-weight: 600;
+		font-size: 22px;
+		text-align: center;
+		margin: 5px 0;
 	}
 
 	&__result--good {
-		color: var(--app-success, #2e7d32);
+		//color: var(--app-success, #2e7d32);
 	}
 
 	&__result--bad {
-		color: var(--app-danger, #c62828);
+		//color: var(--app-danger, #c62828);
 	}
 
 	&__result--neutral {

@@ -1,7 +1,7 @@
 <div class="move-list">
-	<div class="app-card">
-		<div class="app-card-top">Moves</div>
-		<div class="app-card-content-fit">
+	<div class="app-card-flat">
+		<div class="app-card-flat-top">Moves</div>
+		<div class="app-card-flat-content-fit">
 			<div class="empty" *ngIf="!rows.length">No moves yet.</div>
 
 			<div class="rows" *ngIf="rows.length">
@@ -63,6 +63,8 @@
 												</span>
 											</ng-template>
 										</div>
+
+										<div class="ply-after">&nbsp;</div>
 									</div>
 
 									<!--
@@ -108,6 +110,8 @@
 												(+{{ b.variationCount }})
 											</span>
 										</div>
+
+										<div class="ply-after">&nbsp;</div>
 									</div>
 
 									<!--
@@ -157,6 +161,7 @@
 
 									<!-- BLACK CELL (empty) -->
 									<div class="ply-group"></div>
+									<div class="ply-after">&nbsp;</div>
 								</div>
 
 								<!-- Variations after WHITE move -->
@@ -176,7 +181,7 @@
 				</ng-container>
 			</div>
 		</div>
-		<!-- <div class="app-card-bottom">app-card-bottom</div> -->
+		<!-- <div class="app-card-flat-bottom">app-card-flat-bottom</div> -->
 	</div>
 
 	<!-- ============================================================

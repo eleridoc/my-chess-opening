@@ -52,6 +52,8 @@ import {
 	styleUrl: './chess-board.component.scss',
 })
 export class ChessBoardComponent implements AfterViewInit, OnDestroy, OnChanges {
+	@ViewChild('shell') private shell!: ElementRef<HTMLElement>;
+
 	// ---------------------------------------------------------------------------
 	// Inputs (controlled by parent)
 	// ---------------------------------------------------------------------------
@@ -102,6 +104,8 @@ export class ChessBoardComponent implements AfterViewInit, OnDestroy, OnChanges 
 	// Internal state
 	// ---------------------------------------------------------------------------
 
+	private lastComputedSizePx: number | null = null;
+
 	private adapter: ChessBoardAdapter | null = null;
 	private lastFenApplied: string | null = null;
 
@@ -126,28 +130,20 @@ export class ChessBoardComponent implements AfterViewInit, OnDestroy, OnChanges 
 			fen: this.fen,
 			orientation: this.orientation,
 			assetsUrl: 'assets/cm-chessboard/',
-
-			// Authoritative path: adapter emits, parent decides what to do.
 			onMoveAttempt: (attempt: BoardMoveAttempt) => {
 				this.moveAttempt.emit(this.toExplorerAttempt(attempt));
 			},
-
-			// Optimistic path: adapter asks for synchronous validation.
 			...(this.validateMoveAttempt
 				? {
 						validateMoveAttempt: (attempt: BoardMoveAttempt) =>
 							this.validateMoveAttempt!(this.toExplorerAttempt(attempt)),
 					}
 				: {}),
-
-			// Hint providers (optional).
 			...(this.getLegalDestinationsFrom
 				? { getLegalDestinationsFrom: (from) => this.getLegalDestinationsFrom!(from) }
 				: {}),
 			...(this.getLegalCaptureDestinationsFrom
-				? {
-						getLegalCaptureDestinationsFrom: (from) => this.getLegalCaptureDestinationsFrom!(from),
-					}
+				? { getLegalCaptureDestinationsFrom: (from) => this.getLegalCaptureDestinationsFrom!(from) }
 				: {}),
 		};
 
@@ -157,15 +153,18 @@ export class ChessBoardComponent implements AfterViewInit, OnDestroy, OnChanges 
 		this.adapter.setLastMoveSquares?.(this.lastMoveSquares);
 		this.adapter.setMoveInputEnabled(this.inputEnabled);
 		this.adapter.setMoveInputAllowedColor(this.getSideToMoveFromFen(this.fen));
-
 		this.lastFenApplied = this.fen;
 
-		// Keep the adapter responsive if an implementation needs manual refresh.
+		// Auto-size board to fit the available box (min(width, height)).
 		this.resizeObserver = new ResizeObserver(() => {
 			if (this.destroyed) return;
-			requestAnimationFrame(() => this.adapter?.onHostResize?.());
+			this.applyAutoSize();
 		});
-		this.resizeObserver.observe(this.host.nativeElement);
+
+		this.resizeObserver.observe(this.shell.nativeElement);
+
+		// Apply once on init
+		this.applyAutoSize();
 	}
 
 	/**
@@ -235,5 +234,34 @@ export class ChessBoardComponent implements AfterViewInit, OnDestroy, OnChanges 
 		const parts = (fen ?? '').trim().split(/\s+/);
 		if (parts.length < 2) return null;
 		return parts[1] === 'w' ? 'white' : parts[1] === 'b' ? 'black' : null;
+	}
+
+	/**
+	 * Auto-sizes the board host to a square that fits inside the available space.
+	 * We use the smallest dimension of the shell (min(width, height)).
+	 *
+	 * This ensures the board, player cards and controls remain visible without
+	 * requiring a scroll in the center column.
+	 */
+	private applyAutoSize(): void {
+		if (!this.adapter) return;
+
+		const shellEl = this.shell?.nativeElement;
+		const hostEl = this.host?.nativeElement;
+
+		if (!shellEl || !hostEl) return;
+
+		const rect = shellEl.getBoundingClientRect();
+		const size = Math.floor(Math.min(rect.width, rect.height));
+
+		// Avoid useless DOM writes / resize churn.
+		if (!size || size === this.lastComputedSizePx) return;
+
+		this.lastComputedSizePx = size;
+
+		hostEl.style.width = `${size}px`;
+		hostEl.style.height = `${size}px`;
+
+		requestAnimationFrame(() => this.adapter?.onHostResize?.());
 	}
 }

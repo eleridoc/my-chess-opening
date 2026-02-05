@@ -1,76 +1,34 @@
 <div class="game-info-panel">
-	<div class="app-card-flat">
-		<div class="app-card-flat-content">
-			<ng-container *ngIf="facade.gameInfoHeaderVm() as header">
-				<div class="game-info-panel__meta-header">
-					<app-game-meta-header-card [header]="header"></app-game-meta-header-card>
-				</div>
-
-				<div class="app-separator"></div>
-
-				<div class="game-info-panel__players">
-					<app-player-info-card [header]="header" position="top"></app-player-info-card>
-					<app-player-info-card [header]="header" position="bottom"></app-player-info-card>
-				</div>
-
-				<div class="app-separator"></div>
-
-				<!-- Inline details (no row VM, no dedicated component) -->
-				<div class="game-details">
-					<!-- Site -->
-					<div class="game-details__row">
-						<div class="game-details__label">Site</div>
-						<div class="game-details__value">
-							<ng-container *ngIf="header.site as site; else siteEmpty">
-								<a
-									*ngIf="site.url; else sitePlain"
-									class="game-details__link"
-									[attr.href]="site.url"
-									(click)="openExternal(site.url, $event)"
-								>
-									{{ site.label ?? siteFallbackLabel(site.siteKey) }}
-								</a>
-
-								<ng-template #sitePlain>
-									<span>{{ site.label ?? siteFallbackLabel(site.siteKey) }}</span>
-								</ng-template>
-							</ng-container>
-
-							<ng-template #siteEmpty>—</ng-template>
-						</div>
-					</div>
-
-					<!-- Result -->
-					<div class="game-details__row">
-						<div class="game-details__label">Result</div>
-						<div class="game-details__value">
-							<span
-								class="game-details__result"
-								[class.game-details__result--good]="header.result?.tone === 'good'"
-								[class.game-details__result--bad]="header.result?.tone === 'bad'"
-								[class.game-details__result--neutral]="header.result?.tone === 'neutral'"
-							>
-								{{ resultText(header.result?.key) }}
-							</span>
-						</div>
-					</div>
-
-					<!-- Opening -->
-					<div class="game-details__row">
-						<div class="game-details__label">Opening</div>
-						<div class="game-details__value">
-							<ng-container *ngIf="header.opening as op; else openingEmpty">
-								<ng-container *ngIf="op.name || op.eco; else openingEmpty">
-									<span class="game-details__opening-name">{{ op.name || '—' }}</span>
-									<span *ngIf="op.eco as eco" class="game-details__eco"> ({{ eco }})</span>
-								</ng-container>
-							</ng-container>
-
-							<ng-template #openingEmpty>—</ng-template>
-						</div>
-					</div>
-				</div>
-			</ng-container>
+	<ng-container *ngIf="facade.gameInfoHeaderVm() as header">
+		<div class="game-info-panel__meta-header">
+			<app-game-meta-header-card [header]="header"></app-game-meta-header-card>
 		</div>
-	</div>
+
+		<div class="game-info">
+			<div
+				class="game-info__result"
+				[class.game-info__result--good]="header.result?.tone === 'good'"
+				[class.game-info__result--bad]="header.result?.tone === 'bad'"
+				[class.game-info__result--neutral]="header.result?.tone === 'neutral'"
+			>
+				{{ resultText(header.result?.key) }}
+			</div>
+		</div>
+
+		<div class="app-separator"></div>
+
+		<div class="game-info">
+			<ng-container *ngIf="header.opening as op; else openingEmpty">
+				<ng-container *ngIf="op.name || op.eco; else openingEmpty">
+					<span class="game-info__opening-label">Opening : </span>
+					<span class="game-info__opening-name">{{ op.name || '—' }}</span>
+					<span *ngIf="op.eco as eco" class="game-info__eco"> ({{ eco }})</span>
+				</ng-container>
+			</ng-container>
+
+			<ng-template #openingEmpty>—</ng-template>
+		</div>
+
+		<div class="app-separator"></div>
+	</ng-container>
 </div>
