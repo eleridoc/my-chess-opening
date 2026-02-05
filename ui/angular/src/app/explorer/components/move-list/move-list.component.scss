@@ -4,6 +4,40 @@
    - Variation blocks: indented inline lines under the relevant move
    ========================================================================== */
 
+/* ---------------------------------------------------------------------------
+   Layout: make MoveList fill its parent height and scroll only inside the content
+   --------------------------------------------------------------------------- */
+
+:host {
+	display: block;
+	height: 100%;
+	min-height: 0;
+}
+
+.move-list {
+	height: 100%;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.move-list > .app-card {
+	height: 100%;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.move-list > .app-card > .app-card-top {
+	flex: 0 0 auto;
+}
+
+.move-list > .app-card > .app-card-content-fit {
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow: auto; /* ONLY scrollbar for move list */
+}
+
 .move-list {
 	// background: var(--mat-sys-surface-container);
 	// box-shadow:

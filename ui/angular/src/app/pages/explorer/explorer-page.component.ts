@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -10,16 +10,15 @@ import { firstValueFrom } from 'rxjs';
 import type { ExplorerMoveAttempt } from 'my-chess-opening-core/explorer';
 
 import { ExplorerFacade } from '../../explorer/facade/explorer.facade';
+
 import { BoardControlsComponent } from '../../explorer/components/board-controls/board-controls.component';
 import { ChessBoardComponent } from '../../explorer/components/chess-board/chess-board.component';
 import { ExplorerImportComponent } from '../../explorer/components/explorer-import/explorer-import.component';
-import { ExplorerQaPanelComponent } from '../../explorer/components/explorer-qa-panel/explorer-qa-panel.component';
 import { MoveListComponent } from '../../explorer/components/move-list/move-list.component';
 import { ExplorerGameInfoPanelComponent } from '../../explorer/components/explorer-game-info-panel/explorer-game-info-panel.component';
-
 import { ExplorerDbService } from '../../services/explorer-db.service';
-import { NotificationService } from '../../shared/notifications/notification.service';
 
+import { NotificationService } from '../../shared/notifications/notification.service';
 import {
 	ConfirmDialogComponent,
 	type ConfirmDialogData,
@@ -36,7 +35,6 @@ type ResetReason = 'DB_LOAD' | 'PGN_IMPORT' | 'FEN_IMPORT';
 		ChessBoardComponent,
 		MoveListComponent,
 		ExplorerImportComponent,
-		ExplorerQaPanelComponent,
 		ExplorerGameInfoPanelComponent,
 		MatTabsModule,
 		MatIconModule,
@@ -71,9 +69,6 @@ export class ExplorerPageComponent {
 	private dbLoadSeq = 0;
 	private dbLoadInFlightId: string | null = null;
 	private dbLoadSucceededId: string | null = null;
-
-	/** UI-only state: collapses the QA side panel. */
-	readonly qaCollapsed = signal<boolean>(false);
 
 	/**
 	 * ExplorerPage is a container page:

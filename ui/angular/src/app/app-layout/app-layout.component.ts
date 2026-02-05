@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, isDevMode } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 import { AccountsStateService } from '../services/accounts-state.service';
@@ -43,6 +43,7 @@ export class AppLayoutComponent {
 	readonly loading = inject(LoadingService);
 	private readonly notify = inject(NotificationService);
 
+	readonly isDevBuild = isDevMode();
 	readonly globalLoaderLabel = computed(() => (this.isImporting() ? 'Importing…' : 'Loading…'));
 	readonly hasAccounts = this.accountsState.hasAccounts;
 	readonly topNav = computed<TopNavItem[]>(() => {
@@ -50,6 +51,7 @@ export class AppLayoutComponent {
 			return [
 				{ label: 'Getting started', path: '/getting-started' },
 				{ label: 'TestMat', path: '/test-mat' },
+				...(this.isDevBuild ? [{ label: 'QA', path: '/qa' }] : []),
 				{ label: 'Import', path: '/import' },
 			];
 		}
@@ -59,6 +61,7 @@ export class AppLayoutComponent {
 			{ label: 'Games', path: '/games' },
 			{ label: 'Explorer', path: '/explorer' },
 			{ label: 'TestMat', path: '/test-mat' },
+			...(this.isDevBuild ? [{ label: 'QA', path: '/qa' }] : []),
 			{ label: 'Import', path: '/import' },
 		];
 	});

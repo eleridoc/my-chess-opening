@@ -1,12 +1,58 @@
 <div class="app-page">
-	<div class="explorer-layout" [class.explorer-layout--qa-collapsed]="qaCollapsed()">
-		<section class="explorer-col explorer-col--qa">
+	<div class="explorer-layout">
+		<!-- Left column: game info + tabs -->
+		<section class="explorer-col explorer-col--left">
 			<app-explorer-game-info-panel [facade]="facade"></app-explorer-game-info-panel>
 
-			<app-explorer-qa-panel (collapsedChange)="qaCollapsed.set($event)" />
+			<div class="explorer-left-tabs">
+				<mat-tab-group mat-stretch-tabs="false" mat-align-tabs="end">
+					<mat-tab>
+						<ng-template mat-tab-label>
+							<mat-icon class="app-tab-icon">content_paste_go</mat-icon>
+							Import
+						</ng-template>
+
+						<app-explorer-import
+							[disabled]="facade.promotionPending() !== null"
+							[fenError]="facade.importFenError()"
+							[pgnError]="facade.importPgnError()"
+							(applyFen)="onApplyFen($event)"
+							(applyPgn)="onApplyPgn($event)"
+							(clearFenError)="facade.clearImportFenError()"
+							(clearPgnError)="facade.clearImportPgnError()"
+						/>
+					</mat-tab>
+
+					<mat-tab disabled>
+						<ng-template mat-tab-label>
+							<mat-icon class="app-tab-icon">timeline</mat-icon>
+							Analysis
+						</ng-template>
+						Content 1
+					</mat-tab>
+
+					<mat-tab disabled>
+						<ng-template mat-tab-label>
+							<mat-icon class="app-tab-icon">timer</mat-icon>
+							Time
+						</ng-template>
+						Content 2
+					</mat-tab>
+
+					<mat-tab disabled>
+						<ng-template mat-tab-label>
+							<mat-icon class="app-tab-icon">share</mat-icon>
+							Export
+						</ng-template>
+
+						Content 4
+					</mat-tab>
+				</mat-tab-group>
+			</div>
 		</section>
 
-		<section class="explorer-col explorer-col--main">
+		<!-- Center column: board + controls -->
+		<section class="explorer-col explorer-col--center">
 			<div class="explorer-board-center">
 				<app-chess-board
 					[fen]="facade.fen()"
@@ -32,57 +78,31 @@
 				(end)="onEnd()"
 			/>
 
-			<mat-tab-group mat-stretch-tabs="false" mat-align-tabs="end">
-				<mat-tab>
-					<ng-template mat-tab-label>
-						<mat-icon class="app-tab-icon">content_paste_go</mat-icon>
-						Import
-					</ng-template>
-
-					<app-explorer-import
-						[disabled]="facade.promotionPending() !== null"
-						[fenError]="facade.importFenError()"
-						[pgnError]="facade.importPgnError()"
-						(applyFen)="onApplyFen($event)"
-						(applyPgn)="onApplyPgn($event)"
-						(clearFenError)="facade.clearImportFenError()"
-						(clearPgnError)="facade.clearImportPgnError()"
-					/>
-				</mat-tab>
-				<mat-tab disabled>
-					<ng-template mat-tab-label>
-						<mat-icon class="app-tab-icon">timeline</mat-icon>
-						Analysis
-					</ng-template>
-					Content 1
-				</mat-tab>
-
-				<mat-tab disabled>
-					<ng-template mat-tab-label>
-						<mat-icon class="app-tab-icon">timer</mat-icon>
-						Time
-					</ng-template>
-					Content 2
-				</mat-tab>
-
-				<mat-tab disabled>
-					<ng-template mat-tab-label>
-						<mat-icon class="app-tab-icon">share</mat-icon>
-						Export
-					</ng-template>
-
-					Content 4
-				</mat-tab>
-			</mat-tab-group>
+			<div class="explorer-center-bottom">
+				<!-- Placeholder: this area will host future panels (analysis, notes, etc.) -->
+				<div class="explorer-center-bottom__placeholder"></div>
+			</div>
 		</section>
 
+		<!-- Right column: split into 2 equal blocks (top/bottom) -->
 		<section class="explorer-col explorer-col--right">
-			<app-move-list
-				[rows]="facade.moveListRows()"
-				[variationsByNodeId]="facade.variationsByNodeId()"
-				[currentNodeId]="facade.currentNodeId()"
-				(nodeSelected)="onNodeSelected($event)"
-			></app-move-list>
+			<div class="explorer-right-block explorer-right-block--top">
+				<app-move-list
+					[rows]="facade.moveListRows()"
+					[variationsByNodeId]="facade.variationsByNodeId()"
+					[currentNodeId]="facade.currentNodeId()"
+					(nodeSelected)="onNodeSelected($event)"
+				></app-move-list>
+			</div>
+
+			<div class="explorer-right-block explorer-right-block--bottom">
+				<div class="app-card">
+					<div class="app-card-top">Details</div>
+					<div class="app-card-content-fit">
+						<div class="explorer-right-bottom__placeholder">Coming soon…</div>
+					</div>
+				</div>
+			</div>
 		</section>
 	</div>
 </div>

@@ -2,17 +2,19 @@
   Explorer page layout styles
 
   Goals:
-  - 3-column desktop layout (QA | Board | MoveList)
-  - Center the chessboard and keep it responsive with a max width
-  - Collapse to a single column on smaller viewports
+  - Full-height 3-column layout (Left | Center | Right)
+  - Columns must be allowed to shrink (min-height: 0) to avoid pushing the page
+  - Prepare the ground for localized scroll areas (next steps)
 */
 
 :host {
 	display: block;
+	height: 100%;
+	min-height: 0;
 }
 
 /* ---------------------------------------------------------------------------
-   Grid layout
+   Grid layout (full height)
    --------------------------------------------------------------------------- */
 
 .explorer-layout {
@@ -21,14 +23,134 @@
 	/* Desktop default: 3 equal columns */
 	grid-template-columns: repeat(3, minmax(0, 1fr));
 
+	/*
+	  Force the single grid row to take the available height.
+	  This is critical to prevent the layout from growing with content.
+	*/
+	grid-template-rows: minmax(0, 1fr);
+
 	gap: 16px;
-	align-items: start;
+
+	/* Make columns stretch to full height */
+	align-items: stretch;
+
+	/* Fill the remaining height inside .app-page (flex column) */
+	flex: 1 1 auto;
+	min-height: 0;
+	height: 100%;
 }
 
 .explorer-col {
 	display: flex;
 	flex-direction: column;
 	gap: 12px;
+
+	/* Critical: allow inner children to shrink */
+	min-height: 0;
+
+	/* Prevent long content from forcing horizontal overflow */
+	min-width: 0;
+}
+
+/* ---------------------------------------------------------------------------
+   Left column: game info (auto) + tabs (fill remaining height)
+   --------------------------------------------------------------------------- */
+
+.explorer-col--left {
+	overflow: hidden; /* prevent the column from creating its own scrollbar */
+}
+
+.explorer-left-tabs {
+	flex: 1 1 auto;
+	min-height: 0; /* critical: allows tab body to shrink and scroll */
+	overflow: hidden; /* scroll must happen inside tab body only */
+	display: flex;
+	flex-direction: column;
+	//background-color: brown;
+}
+
+/* ---------------------------------------------------------------------------
+   Center column: board + controls fixed, bottom workspace fills the rest
+   --------------------------------------------------------------------------- */
+
+.explorer-col--center {
+	overflow: hidden; /* prevent column-level scrolling */
+}
+
+.explorer-center-bottom {
+	flex: 1 1 auto;
+	min-height: 0; /* critical for inner scroll */
+	overflow: auto; /* scroll only here when content grows */
+	border-radius: 12px; /* optional: keeps it visually clean */
+}
+
+.explorer-center-bottom__placeholder {
+	padding: 12px;
+	opacity: 0.7;
+}
+
+/* ---------------------------------------------------------------------------
+   Right column: 2 equal blocks (top/bottom), no wrapper scroll
+   --------------------------------------------------------------------------- */
+
+.explorer-col--right {
+	overflow: hidden; /* prevents any column-level scrollbar */
+}
+
+.explorer-right-block {
+	flex: 1 1 0; /* 50/50 split (gap is excluded from the distribution) */
+	min-height: 0; /* critical for nested flex/overflow to work */
+	overflow: hidden; /* no scrollbar at wrapper level */
+	display: flex;
+	flex-direction: column;
+}
+
+.explorer-right-block--top > app-move-list {
+	flex: 1 1 auto;
+	min-height: 0;
+}
+
+.explorer-right-block--bottom > .app-card {
+	flex: 1 1 auto;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.explorer-right-bottom__placeholder {
+	padding: 12px;
+	opacity: 0.7;
+}
+
+/* ---------------------------------------------------------------------------
+   Material tabs: keep header fixed, scroll only the tab content
+   Scoped to Explorer to avoid global side-effects.
+   --------------------------------------------------------------------------- */
+
+:host ::ng-deep .explorer-left-tabs .mat-mdc-tab-group {
+	height: 100%;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+:host ::ng-deep .explorer-left-tabs .mat-mdc-tab-header {
+	flex: 0 0 auto; /* never scroll */
+}
+
+:host ::ng-deep .explorer-left-tabs .mat-mdc-tab-body-wrapper {
+	flex: 1 1 auto; /* takes the remaining height */
+	min-height: 0; /* critical for overflow to work */
+}
+
+:host ::ng-deep .explorer-left-tabs .mat-mdc-tab-body {
+	height: 100%;
+}
+
+:host ::ng-deep .explorer-left-tabs .mat-mdc-tab-body-content {
+	height: 100%;
+	min-height: 0;
+	overflow: auto; /* the ONLY scroll in the left column */
 }
 
 /* ---------------------------------------------------------------------------
@@ -47,10 +169,6 @@
 	width: min(100%, 680px); /* tweak 680px to taste */
 }
 
-/* Small spacing between controls and board */
-.explorer-col--main app-chess-board {
-}
-
 /* ---------------------------------------------------------------------------
    Responsive breakpoints
    --------------------------------------------------------------------------- */
@@ -64,12 +182,40 @@
 
 /* Mobile / narrow screens: stack everything */
 @media (max-width: 980px) {
+	// .explorer-layout {
+	// 	grid-template-columns: 1fr;
+
+	// 	/*
+	// 	  On small screens we allow natural height (page scroll is acceptable).
+	// 	  Localized scroll zones are mainly targeted for desktop layout.
+	// 	*/
+	// 	grid-template-rows: auto;
+	// 	height: auto;
+	// }
+
 	.explorer-layout {
-		grid-template-columns: 1fr;
+		/*
+		  On mobile we want the page to size naturally to content.
+		  This prevents the center column from being forced into a "desktop-like" sizing behavior.
+		*/
+		flex: 0 0 auto;
+		min-height: auto;
 	}
 
-	/* Keep the layout single-column even if QA is collapsed */
-	.explorer-layout--qa-collapsed {
-		grid-template-columns: 1fr;
+	.explorer-board-center {
+		/*
+		  On narrow screens we prefer a full-width board container.
+		  Desktop keeps "centered + capped" behavior.
+		*/
+		justify-content: stretch;
+	}
+
+	.explorer-board-center > app-chess-board {
+		/*
+		  Allow the board to fully use the available width on mobile.
+		  Desktop remains capped via the default rule.
+		*/
+		width: 100%;
+		max-width: none;
 	}
 }

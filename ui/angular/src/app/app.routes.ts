@@ -13,6 +13,8 @@ import { FaqPageComponent } from './pages/faq/faq-page.component';
 import { ChessAccountsPageComponent } from './pages/chess-accounts/chess-accounts-page.component';
 import { GettingStartedPageComponent } from './pages/getting-started/getting-started-page.component';
 
+import { devModeGuard } from './guards/dev-mode.guard';
+
 export const routes: Routes = [
 	{
 		path: '',
@@ -43,6 +45,11 @@ export const routes: Routes = [
 			{ path: 'about', component: AboutPageComponent },
 			{ path: 'faq', component: FaqPageComponent },
 			{ path: 'getting-started', component: GettingStartedPageComponent },
+			{
+				path: 'qa',
+				loadComponent: () => import('./pages/qa/qa-page.component').then((m) => m.QaPageComponent),
+				canMatch: [devModeGuard],
+			},
 		],
 	},
 	{

@@ -63,15 +63,81 @@
 /* Make tabs look a bit nicer in a toolbar */
 :host ::ng-deep .app-topbar__nav .mdc-tab {
 	height: 40px;
+	//font-size: 18px;
 }
 
-/* Remove any extra separator line some themes add to tab nav */
-:host ::ng-deep .app-topbar__nav .mdc-tab-indicator {
-	/* keep indicator, nothing to do here */
+// /* Topbar nav: remove the active underline indicator (tab nav bar) */
+// :host ::ng-deep .app-topbar__nav .mdc-tab-indicator {
+// 	display: none !important;
+// }
+
+// /* Ensure the underline content cannot re-appear through other rules */
+// :host ::ng-deep .app-topbar__nav .mdc-tab-indicator__content--underline {
+// 	border: none !important;
+// }
+
+/* ------------------------------------------------------------
+   Colors: make active color apply immediately even while focused/pressed
+   ------------------------------------------------------------ */
+
+/* Default label color */
+:host ::ng-deep .app-topbar__nav .mdc-tab__text-label {
+	color: var(--mat-sys-on-surface-variant);
+	font-weight: 600;
 }
 
+/* Active label color (base) */
+:host ::ng-deep .app-topbar__nav .mdc-tab--active .mdc-tab__text-label {
+	color: var(--mat-sys-primary);
+	font-weight: 700;
+}
+
+/*
+ * IMPORTANT:
+ * On click, the tab can be active + focused/pressed, and MDC can apply a more specific rule.
+ * Force the active color for those states too to avoid "color updates only after blur".
+ */
+:host ::ng-deep .app-topbar__nav .mdc-tab--active.mdc-tab--focused .mdc-tab__text-label,
+:host ::ng-deep .app-topbar__nav .mdc-tab--active.mdc-tab--pressed .mdc-tab__text-label,
+:host ::ng-deep .app-topbar__nav .mdc-tab--active:focus .mdc-tab__text-label,
+:host ::ng-deep .app-topbar__nav .mdc-tab--active:active .mdc-tab__text-label {
+	color: var(--mat-sys-primary) !important;
+}
+
+/* Also apply via MDC CSS variables (covers internal label rules) */
+:host ::ng-deep .app-topbar__nav {
+	/* Inactive label */
+	--mdc-tab-label-text-color: var(--mat-sys-on-surface-variant);
+	--mdc-tab-inactive-hover-label-text-color: var(--mat-sys-on-surface);
+
+	/* Active label (normal + hover + focus) */
+	--mdc-tab-active-label-text-color: var(--mat-sys-primary);
+	--mdc-tab-active-hover-label-text-color: var(--mat-sys-primary);
+	--mdc-tab-active-focus-label-text-color: var(--mat-sys-primary);
+}
+
+/* ------------------------------------------------------------
+   Remove bottom divider line from tab nav
+   ------------------------------------------------------------ */
+
+:host ::ng-deep .app-topbar__nav .mat-mdc-tab-link-container {
+	border-bottom: 0 !important;
+	border-bottom-width: 0 !important;
+	border-bottom-style: none !important;
+	border-bottom-color: transparent !important;
+}
+
+/* Also neutralize the CSS variables used by Angular Material */
+:host ::ng-deep .app-topbar__nav {
+	--mat-tab-divider-height: 0px;
+	--mat-tab-divider-color: transparent;
+}
+
+/* Extra safety: some wrappers still keep borders/shadows */
+:host ::ng-deep .app-topbar__nav .mat-mdc-tab-header,
 :host ::ng-deep .app-topbar__nav .mdc-tab-bar {
 	border-bottom: none !important;
+	box-shadow: none !important;
 }
 
 .app-topbar__spacer {
