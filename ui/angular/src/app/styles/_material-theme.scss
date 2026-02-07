@@ -91,9 +91,22 @@ $_overrides-light: (
 $_overrides-dark: (
 	primary: #abc7ff,
 	on-primary: #0e305e,
-	primary-container: #1d3a69,
-	// need to change primary-container
-	on-primary-container: #d7e2ff,
+	//primary-container: #33373f,
+	//primary-container: mix(#abc7ff, #201f20, 14%),
+	//on-primary-container: #d7e2ff,
+	//on-primary-container: #e5e8f0,
+	// A
+	// primary-container: #313742,
+	// on-primary-container: #d6e2ff,
+	// B
+	// primary-container: #2f3a49,
+	// on-primary-container: #cfe0ff,
+	// C
+	primary-container: #2c3c52,
+	on-primary-container: #c7dcff,
+	// D
+	// primary-container: #28405c,
+	// on-primary-container: #bed6ff,
 	inverse-primary: #425e90,
 	primary-fixed: #d7e2ff,
 	primary-fixed-dim: #abc7ff,

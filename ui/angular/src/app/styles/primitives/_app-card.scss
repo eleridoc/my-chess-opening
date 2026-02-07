@@ -1,15 +1,15 @@
 .app-card-flat {
-	border-top-left-radius: 6px;
-	border-top-right-radius: 6px;
-	background: var(--app-bg-plus-3);
+	border-top-left-radius: var(--app-main-radius);
+	border-top-right-radius: var(--app-main-radius);
+	background: var(--app-bg-plus-1);
 	//border: 1px solid var(--app-border);
 }
 
 .app-card-flat-top {
 	padding: 10px 15px;
 
-	border-top-left-radius: 6px;
-	border-top-right-radius: 6px;
+	border-top-left-radius: var(--app-main-radius);
+	border-top-right-radius: var(--app-main-radius);
 	font-weight: 700;
 	font-size: 14px;
 	border-bottom: 1px solid var(--app-border);
@@ -47,7 +47,7 @@
 }
 .app-card-top,
 .app-card-top-fit {
-	background: var(--app-bg-plus-1);
+	background: var(--app-bg-plus-2);
 	font-weight: 700;
 	font-size: 16px;
 }

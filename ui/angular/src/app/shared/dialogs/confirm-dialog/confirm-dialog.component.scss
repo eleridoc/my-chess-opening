@@ -21,7 +21,7 @@
 .confirm-dialog__details {
 	margin: 0;
 	padding: 10px 12px;
-	border-radius: 10px;
+	border-radius: var(--app-main-radius);
 
 	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
 	font-size: 12px;

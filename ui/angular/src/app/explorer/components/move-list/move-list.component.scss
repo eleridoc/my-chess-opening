@@ -30,7 +30,7 @@
 
 .move-list > .app-card-flat > .app-card-flat-top {
 	flex: 0 0 auto;
-	border-bottom: 0px;
+	//border-bottom: 0px;
 }
 
 .move-list > .app-card-flat > .app-card-flat-content-fit {
@@ -50,7 +50,8 @@
 .empty {
 	opacity: 0.75;
 	font-size: 14px;
-	padding: 20px 30px;
+	padding: 15px;
+	font-style: italic;
 }
 
 /* --------------------------------------------------------------------------
@@ -128,7 +129,7 @@
 	justify-content: flex-start;
 	min-width: 75px;
 	color: color-mix(in srgb, var(--app-on-surface-variant) 80%, transparent);
-	border-radius: 6px !important;
+	border-radius: var(--app-main-radius) !important;
 }
 .var-move.mat-mdc-button,
 .ply.mat-mdc-button {
@@ -178,7 +179,7 @@
 	padding-left: 10px;
 	padding-top: 5px;
 	padding-bottom: 5px;
-	background: var(--app-bg-plus-2);
+	background: var(--app-bg-plus-3);
 }
 
 /* Full-width under mainline row (covers white+black columns) */
@@ -224,7 +225,7 @@
 	font-size: 12px;
 	font-style: italic;
 	color: color-mix(in srgb, var(--app-on-surface-variant) 70%, transparent);
-	border-radius: 6px !important;
+	border-radius: var(--app-main-radius) !important;
 }
 .ply.active,
 .var-move.active {
@@ -232,5 +233,5 @@
 	text-decoration: none;
 	color: var(--app-primary);
 	background: var(--app-bg-plus-5);
-	border-radius: 6px !important;
+	border-radius: var(--app-main-radius) !important;
 }

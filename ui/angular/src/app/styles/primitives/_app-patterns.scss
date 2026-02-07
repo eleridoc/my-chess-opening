@@ -68,7 +68,8 @@
 
 .app-container-fit,
 .app-container {
-	border-radius: 6px;
+	border-top-left-radius: var(--app-main-radius);
+	border-top-right-radius: var(--app-main-radius);
 	background: var(--app-bg-plus-1);
 }
 

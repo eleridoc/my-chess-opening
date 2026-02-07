@@ -5,12 +5,12 @@
 	align-items: stretch;
 	background-color: var(--app-bg-plus-3);
 	padding: 10px 20px 10px 10px;
-	border-radius: 6px;
+	border-radius: var(--app-main-radius);
 
 	&__left {
 		width: 55px;
 		height: 55px;
-		border-radius: 6px;
+		border-radius: var(--app-main-radius);
 		flex: 0 0 auto;
 
 		display: flex;

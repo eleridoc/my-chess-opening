@@ -9,7 +9,7 @@
 	&__left {
 		width: 50px;
 		height: 50px;
-		border-radius: 6px;
+		border-radius: var(--app-main-radius);
 		flex: 0 0 auto;
 		border: 2px solid var(--app-border);
 		display: flex;

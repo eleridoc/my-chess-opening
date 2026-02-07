@@ -36,7 +36,7 @@
 
 .block {
 	padding: 16px;
-	border-radius: 14px;
+	border-radius: var(--app-main-radius);
 	background: var(--app-card, rgba(255, 255, 255, 0.04));
 	border: 1px solid var(--app-border, rgba(255, 255, 255, 0.08));
 }
@@ -57,7 +57,7 @@
 	gap: 10px;
 	align-items: center;
 	padding: 12px 14px;
-	border-radius: 14px;
+	border-radius: var(--app-main-radius);
 	background: rgba(76, 175, 80, 0.12);
 	border: 1px solid rgba(76, 175, 80, 0.25);
 }

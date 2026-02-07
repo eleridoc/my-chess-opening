@@ -8,7 +8,7 @@
 /* Base (shared) ----------------------------------------------------------- */
 .mat-mdc-snack-bar-container.mco-snackbar {
 	/* Geometry */
-	--mco-snackbar-radius: 6px;
+	--mco-snackbar-radius: var(--app-main-radius);
 	--mco-snackbar-pad-y: 4px; /* slimmer */
 	--mco-snackbar-pad-x: 10px;
 

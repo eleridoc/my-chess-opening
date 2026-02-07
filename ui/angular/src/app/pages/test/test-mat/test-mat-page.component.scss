@@ -77,7 +77,7 @@
 
 .table {
 	width: 100%;
-	border-radius: 12px;
+	border-radius: var(--app-main-radius);
 	overflow: hidden;
 	border: 1px solid var(--mat-sys-outline-variant);
 }
@@ -92,7 +92,7 @@
 .sidenav-demo {
 	height: 220px;
 	border: 1px solid var(--mat-sys-outline-variant);
-	border-radius: 12px;
+	border-radius: var(--app-main-radius);
 	overflow: hidden;
 	background: var(--mat-sys-surface);
 }
@@ -120,7 +120,7 @@
 	min-height: 150px;
 	padding: 12px;
 
-	border-radius: 12px;
+	border-radius: var(--app-main-radius);
 	border: 1px solid rgba(0, 0, 0, 0.12);
 
 	display: flex;
@@ -144,5 +144,5 @@
 	color: white;
 
 	padding: 6px 8px;
-	border-radius: 8px;
+	border-radius: var(--app-main-radius);
 }
