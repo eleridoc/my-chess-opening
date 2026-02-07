@@ -1,17 +1,17 @@
 :host {
-	display: block;
-	height: 100%;
+	/*
+	  The Import component must behave as a flex item so it can stretch inside the tab body.
+	  Using "height: 100%" alone is not enough when ancestors don't provide a fixed height.
+	*/
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 auto;
 	min-height: 0;
-	padding: 12px 0;
+	padding: 12px 0 0 0;
 }
 
-/*
-	ExplorerImport layout
-	- Keep this stylesheet focused on component layout/spacing only.
-	- Visual feedback (success/error/info) is handled globally via the snackbar system.
-*/
 .import {
-	height: 100%;
+	flex: 1 1 auto;
 	min-height: 0;
 
 	display: flex;
@@ -23,7 +23,7 @@
 .import__section {
 	display: flex;
 	flex-direction: column;
-	gap: 10px;
+	//gap: 10px;
 	min-height: 0;
 }
 
@@ -58,7 +58,7 @@
 
 	/* Make the wrap fill remaining height */
 	flex: 1 1 auto;
-	min-height: 0;
+	min-height: 50px;
 
 	display: flex;
 	flex-direction: column;
@@ -72,29 +72,51 @@
 	flex-direction: column;
 }
 
-.import__pgn-wrap {
-	min-height: 220px;
+/* ---------------------------------------------------------------------------
+   Material form-field: remove the empty hint/error reserved area (Import only)
+   --------------------------------------------------------------------------- */
+
+:host ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+	display: none !important;
 }
 
-/* Material internals: stretch the infix to allow textarea to grow */
+/* ---------------------------------------------------------------------------
+   Material (MDC): make the textarea field stretch to fill the remaining height
+   --------------------------------------------------------------------------- */
+
+/* Make the form-field behave as a full-height flex column */
 .import__pgn-wrap ::ng-deep .mat-mdc-form-field {
 	flex: 1 1 auto;
 	min-height: 0;
+	height: 100%;
 	display: flex;
 	flex-direction: column;
 }
 
+/* The wrapper/infix chain must stretch to allow the textarea to grow */
 .import__pgn-wrap ::ng-deep .mat-mdc-form-field-flex,
-.import__pgn-wrap ::ng-deep .mat-mdc-form-field-infix {
+.import__pgn-wrap ::ng-deep .mat-mdc-form-field-infix,
+.import__pgn-wrap ::ng-deep .mat-mdc-text-field-wrapper,
+.import__pgn-wrap ::ng-deep .mdc-text-field,
+.import__pgn-wrap ::ng-deep .mdc-text-field--textarea {
 	flex: 1 1 auto;
 	min-height: 0;
+	height: 100%;
 }
 
 /* Make the textarea fill the remaining height of the form-field */
 .import__pgn-field textarea[matInput] {
+	flex: 1 1 auto;
 	height: 100%;
-	min-height: 0;
+	min-height: 50px; /* keep your minimum */
 	resize: none;
+	box-sizing: border-box;
+}
+
+/* Ensure the real MDC textarea input also stretches */
+.import__pgn-wrap ::ng-deep .mdc-text-field__input {
+	height: 100%;
+	box-sizing: border-box;
 }
 
 /* Bottom-right actions for the PGN textarea */
@@ -111,12 +133,4 @@
 	border: 1px solid var(--app-border);
 	border-radius: var(--app-main-radius);
 	background: var(--app-surface-2);
-}
-
-/* ---------------------------------------------------------------------------
-   Material form-field: remove the empty hint/error reserved area (Import only)
-   --------------------------------------------------------------------------- */
-
-:host ::ng-deep .mat-mdc-form-field-subscript-wrapper {
-	display: none !important;
 }

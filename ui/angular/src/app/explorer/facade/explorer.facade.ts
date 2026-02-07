@@ -850,8 +850,14 @@ export class ExplorerFacade {
 	private buildSiteVm(headers: ExplorerGameHeaders | null): GameInfoSiteVm | undefined {
 		if (!headers) return undefined;
 
-		const label = (headers.site ?? '').trim() || undefined;
-		const url = this.pickFirstHttpUrl(headers.siteUrl, headers.site);
+		const rawSite = (headers.site ?? '').trim();
+		const rawSiteIsUrl = this.isHttpUrl(rawSite);
+
+		// When "Site" is an URL (common for Lichess PGN), treat it as URL, not as label.
+		const label = rawSite && !rawSiteIsUrl ? rawSite : undefined;
+
+		// Prefer an explicit siteUrl, then fallback to Site if it is an URL.
+		const url = this.pickFirstHttpUrl(headers.siteUrl, rawSite);
 
 		if (!label && !url) return undefined;
 
@@ -861,7 +867,6 @@ export class ExplorerFacade {
 			...(url ? { url } : {}),
 		};
 	}
-
 	private toResultKey(result?: string): GameResultKey {
 		if (result === '1-0') return 'white_win';
 		if (result === '0-1') return 'black_win';
