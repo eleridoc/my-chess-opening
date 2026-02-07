@@ -1,4 +1,35 @@
-.accounts-loader {
-	display: block;
-	min-height: 120px;
+/*
+  Chess accounts page
+  Goals:
+  - Keep the "Add account" card natural height
+  - Make the accounts list take the remaining height
+  - Enable internal scrolling inside the table card (no page scroll)
+*/
+
+.chess-accounts__list {
+	/* This card must participate in the page flex chain */
+	flex: 1 1 auto;
+	min-height: 0;
+
+	display: flex;
+	flex-direction: column;
+}
+
+.chess-accounts__list-content {
+	/* The content area must also be flex to constrain children height */
+	flex: 1 1 auto;
+	min-height: 0;
+
+	display: flex;
+	flex-direction: column;
+}
+
+/* Optional: make the table card visually blend into the flat card */
+.chess-accounts__table-card {
+	flex: 1 1 auto;
+	min-height: 0;
+
+	/* If you want zero "double radius" effect inside the flat card: */
+	border-top-left-radius: 0;
+	border-top-right-radius: 0;
 }

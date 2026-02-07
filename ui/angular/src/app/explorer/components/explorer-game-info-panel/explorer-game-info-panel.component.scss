@@ -28,15 +28,15 @@
 	}
 
 	&__result--good {
-		//color: var(--app-success, #2e7d32);
+		color: var(--app-me-win);
 	}
 
 	&__result--bad {
-		//color: var(--app-danger, #c62828);
+		color: var(--app-me-loss);
 	}
 
 	&__result--neutral {
-		opacity: 0.85;
+		color: var(--app-me-draw);
 	}
 
 	&__eco {

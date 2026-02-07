@@ -43,8 +43,10 @@ body.theme-dark {
 	/* Background + main surfaces */
 	--app-bg: #1f1f1f;
 	--app-bg-plus-1: #272727;
+	--app-bg-plus-1-half: #292929;
 	--app-bg-plus-2: #2b2b2b;
 	--app-bg-plus-3: #2f2f2f;
+
 	--app-bg-plus-4: #333333;
 	--app-bg-plus-5: #373737;
 
@@ -56,13 +58,16 @@ body.theme-dark {
 	--app-bg-less-1: #232323;
 	--app-bg-less-2: #1f1f1f;
 
+	--app-primary: #abc7ff;
+	--app-primary-nuance: #8aa2c4;
+
 	--app-card: #272727;
 	--app-divider: #373737;
 	--app-border: #373737;
+	--app-border-primary: var(--app-primary-nuance);
 
 	--app-mat-border: #474747;
 
-	--app-primary: #abc7ff;
 	--app-on-surface-variant: #c6c6cb;
 
 	--app-surface-0: transparent;
@@ -70,6 +75,18 @@ body.theme-dark {
 	--app-surface-2: rgba(0, 0, 0, 0.12);
 	--app-surface-3: rgba(0, 0, 0, 0.18);
 	--app-surface-4: rgba(0, 0, 0, 0.22);
+
+	--app-primary-container: #2c3c52;
+	--app-on-primary-container: #c7dcff;
+
+	--app-scrollbar-track: var(--app-bg-plus-4);
+	--app-scrollbar-thumb: var(--app-primary-nuance);
+	--app-scrollbar-thumb-hover: var(--app-on-primary-container); /* soft blue-gray (not flashy) */
+	--app-scrollbar-thumb-active: var(--app-on-primary-container); /* slightly stronger on active */
+
+	--app-me-win: #4fe0a5;
+	--app-me-loss: #ff5a66;
+	--app-me-draw: #7a7a7a;
 }
 
 /* Light theme overrides */

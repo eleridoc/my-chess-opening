@@ -30,15 +30,13 @@
 }
 
 .games-player--me-win {
-	color: var(--mco-success, #2e7d32);
+	color: var(--app-me-win);
 }
-
 .games-player--me-loss {
-	color: var(--mco-error, #c62828);
+	color: var(--app-me-loss);
 }
-
 .games-player--me-draw {
-	color: var(--mco-muted, #7a7a7a);
+	color: var(--app-me-draw);
 }
 
 /* --------------------------------------------------------------------------

@@ -32,17 +32,103 @@ body {
 	box-sizing: border-box;
 }
 
-/* Optional: scrollbar styling (global) */
-::-webkit-scrollbar {
+// /* Optional: scrollbar styling (global) */
+// ::-webkit-scrollbar {
+// 	width: 10px;
+// 	height: 10px;
+// }
+
+// ::-webkit-scrollbar-thumb {
+// 	background: color-mix(in oklab, var(--mat-sys-on-surface) 22%, transparent);
+// 	border-radius: 999px;
+// }
+
+// ::-webkit-scrollbar-thumb:hover {
+// 	background: color-mix(in oklab, var(--mat-sys-on-surface) 30%, transparent);
+// }
+
+/* ---------------------------------------------------------------------------
+   Global scrollbar styling
+   - Chromium/Electron: ::-webkit-scrollbar*
+   - Firefox: scrollbar-color / scrollbar-width
+   --------------------------------------------------------------------------- */
+
+// :root {
+// 	/* You can tweak these per theme if needed */
+// 	--app-scrollbar-track: var(--app-bg-plus-2);
+// 	--app-scrollbar-thumb: var(--app-outline-variant);
+// 	--app-scrollbar-thumb-hover: #7a8fb0; /* soft blue-gray (not flashy) */
+// 	--app-scrollbar-thumb-active: #93acd0; /* slightly stronger on active */
+// }
+
+// :root {
+// 	/* You can tweak these per theme if needed */
+// 	--app-scrollbar-track: red;
+// 	--app-scrollbar-thumb: yellow;
+// 	--app-scrollbar-thumb-hover: blue; /* soft blue-gray (not flashy) */
+// 	--app-scrollbar-thumb-active: green; /* slightly stronger on active */
+// }
+
+// :root {
+// 	/* You can tweak these per theme if needed */
+// 	--app-scrollbar-track: var(--app-primary-container);
+// 	--app-scrollbar-thumb: var(--app-on-primary-container);
+// 	--app-scrollbar-thumb-hover: #7a8fb0; /* soft blue-gray (not flashy) */
+// 	--app-scrollbar-thumb-active: var(--app-primary); /* slightly stronger on active */
+// }
+
+// :root {
+// 	/* You can tweak these per theme if needed */
+// 	--app-scrollbar-track: #2c3c52;
+// 	--app-scrollbar-thumb: #8aa2c4;
+// 	--app-scrollbar-thumb-hover: #7a8fb0; /* soft blue-gray (not flashy) */
+// 	--app-scrollbar-thumb-active: #abc7ff; /* slightly stronger on active */
+// }
+
+// --app-primary: #abc7ff;
+// 	--app-on-surface-variant: #c6c6cb;
+
+// 	--app-surface-0: transparent;
+// 	--app-surface-1: rgba(0, 0, 0, 0.1);
+// 	--app-surface-2: rgba(0, 0, 0, 0.12);
+// 	--app-surface-3: rgba(0, 0, 0, 0.18);
+// 	--app-surface-4: rgba(0, 0, 0, 0.22);
+
+// 	--app-primary-container: #2c3c52;
+// 	--app-on-primary-container: #c7dcff;
+
+/* Firefox */
+* {
+	//scrollbar-width: thin;
+	scrollbar-color: var(--app-scrollbar-thumb) var(--app-scrollbar-track);
+}
+
+/* Chromium / Electron */
+*::-webkit-scrollbar {
 	width: 10px;
 	height: 10px;
 }
 
-::-webkit-scrollbar-thumb {
-	background: color-mix(in oklab, var(--mat-sys-on-surface) 22%, transparent);
-	border-radius: 999px;
+*::-webkit-scrollbar-track {
+	background: var(--app-scrollbar-track);
 }
 
-::-webkit-scrollbar-thumb:hover {
-	background: color-mix(in oklab, var(--mat-sys-on-surface) 30%, transparent);
+*::-webkit-scrollbar-thumb {
+	background: var(--app-scrollbar-thumb);
+	border-radius: 10px;
+
+	/* Adds padding so the thumb looks cleaner on dark themes */
+	border: 2px solid var(--app-scrollbar-track);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+	background: var(--app-scrollbar-thumb-hover);
+}
+
+*::-webkit-scrollbar-thumb:active {
+	background: var(--app-scrollbar-thumb-active);
+}
+
+*::-webkit-scrollbar-corner {
+	background: var(--app-scrollbar-track);
 }

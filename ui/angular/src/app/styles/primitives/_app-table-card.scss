@@ -7,10 +7,18 @@
 	min-height: 0;
 	display: flex;
 	flex-direction: column;
-	border: 1px solid var(--app-border);
-	border-radius: var(--app-radius-lg);
+	//border: 1px solid var(--app-border);
+	//border-radius: var(--app-radius);
+
+	//border-radius: 15px;
+
+	border-top-left-radius: var(--app-main-radius);
+	border-top-right-radius: var(--app-main-radius);
 	overflow: hidden;
-	background: var(--app-bg);
+	//background: var(--app-bg-plus-2);
+
+	// background: var(--app-primary-container);
+	// color: var(--app-on-primary-container);
 
 	/* Density defaults */
 	--app-table-cell-py: 10px;
@@ -66,9 +74,9 @@
 	--app-table-row-min-height: 39px;
 
 	--app-table-btn-width: 45px;
-	--app-table-btn-height: 39px;
-	--app-table-btn-mr: 0px;
-	--app-table-icon-size: 30px;
+	--app-table-btn-height: 32px;
+	--app-table-btn-mr: 5px;
+	--app-table-icon-size: 25px;
 
 	--app-pg-height: 42px;
 	--app-pg-py: 2px;
@@ -84,16 +92,20 @@
 	height: 40px;
 }
 
-.app-table-card .mat-mdc-row {
-	background-color: var(--app-bg-plus-2);
+.app-table-card .mat-mdc-row:nth-child(odd) {
+	background-color: var(--app-bg-plus-1);
+}
+
+.app-table-card .mat-mdc-row:nth-child(even) {
+	background-color: var(--app-bg-plus-1-half);
 }
 
 .app-table-card .mat-mdc-header-row {
-	background-color: var(--app-bg-less-1);
+	background-color: var(--app-bg-plus-2);
 }
 
 .app-table-card .mat-mdc-paginator {
-	background-color: var(--app-bg-less-1);
+	background-color: var(--app-bg-plus-2);
 }
 
 /* --------------------------------------------------------------------------
@@ -119,7 +131,9 @@
 }
 
 .app-table-card .app-table-card__actions .app-table-card__icon-button:hover {
-	background-color: var(--app-bg);
+	background-color: var(--app-primary-container);
+	color: var(--app-on-primary-container);
+	border: 1px solid var(--app-border-primary);
 }
 
 .app-table-card .app-table-card__actions .mat-icon {
