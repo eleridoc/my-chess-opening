@@ -8,6 +8,7 @@ import {
 	ElementRef,
 	ViewChild,
 	signal,
+	isDevMode,
 } from '@angular/core';
 
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -27,6 +28,7 @@ import { ExplorerImportComponent } from '../../explorer/components/explorer-impo
 import { MoveListComponent } from '../../explorer/components/move-list/move-list.component';
 import { ExplorerGameInfoPanelComponent } from '../../explorer/components/explorer-game-info-panel/explorer-game-info-panel.component';
 import { PlayerInfoCardComponent } from '../../explorer/components/player-info-card/player-info-card.component';
+import { ExplorerDebugTabComponent } from '../../explorer/components/explorer-debug-tab/explorer-debug-tab.component';
 
 import { ExplorerDbService } from '../../services/explorer-db.service';
 import { NotificationService } from '../../shared/notifications/notification.service';
@@ -48,6 +50,7 @@ type ResetReason = 'DB_LOAD' | 'PGN_IMPORT' | 'FEN_IMPORT';
 		ExplorerImportComponent,
 		ExplorerGameInfoPanelComponent,
 		PlayerInfoCardComponent,
+		ExplorerDebugTabComponent,
 		MatTabsModule,
 		MatIconModule,
 		MatDialogModule,
@@ -70,6 +73,7 @@ export class ExplorerPageComponent implements AfterViewInit {
 	@ViewChild('controlsWrap', { read: ElementRef }) private controlsWrap!: ElementRef<HTMLElement>;
 	@ViewChild('boardControls', { read: ElementRef }) private boardControls!: ElementRef<HTMLElement>;
 
+	readonly isDevBuild = isDevMode();
 	readonly boardSizePx = signal<number>(0);
 
 	private centerResizeObserver?: ResizeObserver;

@@ -1,0 +1,133 @@
+<div class="debug">
+	<div class="app-card-flat">
+		<div class="app-card-flat-top">Scenarios</div>
+
+		<div class="app-card-flat-content">
+			<div class="debug-row debug-row--wrap">
+				<button
+					mat-stroked-button
+					class="mat-stroked-button-d-5"
+					type="button"
+					(click)="resetToInitial()"
+				>
+					Reset / Initial
+				</button>
+
+				<button
+					mat-stroked-button
+					class="mat-stroked-button-d-5"
+					type="button"
+					(click)="loadDefaultPromotionFen()"
+				>
+					Load promotion FEN
+				</button>
+
+				<button
+					mat-stroked-button
+					class="mat-stroked-button-d-5"
+					type="button"
+					(click)="triggerPromotionAttempt()"
+					[disabled]="facade.promotionPending() !== null"
+				>
+					Try a7→a8
+				</button>
+			</div>
+
+			<div class="debug-fen app-density--5">
+				<mat-form-field appearance="fill" subscriptSizing="dynamic" class="debug-fen__field">
+					<input
+						matInput
+						[ngModel]="promotionFen()"
+						(ngModelChange)="promotionFen.set($event)"
+						placeholder="Promotion FEN (editable)"
+					/>
+				</mat-form-field>
+
+				<button
+					mat-flat-button
+					class="mat-flat-button-d-5"
+					color="primary"
+					type="button"
+					(click)="applyPromotionFen()"
+				>
+					Apply
+				</button>
+			</div>
+
+			<!-- Promotion resolver (kept minimal, required to unblock the board input) -->
+			<div class="debug-promo" *ngIf="facade.promotionPending() as p">
+				<div class="debug-promo__title">Promotion pending</div>
+				<div class="debug-promo__row">{{ p.from }} → {{ p.to }}</div>
+
+				<div class="debug-row">
+					<button
+						mat-stroked-button
+						class="mat-stroked-button-d-5"
+						type="button"
+						(click)="confirmPromotion('q')"
+					>
+						Q
+					</button>
+					<button
+						mat-stroked-button
+						class="mat-stroked-button-d-5"
+						type="button"
+						(click)="confirmPromotion('r')"
+					>
+						R
+					</button>
+					<button
+						mat-stroked-button
+						class="mat-stroked-button-d-5"
+						type="button"
+						(click)="confirmPromotion('b')"
+					>
+						B
+					</button>
+					<button
+						mat-stroked-button
+						class="mat-stroked-button-d-5"
+						type="button"
+						(click)="confirmPromotion('n')"
+					>
+						N
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="app-card-flat">
+		<div class="app-card-flat-top">Variations</div>
+
+		<div class="app-card-flat-content">
+			<div class="debug-row">
+				<button
+					mat-stroked-button
+					class="mat-stroked-button-d-5"
+					type="button"
+					(click)="prevVariation()"
+					[disabled]="!facade.canPrevVariation()"
+				>
+					Prev variation
+				</button>
+
+				<button
+					mat-stroked-button
+					class="mat-stroked-button-d-5"
+					type="button"
+					(click)="nextVariation()"
+					[disabled]="!facade.canNextVariation()"
+				>
+					Next variation
+				</button>
+			</div>
+
+			<div class="debug-info" *ngIf="facade.variationInfo() as v">
+				Current: {{ v.index + 1 }} / {{ v.count }}
+			</div>
+
+			<div class="debug-info" *ngIf="!facade.variationInfo()">No variation at current ply.</div>
+		</div>
+	</div>
+</div>

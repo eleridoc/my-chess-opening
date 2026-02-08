@@ -1,33 +1,6 @@
 <div class="app-page">
-	<header class="qa-header">
-		<div class="qa-header__text">
-			<h1 class="page-title">QA</h1>
-			<p class="page-subtitle">Dev-only tools to validate UI building blocks quickly.</p>
-		</div>
-
-		<div class="qa-header__actions">
-			<a mat-stroked-button routerLink="/explorer">
-				<mat-icon>explore</mat-icon>
-				Explorer
-			</a>
-
-			<a mat-stroked-button routerLink="/test-mat">
-				<mat-icon>science</mat-icon>
-				TestMat
-			</a>
-
-			<a mat-stroked-button routerLink="/logs">
-				<mat-icon>receipt_long</mat-icon>
-				Logs
-			</a>
-		</div>
-	</header>
-
-	@if (!isDevBuild) {
-		<mat-card class="qa-disabled">
-			<mat-card-content>QA tools are disabled in production builds.</mat-card-content>
-		</mat-card>
-	} @else {
-		<app-explorer-qa-panel />
-	}
+	<h1 class="page-title">QA</h1>
+	<p class="page-subtitle">
+		This page is intentionally empty for now. Use the Explorer “Debug” tab for tools.
+	</p>
 </div>
