@@ -258,6 +258,8 @@ export class ExplorerPageComponent implements AfterViewInit {
 			const ref = this.dialog.open(ConfirmDialogComponent, {
 				data,
 				width: '520px',
+				panelClass: 'app-confirm-dialog-panel',
+				backdropClass: 'app-confirm-dialog-backdrop',
 			});
 
 			const result = await firstValueFrom(ref.afterClosed());

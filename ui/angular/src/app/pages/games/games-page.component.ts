@@ -11,6 +11,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSortModule, Sort } from '@angular/material/sort';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import type { GamesListItem, PlayerColor } from 'my-chess-opening-core';
 import { GamesService } from '../../services/games.service';
@@ -38,6 +39,7 @@ type Outcome = 'win' | 'loss' | 'draw' | 'unknown';
 		MatIconModule,
 		MatSelectModule,
 		MatSortModule,
+		MatTooltipModule,
 		SectionLoaderComponent,
 	],
 	templateUrl: './games-page.component.html',

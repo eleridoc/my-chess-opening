@@ -31,7 +31,12 @@
 		<span class="app-topbar__spacer"></span>
 
 		@if (hasAccounts()) {
-			<button mat-stroked-button (click)="onImportNowClick()" [disabled]="isImporting()">
+			<button
+				mat-stroked-button
+				class="mat-stroked-button-d-5"
+				(click)="onImportNowClick()"
+				[disabled]="isImporting()"
+			>
 				<mat-icon>download</mat-icon>
 				<span>{{ isImporting() ? 'Importing…' : 'Import now' }}</span>
 			</button>

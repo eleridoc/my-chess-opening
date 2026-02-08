@@ -12,3 +12,39 @@
 .mdc-text-field--filled .mdc-line-ripple::after {
 	border-bottom-color: var(--app-primary) !important;
 }
+
+/* ---------------------------------------------------------------------------
+   Angular Material (MDC): dialogs
+   - Rounded corners on the dialog surface
+   - Blurred backdrop (Electron/Chromium compatible)
+   --------------------------------------------------------------------------- */
+
+// /* Dialog surface radius */
+// .app-dialog-panel .mat-mdc-dialog-container .mdc-dialog__surface {
+// 	border-radius: var(--app-radius-dialog);
+// 	overflow: hidden; /* Ensure content clips to rounded corners */
+// }
+
+// /* Backdrop blur + tint */
+// .cdk-overlay-backdrop.app-dialog-backdrop {
+// 	background: rgba(0, 0, 0, 0.45);
+// 	backdrop-filter: blur(3px);
+// 	-webkit-backdrop-filter: blur(3px);
+// }
+
+/* ---------------------------------------------------------------------------
+   Angular Material (MDC): Confirm dialog only
+   - Rounded corners on the dialog surface
+   - Blurred backdrop, without affecting other dialogs
+   --------------------------------------------------------------------------- */
+
+.cdk-overlay-pane.app-confirm-dialog-panel .mat-mdc-dialog-container .mdc-dialog__surface {
+	border-radius: var(--app-radius-dialog);
+	overflow: hidden; /* Ensure content clips to rounded corners */
+}
+
+.cdk-overlay-backdrop.app-confirm-dialog-backdrop {
+	background: rgba(0, 0, 0, 0.45);
+	backdrop-filter: blur(4px);
+	-webkit-backdrop-filter: blur(4px);
+}

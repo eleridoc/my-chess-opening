@@ -13,20 +13,32 @@
 </div>
 
 <div mat-dialog-actions align="end" class="confirm-dialog__actions">
-	<button mat-button type="button" (click)="onCancel()">
+	<button mat-button class="mat-flat-button-d-5" type="button" (click)="onCancel()">
 		<mat-icon *ngIf="data.cancelIcon" aria-hidden="true">{{ data.cancelIcon }}</mat-icon>
 		<span>{{ cancelLabel }}</span>
 	</button>
 
 	<ng-container *ngIf="confirmVariant === 'flat'; else textConfirm">
-		<button mat-flat-button type="button" [color]="confirmColor" (click)="onConfirm()">
+		<button
+			mat-flat-button
+			class="mat-flat-button-d-5"
+			type="button"
+			[color]="confirmColor"
+			(click)="onConfirm()"
+		>
 			<mat-icon *ngIf="data.confirmIcon" aria-hidden="true">{{ data.confirmIcon }}</mat-icon>
 			<span>{{ confirmLabel }}</span>
 		</button>
 	</ng-container>
 
 	<ng-template #textConfirm>
-		<button mat-button type="button" [color]="confirmColor" (click)="onConfirm()">
+		<button
+			mat-button
+			class="mat-flat-button-d-5"
+			type="button"
+			[color]="confirmColor"
+			(click)="onConfirm()"
+		>
 			<mat-icon *ngIf="data.confirmIcon" aria-hidden="true">{{ data.confirmIcon }}</mat-icon>
 			<span>{{ confirmLabel }}</span>
 		</button>

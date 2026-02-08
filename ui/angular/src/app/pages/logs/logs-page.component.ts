@@ -13,6 +13,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import type {
 	ExternalSite,
@@ -46,6 +47,7 @@ type TimePreset = 'none' | '1h' | '24h' | '7d';
 		MatSidenavModule,
 		MatProgressSpinnerModule,
 		MatExpansionModule,
+		MatTooltipModule,
 		SectionLoaderComponent,
 	],
 	templateUrl: './logs-page.component.html',

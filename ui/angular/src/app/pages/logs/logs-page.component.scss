@@ -49,20 +49,6 @@
 	min-width: 0;
 }
 
-/* Toggle button should visually align with the "fill" field height (with your density). */
-.logs-advanced-toggle {
-	height: 48px;
-	align-self: stretch;
-	display: inline-flex;
-	align-items: center;
-	gap: 8px;
-	padding: 0 14px;
-}
-
-.logs-advanced-toggle mat-icon {
-	margin: 0;
-}
-
 /* ==========================================================================
    Table (logs-specific)
    ========================================================================== */
@@ -233,10 +219,6 @@ mat-sidenav-content.logs-content {
 	.logs-level,
 	.logs-time {
 		flex: 1 1 100%;
-		width: 100%;
-	}
-
-	.logs-advanced-toggle {
 		width: 100%;
 	}
 

@@ -164,6 +164,8 @@ export class ChessAccountsPageComponent implements OnInit {
 		const ref = this.dialog.open(ConfirmDialogComponent, {
 			width: '520px',
 			data: this.buildDeleteDialogData(row),
+			panelClass: 'app-confirm-dialog-panel',
+			backdropClass: 'app-confirm-dialog-backdrop',
 		});
 
 		const confirmed = await firstValueFrom(ref.afterClosed());

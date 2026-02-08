@@ -1,0 +1,61 @@
+/* ==========================================================================
+   Button density helpers
+   - Use these helpers to match dense (-5) form-field heights.
+   ========================================================================== */
+
+/* ==========================================================================
+   mat-stroked-button
+   ========================================================================== */
+
+.mat-stroked-button-d-5 {
+	height: 36px;
+	//align-self: stretch;
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 0 14px;
+	border-radius: var(--app-main-radius) !important;
+}
+
+.mat-stroked-button-d-5 mat-icon {
+	margin: 0;
+}
+
+@media (max-width: 700px) {
+	.mat-stroked-button-d-5 {
+		width: 100%;
+	}
+}
+
+/* ==========================================================================
+   mat-flat-button
+   ========================================================================== */
+
+.mat-flat-button-d-5 {
+	height: 36px;
+	min-height: 36px; /* Ensure MDC doesn't enforce a different min-height */
+	align-self: stretch;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	padding: 0 14px;
+	border-radius: var(--app-main-radius) !important;
+}
+
+/* Ensure content (icon + label) stays nicely aligned */
+.mat-flat-button-d-5 .mdc-button__label {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.mat-flat-button-d-5 mat-icon {
+	margin: 0;
+}
+
+@media (max-width: 700px) {
+	.mat-flat-button-d-5 {
+		width: 100%;
+	}
+}

@@ -71,7 +71,7 @@ export class SectionLoaderComponent implements OnDestroy {
 	/**
 	 * Anti-flicker: once shown, keep the loader visible for at least this duration (ms).
 	 */
-	@Input() minVisibleMs = 500;
+	@Input() minVisibleMs = 300;
 
 	/** Internal "actually shown" state (signal for reliable rendering). */
 	readonly displayedLoading = signal(false);

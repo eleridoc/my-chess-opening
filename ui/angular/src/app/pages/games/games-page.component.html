@@ -6,16 +6,16 @@
 	<div class="app-filters app-density--5">
 		<div class="app-filters__main">
 			<mat-form-field appearance="fill" subscriptSizing="dynamic" class="games-search">
-				<mat-label>Search</mat-label>
 				<input
 					matInput
+					aria-label="Search"
 					[ngModel]="search()"
 					(ngModelChange)="onSearch($event)"
-					placeholder="player, opening, ECO, external id…"
+					placeholder="Search…"
 				/>
 			</mat-form-field>
 
-			<button matButton="outlined" type="button" (click)="reloadNow()">
+			<button mat-stroked-button class="mat-stroked-button-d-5" type="button" (click)="reloadNow()">
 				<mat-icon>refresh</mat-icon>
 				Reload
 			</button>
@@ -142,18 +142,17 @@
 					<ng-container matColumnDef="actions">
 						<th mat-header-cell *matHeaderCellDef></th>
 						<td mat-cell *matCellDef="let g" class="app-table-card__actions">
-							<!-- Accessible "button-like" span (keeps your styling) -->
-							<span
-								class="app-table-card__icon-button"
-								role="button"
-								tabindex="0"
-								aria-label="Open in Explorer"
+							<button
+								mat-icon-button
+								type="button"
 								(click)="openInExplorer(g.id)"
 								(keydown.enter)="openInExplorer(g.id)"
 								(keydown.space)="openInExplorer(g.id)"
+								aria-label="Open in Explorer"
+								matTooltip="Open in Explorer"
 							>
-								<mat-icon>biotech</mat-icon>
-							</span>
+								<mat-icon aria-hidden="true">biotech</mat-icon>
+							</button>
 						</td>
 					</ng-container>
 

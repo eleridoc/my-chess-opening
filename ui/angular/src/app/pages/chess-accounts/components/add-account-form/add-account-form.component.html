@@ -5,11 +5,11 @@
   - Add: emits addRequested(site, username) when valid
 -->
 
-<div class="add-account-form" [class.add-account-form--disabled]="disabled">
+<div class="add-account-form app-density--5" [class.add-account-form--disabled]="disabled">
 	<form class="add-account-form__grid" [formGroup]="form" (ngSubmit)="onSubmit()">
 		<mat-form-field appearance="fill">
-			<mat-label>Site</mat-label>
-			<mat-select formControlName="site" [disabled]="disabled" required>
+			<!-- <mat-label>Site</mat-label> -->
+			<mat-select formControlName="site" [disabled]="disabled" placeholder="Site*" required>
 				<mat-option *ngFor="let s of sites" [value]="s.value">{{ s.label }}</mat-option>
 			</mat-select>
 			<mat-error *ngIf="form.controls.site.touched && form.controls.site.invalid">
@@ -18,13 +18,14 @@
 		</mat-form-field>
 
 		<mat-form-field appearance="fill">
-			<mat-label>Username</mat-label>
+			<!-- <mat-label>Username</mat-label> -->
 			<input
 				matInput
 				formControlName="username"
 				[disabled]="disabled"
 				autocomplete="off"
 				spellcheck="false"
+				placeholder="Username*"
 				required
 			/>
 			<mat-hint align="end">{{ form.controls.username.value.length }}/40</mat-hint>
@@ -39,7 +40,15 @@
 		</mat-form-field>
 
 		<div class="add-account-form__actions">
-			<button mat-flat-button color="primary" type="submit" [disabled]="!canSubmit">Add</button>
+			<button
+				mat-flat-button
+				class="mat-flat-button-d-5"
+				color="primary"
+				type="submit"
+				[disabled]="!canSubmit"
+			>
+				Add
+			</button>
 		</div>
 	</form>
 </div>

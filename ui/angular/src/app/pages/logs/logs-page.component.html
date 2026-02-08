@@ -108,18 +108,21 @@
 				<!-- Row 1: main filters + single toggle button -->
 				<div class="app-filters__main">
 					<mat-form-field appearance="fill" subscriptSizing="dynamic" class="logs-search">
-						<mat-label>Search</mat-label>
 						<input
 							matInput
 							[ngModel]="search()"
 							(ngModelChange)="search.set($event)"
-							placeholder="message or data…"
+							placeholder="Search…"
 						/>
 					</mat-form-field>
 
 					<mat-form-field appearance="fill" subscriptSizing="dynamic" class="logs-level">
-						<mat-label>Level</mat-label>
-						<mat-select multiple [ngModel]="levels()" (ngModelChange)="levels.set($event)">
+						<mat-select
+							multiple
+							[ngModel]="levels()"
+							placeholder="Level…"
+							(ngModelChange)="levels.set($event)"
+						>
 							<mat-option [value]="'INFO'">INFO</mat-option>
 							<mat-option [value]="'WARN'">WARN</mat-option>
 							<mat-option [value]="'ERROR'">ERROR</mat-option>
@@ -127,9 +130,12 @@
 					</mat-form-field>
 
 					<mat-form-field appearance="fill" subscriptSizing="dynamic" class="logs-time">
-						<mat-label>Time</mat-label>
-						<mat-select [ngModel]="timePreset()" (ngModelChange)="timePreset.set($event)">
-							<mat-option [value]="'none'">All</mat-option>
+						<mat-select
+							[ngModel]="timePreset()"
+							placeholder="Time…"
+							(ngModelChange)="timePreset.set($event)"
+						>
+							<mat-option [value]="'none'">All time</mat-option>
 							<mat-option [value]="'1h'">Last 1h</mat-option>
 							<mat-option [value]="'24h'">Last 24h</mat-option>
 							<mat-option [value]="'7d'">Last 7d</mat-option>
@@ -139,7 +145,7 @@
 					<button
 						mat-stroked-button
 						type="button"
-						class="logs-advanced-toggle"
+						class="mat-stroked-button-d-5"
 						(click)="toggleAdvanced()"
 						[attr.aria-expanded]="advancedOpen()"
 						aria-label="Toggle advanced filters"
@@ -153,19 +159,23 @@
 				<div class="app-filters__advanced" *ngIf="advancedOpen()">
 					<div class="app-filters__advanced-grid">
 						<mat-form-field appearance="fill" subscriptSizing="dynamic">
-							<mat-label>Site</mat-label>
-							<mat-select multiple [ngModel]="sites()" (ngModelChange)="sites.set($event)">
-								<mat-option [value]="'CHESSCOM'">CHESSCOM</mat-option>
-								<mat-option [value]="'LICHESS'">LICHESS</mat-option>
+							<mat-select
+								multiple
+								[ngModel]="sites()"
+								placeholder="Site…"
+								(ngModelChange)="sites.set($event)"
+							>
+								<mat-option [value]="'CHESSCOM'">Chess.com</mat-option>
+								<mat-option [value]="'LICHESS'">Lichess</mat-option>
 							</mat-select>
 						</mat-form-field>
 
 						<mat-form-field appearance="fill" subscriptSizing="dynamic">
-							<mat-label>Scope</mat-label>
 							<mat-select
 								multiple
 								[ngModel]="selectedScopes()"
 								(ngModelChange)="selectedScopes.set($event)"
+								placeholder="Scope…"
 							>
 								<mat-option [value]="null">(empty)</mat-option>
 								<mat-option *ngFor="let s of scopes()" [value]="s">{{ s }}</mat-option>
@@ -173,22 +183,20 @@
 						</mat-form-field>
 
 						<mat-form-field appearance="fill" subscriptSizing="dynamic">
-							<mat-label>Username</mat-label>
 							<input
 								matInput
 								[ngModel]="username()"
 								(ngModelChange)="username.set($event)"
-								placeholder="contains…"
+								placeholder="Username…"
 							/>
 						</mat-form-field>
 
 						<mat-form-field appearance="fill" subscriptSizing="dynamic">
-							<mat-label>Run ID</mat-label>
 							<input
 								matInput
 								[ngModel]="importRunId()"
 								(ngModelChange)="importRunId.set($event)"
-								placeholder="optional…"
+								placeholder="Run ID…"
 							/>
 						</mat-form-field>
 					</div>
@@ -302,29 +310,29 @@
 							<ng-container matColumnDef="actions">
 								<th mat-header-cell *matHeaderCellDef></th>
 								<td mat-cell *matCellDef="let row" class="app-table-card__actions">
-									<span
-										class="app-table-card__icon-button"
-										role="button"
-										tabindex="0"
-										aria-label="Open details"
+									<button
+										mat-icon-button
+										type="button"
 										(click)="openDetails(row)"
 										(keydown.enter)="openDetails(row)"
 										(keydown.space)="openDetails(row)"
+										matTooltip="Open details"
+										aria-label="Open details"
 									>
-										<mat-icon>info</mat-icon>
-									</span>
+										<mat-icon aria-hidden="true">info</mat-icon>
+									</button>
 
-									<span
-										class="app-table-card__icon-button"
-										role="button"
-										tabindex="0"
-										aria-label="Filter by run"
+									<button
+										mat-icon-button
+										type="button"
 										(click)="viewRun(row.importRunId)"
 										(keydown.enter)="viewRun(row.importRunId)"
 										(keydown.space)="viewRun(row.importRunId)"
+										matTooltip="Filter by run"
+										aria-label="Filter by run"
 									>
-										<mat-icon>filter_alt</mat-icon>
-									</span>
+										<mat-icon aria-hidden="true">filter_alt</mat-icon>
+									</button>
 								</td>
 							</ng-container>
 
