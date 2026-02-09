@@ -26,11 +26,9 @@ export const routes: Routes = [
 			{ path: 'games', component: GamesPageComponent, canMatch: [hasAccountsGuard] },
 			{ path: 'explorer', component: ExplorerPageComponent, canMatch: [hasAccountsGuard] },
 			{
-				path: 'test-mat',
+				path: 'qa-mat',
 				loadComponent: () =>
-					import('./pages/test/test-mat/test-mat-page.component').then(
-						(m) => m.TestMatPageComponent,
-					),
+					import('./pages/qa-mat/qa-mat-page.component').then((m) => m.QaMatPageComponent),
 			},
 			{ path: 'import', component: ImportPageComponent },
 

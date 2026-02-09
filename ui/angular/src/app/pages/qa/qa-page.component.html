@@ -1,6 +1,222 @@
 <div class="app-page">
-	<h1 class="page-title">QA</h1>
-	<p class="page-subtitle">
-		This page is intentionally empty for now. Use the Explorer “Debug” tab for tools.
-	</p>
+	<div class="qa">
+		<h1 class="qa__title">QA</h1>
+		<p class="qa__subtitle">Dev playground for dialogs, notifications and loaders.</p>
+
+		<div class="qa__grid">
+			<!-- Confirm dialog -->
+			<div class="app-card-flat">
+				<div class="app-card-flat-top">Confirm dialog</div>
+				<div class="app-card-flat-content">
+					<div class="qa__row qa__row--wrap">
+						<button
+							mat-stroked-button
+							class="mat-stroked-button-d-5"
+							type="button"
+							(click)="openConfirmBasic()"
+						>
+							Basic
+						</button>
+
+						<button
+							mat-stroked-button
+							class="mat-stroked-button-d-5"
+							type="button"
+							(click)="openConfirmDestructive()"
+						>
+							Destructive
+						</button>
+
+						<button
+							mat-stroked-button
+							class="mat-stroked-button-d-5"
+							type="button"
+							(click)="openConfirmWithDetails()"
+						>
+							With details
+						</button>
+
+						<button
+							mat-stroked-button
+							class="mat-stroked-button-d-5"
+							type="button"
+							(click)="openConfirmTextVariant()"
+						>
+							Text confirm
+						</button>
+
+						<button
+							mat-stroked-button
+							class="mat-stroked-button-d-5"
+							type="button"
+							(click)="openConfirmDisableClose()"
+						>
+							Disable close
+						</button>
+
+						<button
+							mat-stroked-button
+							class="mat-stroked-button-d-5"
+							type="button"
+							(click)="openConfirmWithBlur()"
+						>
+							With blur/radius
+						</button>
+					</div>
+				</div>
+			</div>
+
+			<!-- Notifications -->
+			<div class="app-card-flat">
+				<div class="app-card-flat-top">Notifications</div>
+				<div class="app-card-flat-content">
+					<div class="qa__row qa__row--wrap">
+						<button
+							mat-stroked-button
+							class="mat-stroked-button-d-5"
+							type="button"
+							(click)="notifySuccess()"
+						>
+							Success
+						</button>
+						<button
+							mat-stroked-button
+							class="mat-stroked-button-d-5"
+							type="button"
+							(click)="notifyInfo()"
+						>
+							Info
+						</button>
+						<button
+							mat-stroked-button
+							class="mat-stroked-button-d-5"
+							type="button"
+							(click)="notifyWarn()"
+						>
+							Warn
+						</button>
+						<button
+							mat-stroked-button
+							class="mat-stroked-button-d-5"
+							type="button"
+							(click)="notifyError()"
+						>
+							Error
+						</button>
+						<button
+							mat-stroked-button
+							class="mat-stroked-button-d-5"
+							type="button"
+							(click)="notifyWithAction()"
+						>
+							Error + action
+						</button>
+						<button
+							mat-stroked-button
+							class="mat-stroked-button-d-5"
+							type="button"
+							(click)="notifyLong()"
+						>
+							Long (8s)
+						</button>
+						<button
+							mat-stroked-button
+							class="mat-stroked-button-d-5"
+							type="button"
+							(click)="notifyLastWinsSameTick()"
+						>
+							Burst (same tick)
+						</button>
+						<button
+							mat-stroked-button
+							class="mat-stroked-button-d-5"
+							type="button"
+							(click)="notifyStaggered()"
+						>
+							Burst (staggered)
+						</button>
+					</div>
+				</div>
+			</div>
+
+			<!-- Loading -->
+			<div class="app-card-flat">
+				<div class="app-card-flat-top">Loading</div>
+				<div class="app-card-flat-content">
+					<div class="qa__row qa__row--wrap">
+						<button
+							mat-flat-button
+							class="mat-flat-button-d-5"
+							color="primary"
+							type="button"
+							(click)="runGlobalLoader10s()"
+						>
+							Global 10s
+						</button>
+
+						<button
+							mat-stroked-button
+							class="mat-stroked-button-d-5"
+							type="button"
+							(click)="runGlobalLoaderStacked10s()"
+						>
+							Global x3 10s
+						</button>
+
+						<button
+							mat-stroked-button
+							class="mat-stroked-button-d-5"
+							type="button"
+							(click)="runSectionLoader10s('overlay', false, true)"
+						>
+							Section overlay 10s
+						</button>
+
+						<button
+							mat-stroked-button
+							class="mat-stroked-button-d-5"
+							type="button"
+							(click)="runSectionLoader10s('overlay', true, true)"
+						>
+							Overlay + mask 10s
+						</button>
+
+						<button
+							mat-stroked-button
+							class="mat-stroked-button-d-5"
+							type="button"
+							(click)="runSectionLoader10s('inline', false, false)"
+						>
+							Inline 10s
+						</button>
+
+						<button
+							mat-stroked-button
+							class="mat-stroked-button-d-5"
+							type="button"
+							(click)="stopAll()"
+						>
+							Stop
+						</button>
+					</div>
+
+					<app-section-loader
+						[loading]="sectionLoading()"
+						[mode]="sectionMode()"
+						[mask]="sectionMask()"
+						[blocking]="sectionBlocking()"
+						label="Loading this section…"
+					>
+						<div class="qa__demo">
+							<div class="qa__demo-title">Section content</div>
+							<div class="qa__demo-text">
+								This block should remain readable. The loader should cover it (overlay) or appear
+								inline (inline).
+							</div>
+						</div>
+					</app-section-loader>
+				</div>
+			</div>
+		</div>
+	</div>
 </div>

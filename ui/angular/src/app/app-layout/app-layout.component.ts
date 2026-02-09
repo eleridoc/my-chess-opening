@@ -50,8 +50,8 @@ export class AppLayoutComponent {
 		if (!this.hasAccounts()) {
 			return [
 				{ label: 'Getting started', path: '/getting-started' },
-				{ label: 'TestMat', path: '/test-mat' },
 				...(this.isDevBuild ? [{ label: 'QA', path: '/qa' }] : []),
+				...(this.isDevBuild ? [{ label: 'QA-Mat', path: '/qa-mat' }] : []),
 				{ label: 'Import', path: '/import' },
 			];
 		}
@@ -60,8 +60,8 @@ export class AppLayoutComponent {
 			{ label: 'Dashboard', path: '/dashboard' },
 			{ label: 'Games', path: '/games' },
 			{ label: 'Explorer', path: '/explorer' },
-			{ label: 'TestMat', path: '/test-mat' },
 			...(this.isDevBuild ? [{ label: 'QA', path: '/qa' }] : []),
+			...(this.isDevBuild ? [{ label: 'QA-Mat', path: '/qa-mat' }] : []),
 			{ label: 'Import', path: '/import' },
 		];
 	});

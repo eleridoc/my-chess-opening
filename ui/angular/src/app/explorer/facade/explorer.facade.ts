@@ -344,6 +344,20 @@ export class ExplorerFacade {
 		dbGameSnapshot: this._dbGameSnapshot(),
 		pendingDbGameId: this._pendingDbGameId(),
 		boardOrientation: this._boardOrientation(),
+
+		// UI helpers / derived state (useful for diagnostics)
+		canStart: this.canStart(),
+		canEnd: this.canEnd(),
+		importRequiresReset: this.importRequiresReset(),
+
+		importFenError: this._importFenError(),
+		importPgnError: this._importPgnError(),
+		ephemeralPgnTags: this._ephemeralPgnTags(),
+
+		gameHeaders: this.gameHeaders(),
+		gameInfoHeaderVm: this.gameInfoHeaderVm(),
+
+		rev: this._rev(),
 	}));
 
 	constructor() {

@@ -1,1 +1,54 @@
-/* QA page is intentionally minimal for now. */
+.qa {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.qa__title {
+	margin: 0;
+	font-size: 20px;
+	font-weight: 800;
+}
+
+.qa__subtitle {
+	margin: 0;
+	opacity: 0.85;
+}
+
+.qa__grid {
+	display: grid;
+	grid-template-columns: repeat(1, minmax(0, 1fr));
+	gap: 12px;
+}
+
+@media (min-width: 1000px) {
+	.qa__grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+.qa__row {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
+
+.qa__row--wrap {
+	flex-wrap: wrap;
+}
+
+.qa__demo {
+	border: 1px solid var(--app-divider);
+	border-radius: var(--app-main-radius);
+	padding: 12px;
+	background: var(--app-bg-plus-1);
+}
+
+.qa__demo-title {
+	font-weight: 800;
+	margin-bottom: 6px;
+}
+
+.qa__demo-text {
+	opacity: 0.9;
+}
