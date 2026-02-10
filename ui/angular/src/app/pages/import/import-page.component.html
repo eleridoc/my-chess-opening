@@ -1,1 +1,324 @@
-<p>import-page works!</p>
+<div class="app-page import-page">
+	<h1 class="page-title">Import games</h1>
+	<p class="page-subtitle">
+		Import your games account-by-account with live progress and per-account results.
+	</p>
+
+	<div class="app-card-flat import__controls">
+		<div class="app-card-flat-top">Import</div>
+
+		<div class="app-card-flat-content">
+			<div class="import__controls-row">
+				<button
+					mat-flat-button
+					type="button"
+					class="mat-flat-button-d-5"
+					(click)="importAll()"
+					[disabled]="actionsDisabled()"
+					[matTooltip]="
+						importState.isImporting()
+							? 'Import already running'
+							: 'Start import for all enabled accounts'
+					"
+					[attr.aria-disabled]="actionsDisabled() ? 'true' : null"
+				>
+					<mat-icon aria-hidden="true">download</mat-icon>
+					<span>{{ importState.isImporting() ? 'Importing…' : 'Import all accounts' }}</span>
+				</button>
+
+				<button
+					mat-stroked-button
+					type="button"
+					class="mat-stroked-button-d-5"
+					(click)="refresh()"
+					[disabled]="loading() || importState.isImporting()"
+					[attr.aria-disabled]="loading() || importState.isImporting() ? 'true' : null"
+				>
+					<mat-icon aria-hidden="true">refresh</mat-icon>
+					Refresh accounts
+				</button>
+
+				@if (importState.isImporting()) {
+					<!--
+						Inline status indicator:
+						- We keep it lightweight (no modal) because the page itself is the "import console".
+						- Navigation is guarded by importInProgressGuard to keep the UX focused.
+					-->
+					<span class="import__running">
+						<span class="app-pill">RUNNING</span>
+						<span class="import__running-text">Import in progress…</span>
+					</span>
+				}
+			</div>
+
+			@if (importState.batchId(); as bid) {
+				<div class="import__batch">
+					<div class="import__batch-line">
+						<span class="import__batch-key">Batch</span>
+						<span class="import__batch-value mono">{{ bid }}</span>
+					</div>
+
+					@if (importState.startedAtIso()) {
+						<div class="import__batch-line">
+							<span class="import__batch-key">Started</span>
+							<span class="import__batch-value">{{
+								importState.startedAtIso() | appIsoDateTime
+							}}</span>
+						</div>
+					}
+
+					@if (importState.finishedAtIso()) {
+						<div class="import__batch-line">
+							<span class="import__batch-key">Finished</span>
+							<span class="import__batch-value">{{
+								importState.finishedAtIso() | appIsoDateTime
+							}}</span>
+						</div>
+					}
+
+					@if (importState.maxGamesPerAccount() != null) {
+						<div class="import__batch-line">
+							<span class="import__batch-key">Limit</span>
+							<span class="import__batch-value">
+								{{ importState.maxGamesPerAccount() }} games/account
+							</span>
+						</div>
+					}
+
+					@if (importState.totals(); as t) {
+						<div class="import__totals" aria-label="Import batch summary">
+							<div class="import__totals-title">Batch summary</div>
+							<div class="import__totals-grid">
+								<div class="import__totals-item">
+									<div class="import__totals-k">New games</div>
+									<div class="import__totals-v">{{ t.totalGamesFound }}</div>
+								</div>
+								<div class="import__totals-item">
+									<div class="import__totals-k">Inserted</div>
+									<div class="import__totals-v">{{ t.totalInserted }}</div>
+								</div>
+								<div class="import__totals-item">
+									<div class="import__totals-k">Skipped</div>
+									<div class="import__totals-v">{{ t.totalSkipped }}</div>
+								</div>
+								<div class="import__totals-item">
+									<div class="import__totals-k">Failed</div>
+									<div class="import__totals-v" [class.import__totals-v--bad]="t.totalFailed > 0">
+										{{ t.totalFailed }}
+									</div>
+								</div>
+							</div>
+						</div>
+					}
+				</div>
+			}
+		</div>
+	</div>
+
+	<div class="app-card-flat import__list">
+		<div class="app-card-flat-content-fit import__list-content">
+			<app-section-loader
+				[loading]="loading()"
+				mode="overlay"
+				[mask]="true"
+				[blocking]="true"
+				label="Loading accounts…"
+			>
+				@if (!isDesktopApp()) {
+					<div class="import__state import__state--info">
+						<div class="import__empty-title">Desktop app only</div>
+						<div class="import__empty-text">
+							Import is available in the Electron desktop app only.
+						</div>
+					</div>
+				} @else if (error()) {
+					<div class="import__state import__state--error">{{ error() }}</div>
+				} @else if (tableRows().length === 0) {
+					<!-- Empty state: keep it actionable with direct navigation CTAs. -->
+					<div class="import__state import__empty">
+						<div class="import__empty-title">No chess accounts configured</div>
+						<div class="import__empty-text">
+							Add at least one Chess.com or Lichess account to import games.
+						</div>
+
+						<div class="import__empty-actions">
+							<a mat-stroked-button class="mat-stroked-button-d-5" routerLink="/chess-accounts">
+								<mat-icon aria-hidden="true">person_add</mat-icon>
+								Manage accounts
+							</a>
+
+							<a mat-stroked-button class="mat-stroked-button-d-5" routerLink="/getting-started">
+								<mat-icon aria-hidden="true">help_outline</mat-icon>
+								Getting started
+							</a>
+						</div>
+					</div>
+				} @else {
+					<div class="app-table-card app-table-card--compact import__table-card">
+						<div class="app-table-card__scroll">
+							<table
+								mat-table
+								[dataSource]="tableRows()"
+								class="import__table"
+								[trackBy]="trackById"
+								aria-label="Import accounts list"
+							>
+								<!-- site -->
+								<ng-container matColumnDef="site">
+									<th mat-header-cell *matHeaderCellDef>Site</th>
+									<td mat-cell *matCellDef="let r">
+										<span [class.import__dim]="!r.isEnabled">{{ r.siteLabel }}</span>
+									</td>
+								</ng-container>
+
+								<!-- username -->
+								<ng-container matColumnDef="username">
+									<th mat-header-cell *matHeaderCellDef>Username</th>
+									<td mat-cell *matCellDef="let r">
+										<div class="import__username">
+											<span [class.import__dim]="!r.isEnabled">{{ r.username }}</span>
+											@if (!r.isEnabled) {
+												<span class="app-pill app-pill--warn import__pill">DISABLED</span>
+											}
+										</div>
+									</td>
+								</ng-container>
+
+								<!-- lastSyncAt -->
+								<ng-container matColumnDef="lastSyncAt">
+									<th mat-header-cell *matHeaderCellDef>Last sync</th>
+									<td mat-cell *matCellDef="let r">
+										@if (r.lastSyncAt) {
+											<span [class.import__dim]="!r.isEnabled">{{
+												r.lastSyncAt | appIsoDateTime
+											}}</span>
+										} @else {
+											<span class="import__muted">Never</span>
+										}
+									</td>
+								</ng-container>
+
+								<!-- newGames -->
+								<ng-container matColumnDef="newGames">
+									<th mat-header-cell *matHeaderCellDef>New</th>
+									<td mat-cell *matCellDef="let r">
+										@if (r.isWaiting) {
+											<span class="import__muted">Waiting…</span>
+										} @else if (r.gamesFound != null) {
+											{{ r.gamesFound }}
+										} @else {
+											<span class="import__muted">—</span>
+										}
+									</td>
+								</ng-container>
+
+								<!-- progress -->
+								<ng-container matColumnDef="progress">
+									<th mat-header-cell *matHeaderCellDef>Progress</th>
+									<td mat-cell *matCellDef="let r" class="import__progress-cell">
+										@if (r.isWaiting) {
+											<div class="import__muted">Waiting…</div>
+										} @else if (r.processed != null && r.gamesFound != null) {
+											<div class="import__progress-top">
+												<span class="mono">{{ r.processed }}/{{ r.gamesFound }}</span>
+											</div>
+											<mat-progress-bar
+												mode="determinate"
+												[value]="r.gamesFound > 0 ? (r.processed / r.gamesFound) * 100 : 0"
+												aria-label="Import progress"
+											></mat-progress-bar>
+										} @else {
+											<span class="import__muted">—</span>
+										}
+									</td>
+								</ng-container>
+
+								<!-- results -->
+								<ng-container matColumnDef="results">
+									<th mat-header-cell *matHeaderCellDef>Results</th>
+									<td mat-cell *matCellDef="let r" class="import__results-cell">
+										@if (r.inserted != null) {
+											<div class="import__results-line mono">
+												I={{ r.inserted }} &nbsp; S={{ r.skipped }} &nbsp; F={{ r.failed }}
+											</div>
+
+											@if (r.errors.length > 0) {
+												<!-- Error list is intentionally small and scrollable to avoid blowing up row height. -->
+												<div class="import__errors" aria-label="Import errors">
+													@for (e of r.errors; track $index) {
+														<div class="import__error-line" [title]="e.message">
+															<span class="mono import__error-id">{{
+																e.externalId ?? 'unknown'
+															}}</span>
+															<span class="import__error-msg">{{ e.message }}</span>
+														</div>
+													}
+												</div>
+											}
+										} @else {
+											<span class="import__muted">—</span>
+										}
+									</td>
+								</ng-container>
+
+								<!-- status -->
+								<ng-container matColumnDef="status">
+									<th mat-header-cell *matHeaderCellDef>Status</th>
+									<td mat-cell *matCellDef="let r">
+										@if (r.isWaiting) {
+											<span class="app-pill">WAITING</span>
+										} @else if (r.status) {
+											<span
+												class="app-pill"
+												[class.app-pill--error]="r.status === 'FAILED'"
+												[class.app-pill--warn]="r.status === 'PARTIAL'"
+											>
+												{{ r.status }}
+											</span>
+										} @else {
+											<span class="import__muted">—</span>
+										}
+									</td>
+								</ng-container>
+
+								<!-- actions -->
+								<ng-container matColumnDef="actions">
+									<th mat-header-cell *matHeaderCellDef class="import__actions-h"></th>
+									<td mat-cell *matCellDef="let r" class="app-table-card__actions">
+										<button
+											mat-icon-button
+											type="button"
+											(click)="importOne(r.id)"
+											[disabled]="actionsDisabled() || !r.isEnabled"
+											[matTooltip]="
+												importState.isImporting()
+													? 'Import already running'
+													: (r.disabledReason ?? 'Import this account')
+											"
+											[attr.aria-disabled]="actionsDisabled() || !r.isEnabled ? 'true' : null"
+											aria-label="Import account"
+										>
+											<mat-icon aria-hidden="true">play_arrow</mat-icon>
+										</button>
+									</td>
+								</ng-container>
+
+								<tr
+									mat-header-row
+									*matHeaderRowDef="displayedColumns()"
+									class="app-table-card__sticky-header"
+								></tr>
+
+								<tr
+									mat-row
+									*matRowDef="let row; columns: displayedColumns()"
+									[class.import__row--disabled]="!row.isEnabled"
+								></tr>
+							</table>
+						</div>
+					</div>
+				}
+			</app-section-loader>
+		</div>
+	</div>
+</div>

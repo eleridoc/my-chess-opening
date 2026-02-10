@@ -1,0 +1,244 @@
+/*
+  Import page styles
+
+  Goals:
+  - Keep the controls card at natural height.
+  - Make the accounts list take the remaining height.
+  - Ensure internal scrolling happens inside the table card (avoid page scroll).
+*/
+
+//
+// Controls (top card)
+//
+
+.import__controls-row {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+/**
+ * Small inline "RUNNING" indicator displayed next to the buttons.
+ */
+.import__running {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.import__running-text {
+	opacity: 0.85;
+}
+
+//
+// Batch details + totals (within controls card)
+//
+
+.import__batch {
+	margin-top: 12px;
+	padding-top: 12px;
+	border-top: 1px solid var(--app-sep);
+	display: grid;
+	gap: 6px;
+}
+
+.import__batch-line {
+	display: grid;
+	grid-template-columns: 90px 1fr;
+	gap: 10px;
+	align-items: center;
+}
+
+.import__batch-key {
+	opacity: 0.7;
+}
+
+.import__batch-value {
+	opacity: 0.95;
+}
+
+.import__totals {
+	margin-top: 10px;
+	padding: 12px;
+	border-radius: var(--app-main-radius);
+	background: var(--app-card, rgba(255, 255, 255, 0.04));
+	border: 1px solid var(--app-border, rgba(255, 255, 255, 0.08));
+}
+
+.import__totals-title {
+	font-weight: 600;
+	margin-bottom: 10px;
+}
+
+.import__totals-grid {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 10px;
+}
+
+.import__totals-k {
+	opacity: 0.7;
+	font-size: 12px;
+}
+
+.import__totals-v {
+	font-weight: 700;
+	font-size: 16px;
+}
+
+.import__totals-v--bad {
+	color: var(--mco-error, #c62828);
+}
+
+//
+// Layout (page -> list card -> table card)
+//
+
+.import__list {
+	flex: 1 1 auto;
+	min-height: 0; // Critical: allows children to shrink so internal scrolling can work.
+
+	display: flex;
+	flex-direction: column;
+}
+
+.import__list-content {
+	flex: 1 1 auto;
+	min-height: 0; // Critical: same reason as above (nested flex container).
+
+	display: flex;
+	flex-direction: column;
+}
+
+/**
+ * The table card should fill the remaining height and scroll internally.
+ * The squared top corners match the "stacked cards" style (controls card above).
+ */
+.import__table-card {
+	flex: 1 1 auto;
+	min-height: 0;
+
+	border-top-left-radius: 0;
+	border-top-right-radius: 0;
+}
+
+//
+// States (desktop-only, error, empty)
+//
+
+.import__state {
+	padding: 14px;
+	opacity: 0.85;
+}
+
+.import__state--error {
+	color: var(--mco-error, #c62828);
+}
+
+.import__empty {
+	display: grid;
+	gap: 10px;
+}
+
+.import__empty-title {
+	font-weight: 700;
+	font-size: 14px;
+}
+
+.import__empty-text {
+	opacity: 0.75;
+}
+
+.import__empty-actions {
+	display: flex;
+	gap: 10px;
+	flex-wrap: wrap;
+	margin-top: 6px;
+}
+
+//
+// Table cells
+//
+
+.import__username {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.import__pill {
+	margin-left: 8px;
+}
+
+.import__progress-cell {
+	min-width: 140px;
+}
+
+.import__progress-top {
+	display: flex;
+	justify-content: flex-start;
+	margin-bottom: 6px;
+}
+
+.import__results-cell {
+	min-width: 220px;
+}
+
+.import__results-line {
+	margin-bottom: 6px;
+	opacity: 0.9;
+}
+
+/**
+ * Error list is intentionally small and scrollable
+ * to avoid inflating the table row height too much.
+ */
+.import__errors {
+	max-height: 72px;
+	overflow: auto;
+
+	padding: 8px 10px;
+	border-radius: 10px;
+	background: rgba(255, 255, 255, 0.03);
+	border: 1px solid var(--app-border, rgba(255, 255, 255, 0.08));
+}
+
+.import__error-line {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+	font-size: 12px;
+	line-height: 1.2;
+
+	& + & {
+		margin-top: 6px;
+	}
+}
+
+.import__error-id {
+	flex: 0 0 auto;
+	opacity: 0.95;
+}
+
+.import__error-msg {
+	flex: 1 1 auto;
+	opacity: 0.75;
+
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+//
+// Visual helpers
+//
+
+.import__muted,
+.import__dim {
+	opacity: 0.65;
+}
+
+.import__row--disabled {
+	opacity: 0.85;
+}

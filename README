@@ -29,10 +29,6 @@ npm run prisma:studio
 chmod +x tools/generate-icons.sh
 ./tools/generate-icons.sh ui/angular/public/app-logo.png
 
-# Core Explorer harness tests
-npx tsx core/dev/test_version_0_1.ts
-npx tsx core/dev/test_version_0_2.ts
-
 # Full Reset DB
 cd ~/dev/my-chess-opening/electron
 rm -rf prisma/migrations
@@ -42,15 +38,18 @@ npx prisma migrate dev --name init
 npx prisma generate
 npx prisma studio
 
-
-
-
+# Add page exemple
 npx ng g c dashboard-page --path src/app/pages/dashboard --flat --standalone --skip-tests --type=component
-npx ng g c games-page     --path src/app/pages/games     --flat --standalone --skip-tests --type=component
-npx ng g c explorer-page  --path src/app/pages/explorer  --flat --standalone --skip-tests --type=component
-npx ng g c import-page    --path src/app/pages/import    --flat --standalone --skip-tests --type=component
-npx ng g c logs-page      --path src/app/pages/logs      --flat --standalone --skip-tests --type=component
-npx ng g c settings-page  --path src/app/pages/settings  --flat --standalone --skip-tests --type=component
-npx ng g c about-page     --path src/app/pages/about     --flat --standalone --skip-tests --type=component
-npx ng g c faq-page       --path src/app/pages/faq       --flat --standalone --skip-tests --type=component
-npx ng g c test-explo-page  --path src/app/pages/test/test-explo  --flat --standalone --skip-tests --type=component
+
+# Import test
+const subId = window.electron?.import.onEvent?.((e) => console.log('IMPORT EVENT', e));
+window.electron?.import.start?.({
+	maxGamesPerAccount: 25,
+	sinceOverrideIso: new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString(),
+});
+
+
+
+// Should already be initialized by App.ngOnInit(), but ok to call:
+window.ng?.getInjector?.(document.querySelector('app-root')!)?.get?.(ImportStateService)?.ensureInitialized?.();
+window.electron.import.start({ maxGamesPerAccount: 10 });

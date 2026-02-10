@@ -1,7 +1,8 @@
-import { Component, computed, inject, signal, isDevMode } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Component, computed, inject, isDevMode } from '@angular/core';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 import { AccountsStateService } from '../services/accounts-state.service';
+import { ImportStateService } from '../services/import-state.service';
 import { ThemeService } from '../services/theme.service';
 
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -9,11 +10,6 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
-
-import { GlobalLoaderComponent } from '../shared/loading/global-loader/global-loader.component';
-
-import { LoadingService } from '../shared/loading/loading.service';
-import { NotificationService } from '../shared/notifications/notification.service';
 
 type TopNavItem = {
 	label: string;
@@ -27,7 +23,6 @@ type TopNavItem = {
 		RouterOutlet,
 		RouterLink,
 		RouterLinkActive,
-		GlobalLoaderComponent,
 		MatToolbarModule,
 		MatTabsModule,
 		MatButtonModule,
@@ -38,21 +33,45 @@ type TopNavItem = {
 	styleUrl: './app-layout.component.scss',
 })
 export class AppLayoutComponent {
-	readonly accountsState = inject(AccountsStateService);
-	readonly theme = inject(ThemeService);
-	readonly loading = inject(LoadingService);
-	private readonly notify = inject(NotificationService);
+	private readonly router = inject(Router);
 
+	readonly accountsState = inject(AccountsStateService);
+	readonly importState = inject(ImportStateService);
+	readonly theme = inject(ThemeService);
+
+	/**
+	 * Build-time flag.
+	 * Evaluated once and used to optionally expose dev-only routes in the top navigation.
+	 */
 	readonly isDevBuild = isDevMode();
-	readonly globalLoaderLabel = computed(() => (this.isImporting() ? 'Importing…' : 'Loading…'));
+
+	/**
+	 * Whether at least one chess account exists (drives onboarding vs. main app nav).
+	 */
 	readonly hasAccounts = this.accountsState.hasAccounts;
+
+	private readonly importNavItem: TopNavItem = { label: 'Import', path: '/import' };
+
+	/**
+	 * Primary navigation.
+	 *
+	 * Notes:
+	 * - We keep the list small and predictable.
+	 * - Dev-only entries are appended only in dev builds.
+	 */
 	readonly topNav = computed<TopNavItem[]>(() => {
+		const devItems: TopNavItem[] = this.isDevBuild
+			? [
+					{ label: 'QA', path: '/qa' },
+					{ label: 'QA-Mat', path: '/qa-mat' },
+				]
+			: [];
+
 		if (!this.hasAccounts()) {
 			return [
 				{ label: 'Getting started', path: '/getting-started' },
-				...(this.isDevBuild ? [{ label: 'QA', path: '/qa' }] : []),
-				...(this.isDevBuild ? [{ label: 'QA-Mat', path: '/qa-mat' }] : []),
-				{ label: 'Import', path: '/import' },
+				...devItems,
+				this.importNavItem,
 			];
 		}
 
@@ -60,31 +79,29 @@ export class AppLayoutComponent {
 			{ label: 'Dashboard', path: '/dashboard' },
 			{ label: 'Games', path: '/games' },
 			{ label: 'Explorer', path: '/explorer' },
-			...(this.isDevBuild ? [{ label: 'QA', path: '/qa' }] : []),
-			...(this.isDevBuild ? [{ label: 'QA-Mat', path: '/qa-mat' }] : []),
-			{ label: 'Import', path: '/import' },
+			...devItems,
+			this.importNavItem,
 		];
 	});
 
-	isImporting = signal(false);
-
+	/**
+	 * Import CTA:
+	 * - Redirect to the Import page (where progress is visible).
+	 * - Auto-start an "import all accounts" run via query param when not already importing.
+	 *
+	 * Note:
+	 * - Concurrency is enforced in the main process: only one import may run at a time.
+	 */
 	async onImportNowClick(): Promise<void> {
-		const electron = window.electron;
-		if (!electron) return;
-
-		if (this.isImporting()) return;
-
-		this.isImporting.set(true);
-
-		try {
-			await this.loading.runGlobal(
-				() => electron.import.runNow({ maxGamesPerAccount: 1 }),
-				'Import now',
-			);
-		} catch (e) {
-			this.notify.error('Import failed. Check Logs for details.');
-		} finally {
-			this.isImporting.set(false);
+		// If an import is already running, just bring the user to the import page.
+		if (this.importState.isImporting()) {
+			await this.router.navigate(['/import']);
+			return;
 		}
+
+		// Navigate to the import page and let it autostart the batch.
+		await this.router.navigate(['/import'], {
+			queryParams: { autostart: '1' },
+		});
 	}
 }

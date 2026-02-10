@@ -1,5 +1,4 @@
 <div class="app-shell">
-	<app-global-loader [blocking]="true" [label]="globalLoaderLabel()" />
 	<mat-toolbar class="app-topbar" role="banner">
 		<a
 			class="app-topbar__logo"
@@ -22,6 +21,7 @@
 					routerLinkActive
 					#rla="routerLinkActive"
 					[active]="rla.isActive"
+					[attr.aria-current]="rla.isActive ? 'page' : null"
 				>
 					{{ item.label }}
 				</a>
@@ -31,18 +31,24 @@
 		<span class="app-topbar__spacer"></span>
 
 		@if (hasAccounts()) {
+			<!--
+				Import CTA:
+				- Enabled only when no import is currently running.
+				- When an import is running, we keep the user informed via label + disabled state.
+			-->
 			<button
 				mat-stroked-button
 				class="mat-stroked-button-d-5"
 				(click)="onImportNowClick()"
-				[disabled]="isImporting()"
+				[disabled]="importState.isImporting()"
+				[attr.aria-disabled]="importState.isImporting() ? 'true' : null"
 			>
-				<mat-icon>download</mat-icon>
-				<span>{{ isImporting() ? 'Importing…' : 'Import now' }}</span>
+				<mat-icon aria-hidden="true">download</mat-icon>
+				<span>{{ importState.isImporting() ? 'Importing…' : 'Import now' }}</span>
 			</button>
 		}
 
-		<button mat-icon-button (click)="theme.toggle()" aria-label="Open menu">
+		<button mat-icon-button (click)="theme.toggle()" aria-label="Toggle theme">
 			<mat-icon aria-hidden="true">
 				{{ theme.isDark() ? 'light_mode' : 'dark_mode' }}
 			</mat-icon>
@@ -67,6 +73,7 @@
 			</button>
 		</mat-menu>
 
+		<!-- Help menu -->
 		<button mat-icon-button [matMenuTriggerFor]="helpMenu" aria-label="Help and more">
 			<mat-icon aria-hidden="true">help_outline</mat-icon>
 		</button>
@@ -78,10 +85,12 @@
 					<span>Logs</span>
 				</button>
 			}
+
 			<button mat-menu-item routerLink="/about">
 				<mat-icon aria-hidden="true">info</mat-icon>
 				<span>About</span>
 			</button>
+
 			<button mat-menu-item routerLink="/faq">
 				<mat-icon aria-hidden="true">quiz</mat-icon>
 				<span>FAQ</span>
@@ -89,7 +98,7 @@
 		</mat-menu>
 	</mat-toolbar>
 
-	<!-- This is required by mat-tab-nav-bar in M21 -->
+	<!-- Required by mat-tab-nav-bar in Angular Material v21 -->
 	<mat-tab-nav-panel #tabPanel class="app-panel">
 		<main class="app-content" role="main">
 			<router-outlet />

@@ -1,12 +1,12 @@
 import { Routes } from '@angular/router';
 import { AppLayoutComponent } from './app-layout/app-layout.component';
 import { hasAccountsGuard } from './guards/has-accounts.guard';
+import { importInProgressGuard } from './guards/import-in-progress.guard';
 
 import { HomeRedirectPageComponent } from './pages/home-redirect/home-redirect-page.component';
 import { DashboardPageComponent } from './pages/dashboard/dashboard-page.component';
 import { GamesPageComponent } from './pages/games/games-page.component';
 import { ExplorerPageComponent } from './pages/explorer/explorer-page.component';
-import { ImportPageComponent } from './pages/import/import-page.component';
 import { SettingsPageComponent } from './pages/settings/settings-page.component';
 import { AboutPageComponent } from './pages/about/about-page.component';
 import { FaqPageComponent } from './pages/faq/faq-page.component';
@@ -19,6 +19,7 @@ export const routes: Routes = [
 	{
 		path: '',
 		component: AppLayoutComponent,
+		canActivateChild: [importInProgressGuard],
 		children: [
 			{ path: '', pathMatch: 'full', component: HomeRedirectPageComponent },
 
@@ -30,7 +31,11 @@ export const routes: Routes = [
 				loadComponent: () =>
 					import('./pages/qa-mat/qa-mat-page.component').then((m) => m.QaMatPageComponent),
 			},
-			{ path: 'import', component: ImportPageComponent },
+			{
+				path: 'import',
+				loadComponent: () =>
+					import('./pages/import/import-page.component').then((m) => m.ImportPageComponent),
+			},
 
 			{
 				path: 'logs',

@@ -1,31 +1,55 @@
 import { app, BrowserWindow, ipcMain, session, shell } from 'electron';
 import * as path from 'node:path';
-import { PrismaClient, ExternalSite } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { coreIsReady } from 'my-chess-opening-core';
 
-import { importAllAccounts } from './import/importAllAccounts';
+import { cleanupAbortedImportRuns } from './import/importAllAccounts';
 import { registerAccountsIpc } from './accounts/accountsIpc';
 import { registerLogsIpc } from './logs/logsIpc';
 import { registerExplorerIpc } from './explorer/explorerIpc';
 import { registerGamesIpc } from './games/gamesIpc';
 import { registerSystemIpc } from './system/systemIpc';
+import { registerImportIpc } from './import/importIpc';
 
-/**
- * In-app guard to prevent concurrent imports from being triggered via IPC.
- * This is intentionally kept in-memory (not persisted).
- */
-let isImportRunning = false;
+import type { ImportEvent } from 'my-chess-opening-core';
 
 app.setName('My Chess Opening');
 app.setAppUserModelId('com.eleridoc.my-chess-opening');
 
 /**
  * Prisma client used by the main process.
- * Keep a single instance for the whole process lifetime.
+ *
+ * Notes:
+ * - Keep a single instance for the whole process lifetime.
+ * - Do not create per-request clients in IPC handlers.
  */
 const prisma = new PrismaClient();
 
+/**
+ * Main BrowserWindow reference (single-window app for now).
+ * Used to push best-effort import events to the renderer.
+ */
 let mainWindow: BrowserWindow | null = null;
+
+const IMPORT_EVENT_CHANNEL = 'import:event';
+
+/**
+ * Emit an import event to the renderer (if available).
+ *
+ * Best-effort behavior:
+ * - If the window is not ready/available, events are dropped.
+ * - Emission failures must never crash the main process.
+ */
+function emitImportEvent(event: ImportEvent): void {
+	if (!mainWindow) return;
+
+	try {
+		mainWindow.webContents.send(IMPORT_EVENT_CHANNEL, event);
+	} catch (err) {
+		// Keep it silent in prod; in dev it's still useful to know.
+		console.warn('[IPC] Failed to emit import event', err);
+	}
+}
 
 /**
  * Dev server URL (Angular).
@@ -33,28 +57,36 @@ let mainWindow: BrowserWindow | null = null;
  */
 const DEV_SERVER_URL = process.env['MCO_DEV_SERVER_URL'] ?? 'http://localhost:4200';
 
+/**
+ * Resolve the assets directory for the app icon and other resources.
+ *
+ * - In dev, __dirname points to compiled output (usually electron/dist).
+ * - In packaged apps, resources are located under process.resourcesPath.
+ */
 function getAssetsDir(): string {
-	// In dev, __dirname points to compiled output (usually electron/dist).
-	// In packaged apps, use process.resourcesPath.
 	return app.isPackaged
 		? path.join(process.resourcesPath, 'assets')
 		: path.join(__dirname, '../assets');
 }
 
+/**
+ * OS-specific application icon.
+ * Electron expects different formats on Windows/macOS/Linux.
+ */
 function getIconPath(): string {
 	const assetsDir = getAssetsDir();
 
-	if (process.platform === 'win32') {
-		return path.join(assetsDir, 'icon.ico');
-	}
-
-	if (process.platform === 'darwin') {
-		return path.join(assetsDir, 'icon.icns');
-	}
+	if (process.platform === 'win32') return path.join(assetsDir, 'icon.ico');
+	if (process.platform === 'darwin') return path.join(assetsDir, 'icon.icns');
 
 	return path.join(assetsDir, 'icon.png'); // linux
 }
 
+/**
+ * Minimal "setup state" query.
+ *
+ * The UI uses it to know whether at least one account exists (onboarding gating).
+ */
 async function getSetupState(): Promise<{ hasAccounts: boolean; hasCompletedSetup: boolean }> {
 	const accountsCount = await prisma.accountConfig.count();
 
@@ -74,7 +106,7 @@ async function getSetupState(): Promise<{ hasAccounts: boolean; hasCompletedSetu
  * - In production, CSP should be strict.
  * - In development, CSP must allow the Angular dev server + websocket (live reload).
  *
- * Note:
+ * Notes:
  * - CSP is injected via response headers. It works even when loading http://localhost:4200.
  * - Google Fonts are handled explicitly (style-src-elem + font-src).
  */
@@ -108,7 +140,6 @@ function registerContentSecurityPolicy(): void {
 
 	const cspDev = [
 		`default-src 'self' ${devOrigin}`,
-
 		`script-src 'self' ${devOrigin}${allowUnsafeEvalInDev ? " 'unsafe-eval'" : ''}`,
 
 		// IMPORTANT:
@@ -188,7 +219,7 @@ function createWindow(): void {
 		return { action: 'deny' };
 	});
 
-	// DEV only (current setup)
+	// DEV only (current setup).
 	// In production, you will likely load a local file (Angular build output).
 	mainWindow.loadURL(DEV_SERVER_URL);
 
@@ -197,12 +228,13 @@ function createWindow(): void {
 	});
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
 	// Register CSP before creating any BrowserWindow.
 	registerContentSecurityPolicy();
 
 	/**
 	 * Minimal health-check used to validate IPC wiring from the renderer.
+	 *
 	 * "core" is the version string from the shared core package.
 	 */
 	ipcMain.handle('ping', async () => {
@@ -212,51 +244,36 @@ app.whenReady().then(() => {
 		};
 	});
 
-	ipcMain.handle(
-		'import:runNow',
-		async (
-			_event,
-			input?: { sinceOverrideIso?: string | null; maxGamesPerAccount?: number | null },
-		) => {
-			if (isImportRunning) {
-				// Idempotent behavior: do not start a second import.
-				return { ok: true, message: 'Import already running' };
-			}
-
-			isImportRunning = true;
-
-			try {
-				const sinceOverride = input?.sinceOverrideIso
-					? new Date(input.sinceOverrideIso)
-					: null;
-
-				const maxGamesPerAccount =
-					typeof input?.maxGamesPerAccount === 'number' ? input.maxGamesPerAccount : null;
-
-				console.log('[IPC] import:runNow start', input);
-
-				await importAllAccounts({
-					sinceOverride,
-					maxGamesPerAccount,
-				});
-
-				console.log('[IPC] import:runNow end');
-
-				return { ok: true, message: 'Import completed' };
-			} finally {
-				isImportRunning = false;
-			}
-		},
-	);
-
-	// Domain IPC registrations
+	/**
+	 * Domain IPC registrations.
+	 * Keep handlers in dedicated modules to avoid growing `main.ts`.
+	 */
 	registerAccountsIpc();
 	registerLogsIpc();
 	registerExplorerIpc();
 	registerGamesIpc();
 	registerSystemIpc();
+	registerImportIpc({ emitImportEvent });
 
 	createWindow();
+
+	// Ensure DB is reachable once (creates a first Prisma round-trip).
+	try {
+		await getSetupState();
+	} catch (err) {
+		console.error('[DB] Initial DB health-check failed', err);
+	}
+
+	// Cleanup any "running" import runs left unfinished from a previous session.
+	// This ensures the DB doesn't keep stale "RUNNING" markers if the app crashed/closed mid-import.
+	try {
+		const cleaned = await cleanupAbortedImportRuns();
+		if (cleaned > 0) {
+			console.log('[IMPORT] Cleaned up aborted import runs:', cleaned);
+		}
+	} catch (err) {
+		console.error('[IMPORT] Failed to cleanup aborted import runs', err);
+	}
 
 	app.on('activate', () => {
 		// macOS convention: re-create a window when the dock icon is clicked.

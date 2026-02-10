@@ -1,7 +1,7 @@
 /**
  * IPC API surface exposed to the UI (via preload).
  *
- * This file is the *public contract* between:
+ * This file is the **public contract** between:
  * - Electron main/preload (IPC handlers + contextBridge)
  * - Angular UI (typed `window.electron` API)
  *
@@ -9,6 +9,10 @@
  * - Keep this surface small and stable.
  * - Prefer additive changes (new fields / new methods) over breaking changes.
  * - Re-export domain types for convenience in UI/electron layers.
+ *
+ * Notes:
+ * - This module intentionally contains both type re-exports and the ElectronApi shape.
+ * - Imports below are **type-only** to avoid pulling runtime code into the bundle.
  */
 
 // -----------------------------------------------------------------------------
@@ -19,7 +23,16 @@
 // to import shared IPC contracts from a single entry-point.
 //
 
-export type { ImportRunNowInput, ImportRunNowResult, ImportApi } from './import/types';
+export type {
+	ImportStartInput,
+	ImportStartResult,
+	ImportRunStatus,
+	ImportEventBase,
+	ImportEvent,
+	ImportEventListener,
+	ImportEventSubscriptionId,
+	ImportApi,
+} from './import/types';
 
 export type {
 	ImportLogLevel,
@@ -65,10 +78,17 @@ import type { AccountsApi } from './accounts/types';
 
 /**
  * Small system-level IPC helpers that are not tied to a single domain.
- * Example: opening a URL in the user's default browser.
+ *
+ * Keep this focused: anything that grows into a real domain should get its own
+ * `registerXxxIpc()` module + dedicated IPC types.
  */
 export interface SystemApi {
-	/** Open a URL using the OS default handler (browser, mail client, etc.). */
+	/**
+	 * Open a URL using the OS default handler (browser, mail client, etc.).
+	 *
+	 * Security:
+	 * - The main process should validate the URL (scheme, etc.) before opening it.
+	 */
 	openExternal: (url: string) => Promise<{ ok: true }>;
 }
 
@@ -82,11 +102,17 @@ export interface SystemApi {
 export interface ElectronApi {
 	/**
 	 * Simple health-check used to validate IPC wiring.
+	 *
 	 * "core" is the version string of the shared core package.
 	 */
 	ping: () => Promise<{ message: string; core: string }>;
 
-	/** Import orchestration APIs (run now, etc.). */
+	/**
+	 * Import orchestration APIs (start + event streaming).
+	 *
+	 * Note:
+	 * - Import runs are serialized by the main process (no concurrent batches).
+	 */
 	import: ImportApi;
 
 	/** Import logs APIs (list, details, facets). */

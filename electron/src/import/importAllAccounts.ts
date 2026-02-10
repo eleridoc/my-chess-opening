@@ -4,6 +4,7 @@ import {
 	ExternalSite as PrismaExternalSite,
 	GameSpeed as PrismaGameSpeed,
 	PlayerColor as PrismaPlayerColor,
+	Prisma,
 } from '@prisma/client';
 
 import {
@@ -13,9 +14,21 @@ import {
 	ExternalSite as CoreExternalSite,
 	type ImportOptions,
 	type ImportedGameRaw,
+	type ImportEvent,
+	type ImportRunStatus,
 } from 'my-chess-opening-core';
 
 import { createHash } from 'node:crypto';
+
+/**
+ * How often we persist progress + emit UI progress updates during per-account processing.
+ * This reduces DB writes and UI chatter while still providing a smooth progress signal.
+ */
+const PROGRESS_COMMIT_EVERY = 25;
+
+// -----------------------------------------------------------------------------
+// Small helpers
+// -----------------------------------------------------------------------------
 
 function sha256Hex(input: string): string {
 	return createHash('sha256').update(input).digest('hex');
@@ -30,6 +43,7 @@ function mapSpeed(speed: ImportedGameRaw['speed']): PrismaGameSpeed {
 		case 'rapid':
 			return PrismaGameSpeed.RAPID;
 		default:
+			// Defensive fallback: treat unknown values as classical.
 			return PrismaGameSpeed.CLASSICAL;
 	}
 }
@@ -38,10 +52,91 @@ function mapColor(color: 'white' | 'black'): PrismaPlayerColor {
 	return color === 'white' ? PrismaPlayerColor.WHITE : PrismaPlayerColor.BLACK;
 }
 
+/**
+ * Map Prisma enum -> Core enum for orchestrator calls and UI events.
+ */
 function mapSite(site: PrismaExternalSite): CoreExternalSite {
 	return site === PrismaExternalSite.CHESSCOM
 		? CoreExternalSite.CHESSCOM
 		: CoreExternalSite.LICHESS;
+}
+
+/**
+ * Map Core enum -> Prisma enum for DB persistence.
+ * This avoids unsafe casts (`as unknown as`) at write-time.
+ */
+function mapPrismaSite(site: CoreExternalSite): PrismaExternalSite {
+	return site === CoreExternalSite.CHESSCOM
+		? PrismaExternalSite.CHESSCOM
+		: PrismaExternalSite.LICHESS;
+}
+
+export type ImportBatchSummary = {
+	status: ImportRunStatus;
+	totalGamesFound: number;
+	totalInserted: number;
+	totalSkipped: number;
+	totalFailed: number;
+};
+
+function mapRunStatus(status: ImportStatus): ImportRunStatus {
+	switch (status) {
+		case ImportStatus.SUCCESS:
+			return 'SUCCESS';
+		case ImportStatus.FAILED:
+			return 'FAILED';
+		default:
+			return 'PARTIAL';
+	}
+}
+
+/**
+ * Marks "running" ImportRuns left in an unfinished state as aborted.
+ *
+ * This typically happens when the app is closed while an import is running.
+ * We use ImportStatus.PARTIAL as a "RUNNING" surrogate in our minimal enum set.
+ */
+export async function cleanupAbortedImportRuns(): Promise<number> {
+	const abortedRuns = await prisma.importRun.findMany({
+		where: {
+			status: ImportStatus.PARTIAL,
+			finishedAt: null,
+		},
+		select: {
+			id: true,
+			accountConfigId: true,
+		},
+	});
+
+	if (abortedRuns.length === 0) {
+		return 0;
+	}
+
+	const now = new Date();
+	const message = 'Aborted (app closed)';
+
+	// Update runs in bulk.
+	await prisma.importRun.updateMany({
+		where: { id: { in: abortedRuns.map((r) => r.id) } },
+		data: {
+			status: ImportStatus.FAILED,
+			finishedAt: now,
+			errorMessage: message,
+		},
+	});
+
+	// Add one log line per run to preserve per-account traceability.
+	for (const run of abortedRuns) {
+		await logImport({
+			importRunId: run.id,
+			level: 'WARN',
+			scope: 'RUN',
+			message,
+		});
+	}
+
+	console.warn('[IMPORT] Aborted import runs cleaned up:', abortedRuns.length);
+	return abortedRuns.length;
 }
 
 async function logImport(params: {
@@ -54,8 +149,9 @@ async function logImport(params: {
 	externalId?: string;
 	url?: string;
 	data?: unknown;
-}) {
+}): Promise<void> {
 	const { data, level, ...rest } = params;
+
 	await prisma.importLogEntry.create({
 		data: {
 			...rest,
@@ -77,7 +173,6 @@ async function logImport(params: {
 async function persistGame(params: {
 	accountConfigId: string;
 	game: ImportedGameRaw;
-	importRunId: string;
 }): Promise<{ inserted: boolean }> {
 	const { accountConfigId, game } = params;
 
@@ -95,15 +190,13 @@ async function persistGame(params: {
 
 	const pgnHash = sha256Hex(game.pgn);
 
-	console.log('[IMPORT] inserting game', game.externalId);
-
 	try {
 		await prisma.$transaction(async (tx) => {
 			const created = await tx.game.create({
 				data: {
 					accountConfigId,
 
-					site: game.site as unknown as PrismaExternalSite,
+					site: mapPrismaSite(game.site),
 					externalId: game.externalId,
 					siteUrl: game.siteUrl ?? null,
 
@@ -145,7 +238,7 @@ async function persistGame(params: {
 				select: { id: true },
 			});
 
-			// Players (2 rows)
+			// Players (2 rows).
 			await tx.gamePlayer.createMany({
 				data: [
 					{
@@ -165,7 +258,7 @@ async function persistGame(params: {
 				],
 			});
 
-			// Moves (N rows) - only if includeMoves was enabled
+			// Moves (N rows) - only if includeMoves was enabled.
 			if (game.moves?.length) {
 				await tx.gameMove.createMany({
 					data: game.moves.map((m) => ({
@@ -188,42 +281,106 @@ async function persistGame(params: {
 			}
 		});
 
-		console.log('[IMPORT] persist inserted', game.site, game.externalId);
 		return { inserted: true };
 	} catch (e: any) {
-		// Prisma unique constraint error code (P2002) => duplicate
+		// Prisma unique constraint error code (P2002) => duplicate.
 		if (e?.code === 'P2002') {
-			console.log('[IMPORT] persist skipped (duplicate)', game.site, game.externalId);
 			return { inserted: false };
 		}
-		console.log('[IMPORT] persist failed', game.site, game.externalId, e?.message ?? e);
 		throw e;
 	}
 }
 
+// -----------------------------------------------------------------------------
+// Import batch runner
+// -----------------------------------------------------------------------------
+
+/**
+ * A "payload" is an ImportEvent without base fields.
+ *
+ * IMPORTANT:
+ * `ImportEvent` is a discriminated union. Using `Omit<ImportEvent, ...>` directly would
+ * collapse the union and drop fields that are not common to all variants (e.g. `accountId`).
+ *
+ * The conditional type below distributes over the union, keeping the per-variant fields intact.
+ */
+type WithoutBase<T> = T extends unknown ? Omit<T, 'batchId' | 'emittedAtIso'> : never;
+type ImportEventPayload = WithoutBase<ImportEvent>;
+
 export async function importAllAccounts(params?: {
 	sinceOverride?: Date | null;
 	maxGamesPerAccount?: number | null;
-}) {
-	const maxGamesPerAccount = params?.maxGamesPerAccount ?? null;
 
-	console.log('[IMPORT] maxGamesPerAccount:', maxGamesPerAccount);
+	/**
+	 * If provided, import only these enabled accounts.
+	 * When null/undefined, imports all enabled accounts.
+	 */
+	accountIds?: string[] | null;
+
+	/**
+	 * Required when `onEvent` is provided.
+	 * Used to correlate all streamed events on the UI side.
+	 */
+	batchId?: string | null;
+
+	/**
+	 * Optional event callback for streaming progress to the UI.
+	 * This should be wired by the Electron main process (webContents.send).
+	 */
+	onEvent?: (event: ImportEvent) => void;
+}): Promise<ImportBatchSummary> {
+	const maxGamesPerAccount = params?.maxGamesPerAccount ?? null;
 	const isLimitedRun = typeof maxGamesPerAccount === 'number' && maxGamesPerAccount > 0;
 
 	const sinceOverride = params?.sinceOverride ?? null;
+	const accountIds = params?.accountIds ?? null;
+
+	const batchIdRaw = params?.batchId ?? null;
+	const batchId = typeof batchIdRaw === 'string' && batchIdRaw.length > 0 ? batchIdRaw : null;
+
+	const onEvent = params?.onEvent ?? null;
+	const shouldEmit = Boolean(onEvent && batchId);
+
+	function nowIso(): string {
+		return new Date().toISOString();
+	}
+
+	/**
+	 * Emit an event payload (without base fields).
+	 * We attach `{ batchId, emittedAtIso }` here to keep call sites concise and consistent.
+	 */
+	function emit(payload: ImportEventPayload): void {
+		if (!shouldEmit || !onEvent || !batchId) return;
+
+		onEvent({
+			...payload,
+			batchId,
+			emittedAtIso: nowIso(),
+		} as ImportEvent);
+	}
+
+	const whereAccount: Prisma.AccountConfigWhereInput = { isEnabled: true };
+	if (Array.isArray(accountIds) && accountIds.length > 0) {
+		whereAccount.id = { in: accountIds };
+	}
 
 	const accounts = await prisma.accountConfig.findMany({
-		where: { isEnabled: true },
+		where: whereAccount,
 		orderBy: [{ site: 'asc' }, { username: 'asc' }],
 	});
 
-	// Register importers from core
+	// Register importers from core (pure orchestrator: no DB side effects).
 	const importService = new ImportOrchestrator([new ChessComImporter(), new LichessImporter()]);
+
+	let totalGamesFound = 0;
+	let totalInserted = 0;
+	let totalSkipped = 0;
+	let totalFailed = 0;
 
 	for (const account of accounts) {
 		const since = sinceOverride ?? account.lastSyncAt ?? null;
 
-		// Create per-account ImportRun
+		// Create per-account ImportRun.
 		const run = await prisma.importRun.create({
 			data: {
 				accountConfigId: account.id,
@@ -235,13 +392,22 @@ export async function importAllAccounts(params?: {
 			},
 		});
 
+		emit({
+			type: 'accountStarted',
+			accountId: account.id,
+			site: mapSite(account.site),
+			username: account.username,
+		});
+
 		await logImport({
 			importRunId: run.id,
 			level: 'INFO',
 			scope: 'RUN',
 			site: account.site,
 			username: account.username,
-			message: `Import started (since=${since ? since.toISOString() : 'FULL'}${isLimitedRun ? `, maxGames=${maxGamesPerAccount}` : ''})`,
+			message: `Import started (since=${since ? since.toISOString() : 'FULL'}${
+				isLimitedRun ? `, maxGames=${maxGamesPerAccount}` : ''
+			})`,
 		});
 
 		let gamesFound = 0;
@@ -264,11 +430,26 @@ export async function importAllAccounts(params?: {
 			const games = await importService.importGames(mapSite(account.site), options);
 			gamesFound = games.length;
 
-			console.log('[IMPORT] fetched games:', games.length);
-
 			await prisma.importRun.update({
 				where: { id: run.id },
 				data: { gamesFound },
+			});
+
+			emit({
+				type: 'accountNewGamesFound',
+				accountId: account.id,
+				gamesFound,
+			});
+
+			// Initial progress snapshot (0/X).
+			emit({
+				type: 'accountProgress',
+				accountId: account.id,
+				processed: 0,
+				gamesFound,
+				inserted: 0,
+				skipped: 0,
+				failed: 0,
 			});
 
 			for (const g of games) {
@@ -276,7 +457,6 @@ export async function importAllAccounts(params?: {
 					const { inserted } = await persistGame({
 						accountConfigId: account.id,
 						game: g,
-						importRunId: run.id,
 					});
 
 					if (inserted) {
@@ -287,20 +467,10 @@ export async function importAllAccounts(params?: {
 					} else {
 						gamesSkipped += 1;
 					}
-
-					// Batch updates to avoid writing too often
-					if ((gamesInserted + gamesSkipped + gamesFailed) % 25 === 0) {
-						await prisma.importRun.update({
-							where: { id: run.id },
-							data: {
-								gamesInserted,
-								gamesSkipped,
-								gamesFailed,
-							},
-						});
-					}
 				} catch (err: any) {
 					gamesFailed += 1;
+
+					const errorMessage = String(err?.message ?? err);
 
 					await logImport({
 						importRunId: run.id,
@@ -309,15 +479,44 @@ export async function importAllAccounts(params?: {
 						site: account.site,
 						username: account.username,
 						externalId: g.externalId,
-						message: `Failed to persist game`,
+						message: 'Failed to persist game',
+						data: { error: errorMessage },
+					});
+
+					emit({
+						type: 'accountError',
+						accountId: account.id,
+						externalId: g.externalId ?? null,
+						message: errorMessage,
+					});
+				}
+
+				const processed = gamesInserted + gamesSkipped + gamesFailed;
+
+				// Throttle DB writes + UI updates.
+				if (processed > 0 && processed % PROGRESS_COMMIT_EVERY === 0) {
+					await prisma.importRun.update({
+						where: { id: run.id },
 						data: {
-							error: String(err?.message ?? err),
+							gamesInserted,
+							gamesSkipped,
+							gamesFailed,
 						},
+					});
+
+					emit({
+						type: 'accountProgress',
+						accountId: account.id,
+						processed,
+						gamesFound,
+						inserted: gamesInserted,
+						skipped: gamesSkipped,
+						failed: gamesFailed,
 					});
 				}
 			}
 
-			// Final counters
+			// Final counters.
 			await prisma.importRun.update({
 				where: { id: run.id },
 				data: {
@@ -327,7 +526,18 @@ export async function importAllAccounts(params?: {
 				},
 			});
 
-			// Decide final status
+			// Final progress snapshot (X/X).
+			emit({
+				type: 'accountProgress',
+				accountId: account.id,
+				processed: gamesInserted + gamesSkipped + gamesFailed,
+				gamesFound,
+				inserted: gamesInserted,
+				skipped: gamesSkipped,
+				failed: gamesFailed,
+			});
+
+			// Decide final status.
 			const status =
 				gamesFailed === 0
 					? ImportStatus.SUCCESS
@@ -335,7 +545,8 @@ export async function importAllAccounts(params?: {
 						? ImportStatus.PARTIAL
 						: ImportStatus.FAILED;
 
-			// Update lastSyncAt only on full success (avoid skipping games on next run)
+			// Update lastSyncAt only on full success (avoid skipping games on next run).
+			// Also, do not update when running with a debug cap (limited run).
 			if (!isLimitedRun && status === ImportStatus.SUCCESS && maxPlayedAtInserted) {
 				await prisma.accountConfig.update({
 					where: { id: account.id },
@@ -343,11 +554,13 @@ export async function importAllAccounts(params?: {
 				});
 			}
 
+			const finishedAtIso = nowIso();
+
 			await prisma.importRun.update({
 				where: { id: run.id },
 				data: {
 					status,
-					finishedAt: new Date(),
+					finishedAt: new Date(finishedAtIso),
 					errorMessage: gamesFailed ? `Some games failed (${gamesFailed}).` : null,
 				},
 			});
@@ -360,16 +573,26 @@ export async function importAllAccounts(params?: {
 				username: account.username,
 				message: `Import finished: found=${gamesFound} inserted=${gamesInserted} skipped=${gamesSkipped} failed=${gamesFailed} status=${status}`,
 			});
+
+			emit({
+				type: 'accountFinished',
+				accountId: account.id,
+				status: mapRunStatus(status),
+				gamesFound,
+				inserted: gamesInserted,
+				skipped: gamesSkipped,
+				failed: gamesFailed,
+				finishedAtIso,
+			});
 		} catch (err: any) {
-			// Import crashed at a higher level (network/parsing in bulk, etc.)
-			gamesFailed = Math.max(gamesFailed, 1);
+			const errorMessage = String(err?.message ?? err);
 
 			await prisma.importRun.update({
 				where: { id: run.id },
 				data: {
 					status: ImportStatus.FAILED,
 					finishedAt: new Date(),
-					errorMessage: String(err?.message ?? err),
+					errorMessage,
 					gamesFound,
 					gamesInserted,
 					gamesSkipped,
@@ -383,11 +606,44 @@ export async function importAllAccounts(params?: {
 				scope: 'RUN',
 				site: account.site,
 				username: account.username,
-				message: `Import failed: ${String(err?.message ?? err)}`,
+				message: `Import failed: ${errorMessage}`,
 				data: { error: String(err?.stack ?? err) },
 			});
+
+			emit({
+				type: 'accountError',
+				accountId: account.id,
+				externalId: null,
+				message: errorMessage,
+			});
+
+			emit({
+				type: 'accountFinished',
+				accountId: account.id,
+				status: 'FAILED',
+				gamesFound,
+				inserted: gamesInserted,
+				skipped: gamesSkipped,
+				failed: gamesFailed,
+				finishedAtIso: nowIso(),
+			});
 		}
+
+		// Update batch totals from this account run.
+		totalGamesFound += gamesFound;
+		totalInserted += gamesInserted;
+		totalSkipped += gamesSkipped;
+		totalFailed += gamesFailed;
 	}
 
-	console.log('[IMPORT] all accounts finished');
+	const status: ImportRunStatus =
+		totalFailed === 0 ? 'SUCCESS' : totalInserted > 0 ? 'PARTIAL' : 'FAILED';
+
+	return {
+		status,
+		totalGamesFound,
+		totalInserted,
+		totalSkipped,
+		totalFailed,
+	};
 }
