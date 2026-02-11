@@ -12,6 +12,13 @@ export type ImportAccountErrorVm = {
 	message: string;
 };
 
+/**
+ * UI-only phase:
+ * - FETCHING: downloading/parsing games (we don't know gamesFound yet)
+ * - PROCESSING: persisting games one-by-one (progress is available)
+ */
+export type ImportAccountPhaseVm = 'IDLE' | 'FETCHING' | 'PROCESSING';
+
 export type ImportAccountStateVm = {
 	accountId: string;
 
@@ -19,9 +26,13 @@ export type ImportAccountStateVm = {
 	site: 'CHESSCOM' | 'LICHESS' | null;
 	username: string | null;
 
+	// UI-only phase used to show "downloading..." spinners before gamesFound is known.
+	phase: ImportAccountPhaseVm;
+
 	// Progress
-	gamesFound: number;
-	processed: number;
+	// When null: still fetching/downloading, gamesFound is not known yet.
+	gamesFound: number | null;
+	processed: number | null;
 
 	inserted: number;
 	skipped: number;
@@ -147,7 +158,7 @@ export class ImportStateService {
 
 	private handleEvent(event: ImportEvent): void {
 		// TEMP (dev): debug IPC event stream
-		//console.log('[ImportState] event', event);
+		// console.log('[ImportState] event', event);
 
 		// If we already have a batchId and receive a different batch, ignore noise.
 		// In our app, only one import should run at a time.
@@ -175,20 +186,38 @@ export class ImportStateService {
 			}
 
 			case 'accountStarted': {
+				// At this stage, the importer is downloading/parsing games and we don't know gamesFound yet.
 				this.upsertAccount(event.accountId, (prev) => ({
 					...prev,
 					accountId: event.accountId,
 					site: event.site,
 					username: event.username,
+
 					status: 'RUNNING',
+					phase: 'FETCHING',
+
+					// Unknown until accountNewGamesFound arrives.
+					gamesFound: null,
+					processed: null,
+
+					// Reset counters for this run.
+					inserted: 0,
+					skipped: 0,
+					failed: 0,
+
+					finishedAtIso: null,
+					errors: [],
 				}));
 				return;
 			}
 
 			case 'accountNewGamesFound': {
+				// We now know the total number of games to process; switch to PROCESSING.
 				this.upsertAccount(event.accountId, (prev) => ({
 					...prev,
+					phase: 'PROCESSING',
 					gamesFound: event.gamesFound,
+					processed: 0,
 				}));
 				return;
 			}
@@ -196,6 +225,7 @@ export class ImportStateService {
 			case 'accountProgress': {
 				this.upsertAccount(event.accountId, (prev) => ({
 					...prev,
+					phase: 'PROCESSING',
 					processed: event.processed,
 					gamesFound: event.gamesFound,
 					inserted: event.inserted,
@@ -268,11 +298,17 @@ export class ImportStateService {
 			accountId,
 			site: null,
 			username: null,
-			gamesFound: 0,
-			processed: 0,
+
+			phase: 'IDLE',
+
+			// Unknown until we receive accountNewGamesFound.
+			gamesFound: null,
+			processed: null,
+
 			inserted: 0,
 			skipped: 0,
 			failed: 0,
+
 			status: 'RUNNING',
 			finishedAtIso: null,
 			errors: [],

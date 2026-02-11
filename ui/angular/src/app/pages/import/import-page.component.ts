@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
@@ -12,7 +13,7 @@ import type { ExternalSite } from 'my-chess-opening-core';
 
 import { AccountsStateService } from '../../services/accounts-state.service';
 import { ChessAccountsService } from '../../services/chess-accounts.service';
-import { ImportStateService } from '../../services/import-state.service';
+import { ImportStateService, type ImportAccountPhaseVm } from '../../services/import-state.service';
 import { NotificationService } from '../../shared/notifications/notification.service';
 
 import { IsoDateTimePipe } from '../../shared/dates/pipes';
@@ -59,6 +60,7 @@ type TableRowVm = AccountRow & {
 	failed: number | null;
 	status: string | null; // RUNNING / SUCCESS / FAILED / PARTIAL etc.
 	errors: ImportErrorVm[];
+	phase: ImportAccountPhaseVm | null;
 };
 
 const BASE_COLUMNS = ['site', 'username', 'lastSyncAt', 'actions'] as const;
@@ -84,6 +86,7 @@ const IMPORT_COLUMNS = [
 		MatTableModule,
 		MatTooltipModule,
 		MatProgressBarModule,
+		MatProgressSpinnerModule,
 		SectionLoaderComponent,
 		IsoDateTimePipe,
 	],
@@ -171,6 +174,7 @@ export class ImportPageComponent implements OnInit {
 
 				isWaiting,
 
+				phase: st ? st.phase : null,
 				gamesFound: st ? st.gamesFound : null,
 				processed: st ? st.processed : null,
 				inserted: st ? st.inserted : null,

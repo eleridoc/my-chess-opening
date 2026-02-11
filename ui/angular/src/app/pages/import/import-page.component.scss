@@ -242,3 +242,14 @@
 .import__row--disabled {
 	opacity: 0.85;
 }
+
+// Small inline spinner blocks (per-row "Downloading..." and global "RUNNING" state).
+.import__running-spinner {
+	margin: 0 8px;
+}
+
+.import__row-fetching {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}

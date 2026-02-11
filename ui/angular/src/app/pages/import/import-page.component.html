@@ -46,6 +46,15 @@
 					-->
 					<span class="import__running">
 						<span class="app-pill">RUNNING</span>
+
+						<!-- Spinner: visible for the whole batch duration -->
+						<mat-progress-spinner
+							class="import__running-spinner"
+							diameter="14"
+							mode="indeterminate"
+							aria-label="Import in progress"
+						></mat-progress-spinner>
+
 						<span class="import__running-text">Import in progress…</span>
 					</span>
 				}
@@ -90,7 +99,7 @@
 							<div class="import__totals-title">Batch summary</div>
 							<div class="import__totals-grid">
 								<div class="import__totals-item">
-									<div class="import__totals-k">New games</div>
+									<div class="import__totals-k">Found</div>
 									<div class="import__totals-v">{{ t.totalGamesFound }}</div>
 								</div>
 								<div class="import__totals-item">
@@ -200,12 +209,21 @@
 
 								<!-- newGames -->
 								<ng-container matColumnDef="newGames">
-									<th mat-header-cell *matHeaderCellDef>New</th>
+									<th mat-header-cell *matHeaderCellDef>Found</th>
 									<td mat-cell *matCellDef="let r">
 										@if (r.isWaiting) {
 											<span class="import__muted">Waiting…</span>
 										} @else if (r.gamesFound != null) {
 											{{ r.gamesFound }}
+										} @else if (r.phase === 'FETCHING') {
+											<div class="import__row-fetching">
+												<mat-progress-spinner
+													diameter="14"
+													mode="indeterminate"
+													aria-label="Fetching games"
+												></mat-progress-spinner>
+												<span class="import__muted">Downloading…</span>
+											</div>
 										} @else {
 											<span class="import__muted">—</span>
 										}
@@ -227,6 +245,15 @@
 												[value]="r.gamesFound > 0 ? (r.processed / r.gamesFound) * 100 : 0"
 												aria-label="Import progress"
 											></mat-progress-bar>
+										} @else if (r.phase === 'FETCHING') {
+											<div class="import__row-fetching">
+												<mat-progress-spinner
+													diameter="14"
+													mode="indeterminate"
+													aria-label="Downloading games"
+												></mat-progress-spinner>
+												<span class="import__muted">Downloading…</span>
+											</div>
 										} @else {
 											<span class="import__muted">—</span>
 										}
