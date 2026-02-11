@@ -61,26 +61,35 @@ export function registerImportIpc(opts: { emitImportEvent: EmitImportEvent }): v
 				typeof input?.maxGamesPerAccount === 'number' ? input.maxGamesPerAccount : null;
 
 			/**
-			 * DEV safety: prevent accidental unbounded imports when testing IPC manually.
-			 * To disable: set MCO_IMPORT_DEV_MAX_GAMES_PER_ACCOUNT=0
+			 * DEV cap (opt-in):
+			 * - By default, dev runs are UNBOUNDED (no cap).
+			 * - Enable a cap only when explicitly requested:
+			 *   - via ImportStartInput.maxGamesPerAccount (renderer), OR
+			 *   - via env var MCO_IMPORT_DEV_MAX_GAMES_PER_ACCOUNT=<N>
+			 *
+			 * Notes:
+			 * - 0 / empty / invalid values disable the cap.
 			 */
 			if (!app.isPackaged && maxGamesPerAccount == null) {
 				const raw = process.env['MCO_IMPORT_DEV_MAX_GAMES_PER_ACCOUNT'];
-				const devCap = raw != null ? Number(raw) : 30;
 
-				if (Number.isFinite(devCap) && devCap > 0) {
-					console.warn('[IPC] import:start dev safety cap applied', { devCap });
-					maxGamesPerAccount = devCap;
+				if (raw != null && raw.trim().length > 0) {
+					const devCap = Number(raw);
+
+					if (Number.isFinite(devCap) && devCap > 0) {
+						console.warn('[IPC] import:start dev cap enabled via env', { devCap });
+						maxGamesPerAccount = devCap;
+					}
 				}
 			}
 
 			const accountIds = input?.accountIds ?? null;
-			const nowIso = new Date().toISOString();
+			const startedAtIso = new Date().toISOString();
 
 			emitImportEvent({
 				type: 'runStarted',
 				batchId,
-				emittedAtIso: nowIso,
+				emittedAtIso: startedAtIso,
 				sinceOverrideIso,
 				maxGamesPerAccount,
 				accountIds,
@@ -106,6 +115,7 @@ export function registerImportIpc(opts: { emitImportEvent: EmitImportEvent }): v
 						maxGamesPerAccount,
 						accountIds,
 						batchId,
+						batchStartedAtIso: startedAtIso, // <-- NEW
 						onEvent: emitImportEvent,
 					});
 

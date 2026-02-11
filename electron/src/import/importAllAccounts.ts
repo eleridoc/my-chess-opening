@@ -324,6 +324,12 @@ export async function importAllAccounts(params?: {
 	batchId?: string | null;
 
 	/**
+	 * When provided, used as the batch "started at" watermark.
+	 * This is typically the timestamp emitted in the `runStarted` event.
+	 */
+	batchStartedAtIso?: string | null;
+
+	/**
 	 * Optional event callback for streaming progress to the UI.
 	 * This should be wired by the Electron main process (webContents.send).
 	 */
@@ -340,6 +346,18 @@ export async function importAllAccounts(params?: {
 
 	const onEvent = params?.onEvent ?? null;
 	const shouldEmit = Boolean(onEvent && batchId);
+
+	const batchStartedAtIso = params?.batchStartedAtIso ?? null;
+
+	/**
+	 * Timestamp used to update lastSyncAt after the batch is fully completed.
+	 * We prefer the "runStarted" timestamp emitted by IPC to keep UI/DB consistent.
+	 */
+	const batchStartedAt = (() => {
+		if (!batchStartedAtIso) return new Date();
+		const d = new Date(batchStartedAtIso);
+		return Number.isFinite(d.getTime()) ? d : new Date();
+	})();
 
 	function nowIso(): string {
 		return new Date().toISOString();
@@ -376,6 +394,16 @@ export async function importAllAccounts(params?: {
 	let totalInserted = 0;
 	let totalSkipped = 0;
 	let totalFailed = 0;
+
+	/**
+	 * lastSyncAt policy:
+	 * - We treat lastSyncAt as a "watermark" timestamp (batch started at).
+	 * - We update it only once, after the whole batch completes.
+	 * - When importing one account: update only that account.
+	 * - When importing all accounts: update all accounts that finished SUCCESS.
+	 * - We never update lastSyncAt for limited runs (debug cap), to avoid skipping games.
+	 */
+	const accountsToUpdateLastSyncAt: string[] = [];
 
 	for (const account of accounts) {
 		const since = sinceOverride ?? account.lastSyncAt ?? null;
@@ -414,8 +442,6 @@ export async function importAllAccounts(params?: {
 		let gamesInserted = 0;
 		let gamesSkipped = 0;
 		let gamesFailed = 0;
-
-		let maxPlayedAtInserted: Date | null = null;
 
 		try {
 			const options: ImportOptions = {
@@ -461,9 +487,6 @@ export async function importAllAccounts(params?: {
 
 					if (inserted) {
 						gamesInserted += 1;
-						if (!maxPlayedAtInserted || g.playedAt > maxPlayedAtInserted) {
-							maxPlayedAtInserted = g.playedAt;
-						}
 					} else {
 						gamesSkipped += 1;
 					}
@@ -545,13 +568,10 @@ export async function importAllAccounts(params?: {
 						? ImportStatus.PARTIAL
 						: ImportStatus.FAILED;
 
-			// Update lastSyncAt only on full success (avoid skipping games on next run).
-			// Also, do not update when running with a debug cap (limited run).
-			if (!isLimitedRun && status === ImportStatus.SUCCESS && maxPlayedAtInserted) {
-				await prisma.accountConfig.update({
-					where: { id: account.id },
-					data: { lastSyncAt: maxPlayedAtInserted },
-				});
+			// Defer lastSyncAt update to batch completion (watermark = batchStartedAt).
+			// We only update accounts that finished SUCCESS, to avoid skipping games after failures.
+			if (!isLimitedRun && status === ImportStatus.SUCCESS) {
+				accountsToUpdateLastSyncAt.push(account.id);
 			}
 
 			const finishedAtIso = nowIso();
@@ -634,6 +654,35 @@ export async function importAllAccounts(params?: {
 		totalInserted += gamesInserted;
 		totalSkipped += gamesSkipped;
 		totalFailed += gamesFailed;
+	}
+
+	// Apply the batch-level watermark update once everything is finished.
+	if (!isLimitedRun && accountsToUpdateLastSyncAt.length > 0) {
+		await prisma.accountConfig.updateMany({
+			where: { id: { in: accountsToUpdateLastSyncAt } },
+			data: { lastSyncAt: batchStartedAt },
+		});
+
+		await logImport({
+			importRunId:
+				(
+					await prisma.importRun.findFirst({
+						where: { accountConfigId: { in: accountsToUpdateLastSyncAt } },
+						select: { id: true },
+						orderBy: { createdAt: 'desc' },
+					})
+				)?.id ?? '',
+			level: 'INFO',
+			scope: 'BATCH',
+			message: `lastSyncAt updated after batch finished (watermark=${batchStartedAt.toISOString()}, updatedAccounts=${accountsToUpdateLastSyncAt.length})`,
+		}).catch(() => {
+			// Best-effort logging only; do not fail the whole import summary for this.
+		});
+
+		console.log('[IMPORT] lastSyncAt updated after batch finished', {
+			batchStartedAtIso: batchStartedAt.toISOString(),
+			updatedAccounts: accountsToUpdateLastSyncAt.length,
+		});
 	}
 
 	const status: ImportRunStatus =
