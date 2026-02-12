@@ -60,6 +60,43 @@
 				}
 			</div>
 
+			<mat-expansion-panel
+				class="import__rules"
+				[expanded]="importRulesExpanded()"
+				(expandedChange)="setImportRulesExpanded($event)"
+			>
+				<mat-expansion-panel-header>
+					<mat-panel-title>
+						<span class="import__rules-title">
+							<mat-icon class="import__rules-icon" aria-hidden="true">info</mat-icon>
+							<span>What gets imported</span>
+						</span>
+					</mat-panel-title>
+
+					<mat-panel-description> Rated · Standard · Bullet/Blitz/Rapid </mat-panel-description>
+				</mat-expansion-panel-header>
+
+				<div class="import__rules-body">
+					<p>
+						To keep your database clean and focused, the importer currently fetches a curated subset
+						of games:
+					</p>
+
+					<ul class="import__rules-list">
+						<li><strong>Rated</strong> games only (competitive).</li>
+						<li><strong>Standard chess</strong> only (no Chess960 or other variants).</li>
+						<li>
+							Time controls: <strong>bullet</strong>, <strong>blitz</strong>,
+							<strong>rapid</strong>.
+						</li>
+					</ul>
+
+					<p class="import__muted">
+						Friendly/casual games, bot games, and special variants are not imported.
+					</p>
+				</div>
+			</mat-expansion-panel>
+
 			@if (importState.batchId(); as bid) {
 				<div class="import__batch">
 					<div class="import__batch-line">

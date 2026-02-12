@@ -8,6 +8,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatExpansionModule } from '@angular/material/expansion';
 
 import type { ExternalSite } from 'my-chess-opening-core';
 
@@ -87,6 +88,7 @@ const IMPORT_COLUMNS = [
 		MatTooltipModule,
 		MatProgressBarModule,
 		MatProgressSpinnerModule,
+		MatExpansionModule,
 		SectionLoaderComponent,
 		IsoDateTimePipe,
 	],
@@ -103,6 +105,12 @@ export class ImportPageComponent implements OnInit {
 	private readonly accountsState = inject(AccountsStateService);
 	private readonly accounts = inject(ChessAccountsService);
 	private readonly notify = inject(NotificationService);
+
+	private readonly IMPORT_RULES_EXPANDED_KEY = 'mco.import.rulesExpanded';
+	/** Whether the "What gets imported" panel is expanded (persisted in localStorage). */
+	readonly importRulesExpanded = signal<boolean>(
+		this.readBool(this.IMPORT_RULES_EXPANDED_KEY, true),
+	);
 
 	/**
 	 * Public (used by template):
@@ -331,9 +339,32 @@ export class ImportPageComponent implements OnInit {
 		}
 	}
 
+	setImportRulesExpanded(expanded: boolean): void {
+		this.importRulesExpanded.set(expanded);
+		this.writeBool(this.IMPORT_RULES_EXPANDED_KEY, expanded);
+	}
+
 	// -------------------------------------------------------------------------
 	// Internal helpers
 	// -------------------------------------------------------------------------
+
+	private readBool(key: string, fallback: boolean): boolean {
+		try {
+			const raw = localStorage.getItem(key);
+			if (raw == null) return fallback;
+			return raw === 'true';
+		} catch {
+			return fallback;
+		}
+	}
+
+	private writeBool(key: string, value: boolean): void {
+		try {
+			localStorage.setItem(key, String(value));
+		} catch {
+			// Ignore storage failures (private mode, blocked storage, etc.)
+		}
+	}
 
 	private async onBatchFinished(): Promise<void> {
 		// Refresh account lastSyncAt + keep global "hasAccounts" state consistent.

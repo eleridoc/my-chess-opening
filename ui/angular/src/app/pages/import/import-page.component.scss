@@ -253,3 +253,46 @@
 	align-items: center;
 	gap: 8px;
 }
+
+.import__rules {
+	margin-top: 12px;
+}
+
+// Header: icon + title
+.import__rules-title {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.import__rules-icon {
+	opacity: 0.9;
+}
+
+// Body typography: compact
+.import__rules-body {
+	font-size: 13px;
+	line-height: 1.35;
+	padding-top: 2px;
+}
+
+.import__rules-body p {
+	margin: 6px 0;
+}
+
+.import__rules-list {
+	margin: 6px 0 6px 18px;
+	display: grid;
+	gap: 4px;
+}
+
+// Reduce Material body padding inside the expansion panel
+.import__rules ::ng-deep .mat-expansion-panel-body {
+	padding: 8px 16px 12px;
+}
+
+// Make the header description slightly smaller / more subtle
+.import__rules ::ng-deep .mat-expansion-panel-header-description {
+	font-size: 12px;
+	opacity: 0.85;
+}
