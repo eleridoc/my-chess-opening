@@ -54,6 +54,26 @@
 			</mat-icon>
 		</button>
 
+		<!-- Help menu -->
+		<button mat-icon-button [matMenuTriggerFor]="helpMenu" aria-label="Help and more">
+			<mat-icon aria-hidden="true">help_outline</mat-icon>
+		</button>
+
+		<mat-menu #helpMenu="matMenu">
+			<button mat-menu-item routerLink="/getting-started">
+				<mat-icon aria-hidden="true">help_clinic</mat-icon>
+				<span>Getting started</span>
+			</button>
+			<button mat-menu-item routerLink="/faq">
+				<mat-icon aria-hidden="true">quiz</mat-icon>
+				<span>FAQ</span>
+			</button>
+			<button mat-menu-item routerLink="/about">
+				<mat-icon aria-hidden="true">info</mat-icon>
+				<span>About</span>
+			</button>
+		</mat-menu>
+
 		<!-- Settings menu -->
 		<button mat-icon-button [matMenuTriggerFor]="settingsMenu" aria-label="Settings and accounts">
 			<mat-icon aria-hidden="true">settings</mat-icon>
@@ -66,35 +86,32 @@
 					<span>Settings</span>
 				</button>
 			}
+		</mat-menu>
 
+		<!-- User menu -->
+		<button mat-icon-button [matMenuTriggerFor]="userMenu" aria-label="Accounts and import">
+			<mat-icon aria-hidden="true">person</mat-icon>
+		</button>
+
+		<mat-menu #userMenu="matMenu">
 			<button mat-menu-item routerLink="/chess-accounts">
 				<mat-icon aria-hidden="true">manage_accounts</mat-icon>
 				<span>Chess accounts</span>
 			</button>
-		</mat-menu>
 
-		<!-- Help menu -->
-		<button mat-icon-button [matMenuTriggerFor]="helpMenu" aria-label="Help and more">
-			<mat-icon aria-hidden="true">help_outline</mat-icon>
-		</button>
+			@if (hasAccounts()) {
+				<button mat-menu-item routerLink="/import">
+					<mat-icon aria-hidden="true">cloud_download</mat-icon>
+					<span>Import</span>
+				</button>
+			}
 
-		<mat-menu #helpMenu="matMenu">
 			@if (hasAccounts()) {
 				<button mat-menu-item routerLink="/logs">
 					<mat-icon aria-hidden="true">receipt_long</mat-icon>
 					<span>Logs</span>
 				</button>
 			}
-
-			<button mat-menu-item routerLink="/about">
-				<mat-icon aria-hidden="true">info</mat-icon>
-				<span>About</span>
-			</button>
-
-			<button mat-menu-item routerLink="/faq">
-				<mat-icon aria-hidden="true">quiz</mat-icon>
-				<span>FAQ</span>
-			</button>
 		</mat-menu>
 	</mat-toolbar>
 

@@ -6,17 +6,6 @@
 
 			<div class="explorer-left-tabs">
 				<mat-tab-group mat-stretch-tabs="false" mat-align-tabs="end">
-					@if (isDevBuild) {
-						<mat-tab>
-							<ng-template mat-tab-label>
-								<mat-icon class="app-tab-icon">bug_report</mat-icon>
-								Debug
-							</ng-template>
-
-							<app-explorer-debug-tab />
-						</mat-tab>
-					}
-
 					<mat-tab>
 						<ng-template mat-tab-label>
 							<mat-icon class="app-tab-icon">content_paste_go</mat-icon>
@@ -50,6 +39,16 @@
 
 						<!-- <div *ngFor="let _ of [].constructor(100)">TEST div</div> -->
 					</mat-tab>
+
+					@if (isDevBuild) {
+						<mat-tab>
+							<ng-template mat-tab-label>
+								<mat-icon class="app-tab-icon">bug_report</mat-icon>
+							</ng-template>
+
+							<app-explorer-debug-tab />
+						</mat-tab>
+					}
 				</mat-tab-group>
 			</div>
 		</section>

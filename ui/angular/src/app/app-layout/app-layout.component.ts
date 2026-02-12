@@ -68,11 +68,7 @@ export class AppLayoutComponent {
 			: [];
 
 		if (!this.hasAccounts()) {
-			return [
-				{ label: 'Getting started', path: '/getting-started' },
-				...devItems,
-				this.importNavItem,
-			];
+			return [{ label: 'Getting started', path: '/getting-started' }, ...devItems];
 		}
 
 		return [
@@ -80,7 +76,6 @@ export class AppLayoutComponent {
 			{ label: 'Games', path: '/games' },
 			{ label: 'Explorer', path: '/explorer' },
 			...devItems,
-			this.importNavItem,
 		];
 	});
 
