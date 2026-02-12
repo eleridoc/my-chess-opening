@@ -11,6 +11,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 
+import { GlobalLoaderComponent } from '../shared/loading/global-loader/global-loader.component';
+
 type TopNavItem = {
 	label: string;
 	path: string;
@@ -28,6 +30,7 @@ type TopNavItem = {
 		MatButtonModule,
 		MatIconModule,
 		MatMenuModule,
+		GlobalLoaderComponent,
 	],
 	templateUrl: './app-layout.component.html',
 	styleUrl: './app-layout.component.scss',
