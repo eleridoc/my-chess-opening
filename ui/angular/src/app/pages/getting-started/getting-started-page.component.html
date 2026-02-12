@@ -3,46 +3,104 @@
 		<h1 class="title">Getting started</h1>
 		<p class="subtitle">To use the app, you first need to configure at least one chess account.</p>
 
-		<div class="actions">
-			<a mat-flat-button color="primary" routerLink="/chess-accounts">
-				<mat-icon>account_circle</mat-icon>
-				Open chess accounts
-			</a>
-
-			<a mat-button routerLink="/import">
-				<mat-icon>upload</mat-icon>
-				Go to import
-			</a>
+		<div class="getting-started__logo" aria-hidden="true">
+			<img class="getting-started__logo-img" src="/app-logo-128.png" alt="My Chess Opening" />
 		</div>
 	</header>
 
 	<section class="content">
 		<div class="block">
-			<h2 class="block-title">1) Add your account(s)</h2>
-			<p class="block-text">
-				Add your Chess.com and/or Lichess usernames in <strong>Chess accounts</strong>.
-			</p>
+			<div class="block-head">
+				<h2 class="block-title">1) Add your account(s)</h2>
+				<p class="block-text">
+					Add your Chess.com and/or Lichess usernames in <strong>Chess accounts</strong>.
+				</p>
+			</div>
+
+			<div class="block-actions">
+				<button
+					mat-flat-button
+					color="primary"
+					type="button"
+					class="mat-flat-button-d-5"
+					routerLink="/chess-accounts"
+				>
+					<mat-icon aria-hidden="true">account_circle</mat-icon>
+					Open chess accounts
+				</button>
+			</div>
 		</div>
 
 		<div class="block">
-			<h2 class="block-title">2) Import your games</h2>
-			<p class="block-text">
-				Once accounts are configured, use <strong>Import</strong> to fetch games into the local
-				database.
-			</p>
+			<div class="block-head">
+				<h2 class="block-title">2) Import your games</h2>
+				<p class="block-text">
+					Once accounts are configured, use <strong>Import</strong> to fetch games into the local
+					database.
+				</p>
+			</div>
+
+			<div class="block-actions">
+				<button
+					mat-stroked-button
+					type="button"
+					class="mat-stroked-button-d-5"
+					routerLink="/import"
+					[disabled]="!canGoToImport()"
+					[attr.aria-disabled]="!canGoToImport() ? 'true' : null"
+				>
+					<mat-icon aria-hidden="true">upload</mat-icon>
+					Go to import
+				</button>
+
+				@if (!hasAccounts()) {
+					<div class="block-hint">Add at least one account to enable this step.</div>
+				}
+			</div>
 		</div>
 
 		<div class="block">
-			<h2 class="block-title">3) Explore your games</h2>
-			<p class="block-text">
-				After the first import, you can browse <strong>Games</strong> and open the
-				<strong>Explorer</strong>.
-			</p>
+			<div class="block-head">
+				<h2 class="block-title">3) Explore your games</h2>
+				<p class="block-text">
+					After the first import, you can browse <strong>Games</strong> and open the
+					<strong>Explorer</strong>.
+				</p>
+			</div>
+
+			<div class="block-actions">
+				<button
+					mat-stroked-button
+					type="button"
+					class="mat-stroked-button-d-5"
+					routerLink="/explorer"
+					[disabled]="!canGoToExplorer()"
+					[attr.aria-disabled]="!canGoToExplorer() ? 'true' : null"
+				>
+					<mat-icon aria-hidden="true">travel_explore</mat-icon>
+					Go to explorer
+				</button>
+
+				@if (hasAccounts() && gamesChecked() && !hasGames()) {
+					<div class="block-hint">Import at least one game to enable this step.</div>
+				}
+			</div>
 		</div>
 
-		<div class="note" *ngIf="hasAccounts()">
-			<mat-icon>check_circle</mat-icon>
-			<span>Accounts are configured. You can now use Dashboard / Games / Explorer.</span>
-		</div>
+		@if (shouldShowImportHint()) {
+			<div class="note note--info">
+				<mat-icon aria-hidden="true">info</mat-icon>
+				<span>
+					Accounts are configured. Run your first import to download games and complete the setup.
+				</span>
+			</div>
+		}
+
+		@if (shouldShowReadyHint()) {
+			<div class="note note--success">
+				<mat-icon aria-hidden="true">check_circle</mat-icon>
+				<span> Setup complete. You can now explore your games in Games and Explorer. </span>
+			</div>
+		}
 	</section>
 </div>

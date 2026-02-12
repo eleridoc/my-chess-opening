@@ -1,5 +1,5 @@
 .page {
-	max-width: 980px;
+	max-width: 640px;
 	margin: 0 auto;
 	padding: 24px;
 }
@@ -22,11 +22,18 @@
 	opacity: 0.85;
 }
 
-.actions {
+.getting-started__logo {
 	display: flex;
-	gap: 10px;
-	flex-wrap: wrap;
-	align-items: center;
+	justify-content: center;
+	margin-top: 8px;
+}
+
+.getting-started__logo-img {
+	width: 128px;
+	height: 128px;
+	object-fit: contain;
+	/* Optional: tiny soft lift to separate it from the background */
+	filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.35));
 }
 
 .content {
@@ -39,6 +46,8 @@
 	border-radius: var(--app-main-radius);
 	background: var(--app-card, rgba(255, 255, 255, 0.04));
 	border: 1px solid var(--app-border, rgba(255, 255, 255, 0.08));
+	display: grid;
+	gap: 10px;
 }
 
 .block-title {
@@ -52,12 +61,33 @@
 	opacity: 0.9;
 }
 
+.block-actions {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.block-hint {
+	font-size: 12px;
+	opacity: 0.75;
+}
+
 .note {
 	display: flex;
 	gap: 10px;
 	align-items: center;
 	padding: 12px 14px;
 	border-radius: var(--app-main-radius);
+	border: 1px solid transparent;
+}
+
+.note--success {
 	background: rgba(76, 175, 80, 0.12);
-	border: 1px solid rgba(76, 175, 80, 0.25);
+	border-color: rgba(76, 175, 80, 0.25);
+}
+
+.note--info {
+	background: rgba(171, 199, 255, 0.1);
+	border-color: rgba(171, 199, 255, 0.22);
 }
