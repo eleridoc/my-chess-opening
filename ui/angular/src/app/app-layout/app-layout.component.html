@@ -96,13 +96,13 @@
 
 		<mat-menu #userMenu="matMenu">
 			<button mat-menu-item routerLink="/chess-accounts">
-				<mat-icon aria-hidden="true">manage_accounts</mat-icon>
+				<mat-icon aria-hidden="true">account_circle</mat-icon>
 				<span>Chess accounts</span>
 			</button>
 
 			@if (hasAccounts()) {
 				<button mat-menu-item routerLink="/import">
-					<mat-icon aria-hidden="true">cloud_download</mat-icon>
+					<mat-icon aria-hidden="true">download</mat-icon>
 					<span>Import</span>
 				</button>
 			}
