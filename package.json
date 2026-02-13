@@ -20,7 +20,8 @@
 		"prisma:migrate": "npm -w electron run prisma:migrate --",
 		"prisma:migrate:open": "npm run prisma:migrate -- && npm run prisma:generate && npm run prisma:studio",
 		"prisma:generate": "npm -w electron run prisma:generate",
-		"prisma:studio": "npm -w electron run prisma:studio"
+		"prisma:studio": "npm -w electron run prisma:studio",
+		"eco:update": "tsx tools/eco/update-lichess-chess-openings.ts"
 	},
 	"keywords": [],
 	"author": "",

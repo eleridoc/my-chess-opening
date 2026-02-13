@@ -11,6 +11,9 @@ npm run build:all:run:electron
 # Run Electron (after building everything) and limit import to 10 games for dev
 MCO_IMPORT_DEV_MAX_GAMES_PER_ACCOUNT=10 npm run build:all:run:electron
 
+# Regenerate lichess-chess-openings.json for ECO
+npm run eco:update
+
 # Create a migration, then generate Prisma Client, then open Prisma Studio
 npm run prisma:migrate:open -- --name xxx_xxx_xxx
 
