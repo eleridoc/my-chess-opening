@@ -47,15 +47,5 @@ npx prisma studio
 # Add page exemple
 npx ng g c dashboard-page --path src/app/pages/dashboard --flat --standalone --skip-tests --type=component
 
-# Import test
-const subId = window.electron?.import.onEvent?.((e) => console.log('IMPORT EVENT', e));
-window.electron?.import.start?.({
-	maxGamesPerAccount: 25,
-	sinceOverrideIso: new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString(),
-});
-
-
-
-// Should already be initialized by App.ngOnInit(), but ok to call:
-window.ng?.getInjector?.(document.querySelector('app-root')!)?.get?.(ImportStateService)?.ensureInitialized?.();
-window.electron.import.start({ maxGamesPerAccount: 10 });
+npm run prisma:migrate -- --name x_x_x
+npm run prisma:generate
