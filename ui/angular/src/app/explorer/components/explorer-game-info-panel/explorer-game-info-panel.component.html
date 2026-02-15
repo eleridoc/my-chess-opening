@@ -21,8 +21,48 @@
 			<ng-container *ngIf="header.opening as op; else openingEmpty">
 				<ng-container *ngIf="op.name || op.eco; else openingEmpty">
 					<span class="game-info__opening-label">Opening : </span>
-					<span class="game-info__opening-name">{{ op.name || '—' }}</span>
-					<span *ngIf="op.eco as eco" class="game-info__eco"> ({{ eco }})</span>
+
+					<span
+						class="game-info__opening-name"
+						[class.game-info__opening-name--deduced]="op.nameIsDeduced"
+						[matTooltip]="
+							op.nameIsDeduced ? op.deducedLinePgn || 'Deduced opening name (best-effort).' : ''
+						"
+						[matTooltipDisabled]="!op.nameIsDeduced"
+					>
+						{{ op.name || '—' }}
+					</span>
+
+					<span
+						*ngIf="op.nameIsDeduced"
+						class="game-info__opening-deduced"
+						[matTooltip]="
+							op.deducedMatchPly != null
+								? 'Deduced from ECO + moves. Matched ' +
+									op.deducedMatchPly +
+									' plies (best-effort).'
+								: 'Deduced from ECO + moves (best-effort).'
+						"
+					>
+						≈
+					</span>
+
+					<span
+						*ngIf="op.eco as eco"
+						class="game-info__eco"
+						[matTooltip]="op.ecoIsDeduced ? 'Provider ECO: ' + (op.providerEco || '—') : ''"
+						[matTooltipDisabled]="!op.ecoIsDeduced"
+					>
+						({{ eco }})
+					</span>
+
+					<span
+						*ngIf="op.ecoIsDeduced"
+						class="game-info__eco-deduced"
+						matTooltip="ECO determined by the app (best-effort)."
+					>
+						!
+					</span>
 				</ng-container>
 			</ng-container>
 

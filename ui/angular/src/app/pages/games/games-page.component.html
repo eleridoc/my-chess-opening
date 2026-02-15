@@ -112,8 +112,45 @@
 						<th mat-header-cell *matHeaderCellDef>Opening</th>
 						<td mat-cell *matCellDef="let g">
 							<span class="games-opening">
-								<span *ngIf="g.eco" class="games-eco">{{ g.eco }}</span>
-								<span class="games-opening-name">{{ openingLabel(g.opening) }}</span>
+								<!-- ECO -->
+								<span *ngIf="g.ecoDetermined || g.eco" class="games-eco">
+									<ng-container *ngIf="g.ecoDetermined as ecoDet; else ecoProviderOnly">
+										<span
+											class="games-eco-code"
+											[class.games-eco-code--overridden]="!!g.eco && g.eco !== ecoDet"
+											[matTooltip]="!!g.eco && g.eco !== ecoDet ? 'Provider ECO: ' + g.eco : ''"
+											[matTooltipDisabled]="!(!!g.eco && g.eco !== ecoDet)"
+										>
+											{{ ecoDet }}
+										</span>
+
+										<span *ngIf="g.eco && g.eco !== ecoDet" class="games-eco-source">
+											({{ g.eco }})
+										</span>
+									</ng-container>
+
+									<ng-template #ecoProviderOnly>
+										<span class="games-eco-code">{{ g.eco }}</span>
+									</ng-template>
+								</span>
+
+								<!-- Opening name -->
+								<span
+									class="games-opening-name"
+									[class.games-opening-name--deduced]="!g.opening && !!g.ecoOpeningName"
+									[matTooltip]="g.ecoOpeningLinePgn || ''"
+									[matTooltipDisabled]="!g.ecoOpeningLinePgn"
+								>
+									{{ openingLabel(g.opening ?? g.ecoOpeningName) }}
+								</span>
+
+								<span
+									*ngIf="!g.opening && g.ecoOpeningName"
+									class="games-opening-deduced"
+									matTooltip="Deduced from ECO + moves (best-effort, may be imprecise)."
+								>
+									≈
+								</span>
 							</span>
 						</td>
 					</ng-container>

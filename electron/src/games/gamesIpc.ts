@@ -68,7 +68,9 @@ function buildWhere(filters: NonNullable<GamesListInput['filters']>) {
 				{ whiteUsername: { contains: q } },
 				{ blackUsername: { contains: q } },
 				{ opening: { contains: q } },
+				{ ecoOpeningName: { contains: q } },
 				{ eco: { contains: q } },
+				{ ecoDetermined: { contains: q } }, // NEW
 				{ externalId: { contains: q } },
 			],
 		});
@@ -131,7 +133,13 @@ export function registerGamesIpc() {
 						blackElo: true,
 
 						eco: true,
+						ecoDetermined: true, // NEW
 						opening: true,
+
+						ecoOpeningName: true,
+						ecoOpeningLinePgn: true,
+						ecoOpeningMatchPly: true,
+
 						_count: { select: { moves: true } },
 						externalId: true,
 					},
@@ -162,7 +170,13 @@ export function registerGamesIpc() {
 					blackElo: g.blackElo ?? null,
 
 					eco: g.eco ?? null,
+					ecoDetermined: g.ecoDetermined ?? null, // NEW
+
 					opening: g.opening ?? null,
+					ecoOpeningName: g.ecoOpeningName ?? null,
+					ecoOpeningLinePgn: g.ecoOpeningLinePgn ?? null,
+					ecoOpeningMatchPly: g.ecoOpeningMatchPly ?? null,
+
 					movesCount: g._count.moves,
 					externalUrl: buildExternalUrl(g.site, g.externalId ?? null),
 				})),

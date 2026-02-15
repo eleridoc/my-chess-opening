@@ -224,9 +224,32 @@ export type ExplorerGameHeaders = {
 	/** Game result (PGN: Result). */
 	result?: '1-0' | '0-1' | '1/2-1/2' | '*';
 
-	/** ECO code and human-friendly opening name (if available). */
+	/**
+	 * Provider ECO code coming from the imported PGN (Chess.com/Lichess).
+	 * This value must never be overwritten by the app.
+	 */
 	eco?: string;
+
+	/**
+	 * ECO code determined by the app using the Lichess openings dataset (best-effort).
+	 * - When the provider ECO is consistent, ecoDetermined === eco.
+	 * - When inconsistent, ecoDetermined may differ.
+	 */
+	ecoDetermined?: string;
+
+	/**
+	 * Provider opening name coming from the imported PGN (Chess.com/Lichess).
+	 * This value must never be overwritten by the app.
+	 */
 	opening?: string;
+
+	/**
+	 * Optional opening name deduced by the app (ECO + moves).
+	 * Best-effort enrichment: may be absent or approximate.
+	 */
+	ecoOpeningName?: string;
+	ecoOpeningLinePgn?: string;
+	ecoOpeningMatchPly?: number;
 
 	/** Rating information (best effort). */
 	whiteElo?: string;

@@ -84,8 +84,36 @@ export interface GamesListItem {
 	whiteElo: number | null;
 	blackElo: number | null;
 
+	/**
+	 * Provider ECO code coming from the imported PGN (Chess.com/Lichess).
+	 * This value must never be overwritten by the app.
+	 */
 	eco: string | null;
+
+	/**
+	 * ECO code determined by the app using the Lichess openings dataset (best-effort).
+	 * - When the provider ECO is consistent, ecoDetermined === eco.
+	 * - When inconsistent (e.g. provider ECO wrong), ecoDetermined may differ.
+	 */
+	ecoDetermined: string | null;
+
+	/**
+	 * Provider opening name coming from the imported PGN (Chess.com/Lichess).
+	 * This value must never be overwritten by the app.
+	 */
 	opening: string | null;
+
+	/**
+	 * Opening name deduced by the app using ECO + moves (best-effort).
+	 * This is separate from `opening` which comes from the PGN/header/source.
+	 */
+	ecoOpeningName: string | null;
+
+	/** Dataset line used for the match (useful for tooltips/debug). */
+	ecoOpeningLinePgn: string | null;
+
+	/** Number of plies matched against the game mainline (diagnostic). */
+	ecoOpeningMatchPly: number | null;
 
 	/** Number of half-moves (plies) or moves count depending on your query convention. */
 	movesCount: number;

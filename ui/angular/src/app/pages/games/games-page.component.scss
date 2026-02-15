@@ -112,3 +112,48 @@
 	text-align: center;
 	vertical-align: middle;
 }
+
+.games-opening-name--deduced {
+	opacity: 0.8;
+	font-style: italic;
+}
+
+.games-opening-deduced {
+	opacity: 0.75;
+	font-size: 12px;
+	user-select: none;
+}
+
+.games-eco {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 6px;
+	margin-right: 8px;
+}
+
+.games-eco-code {
+	font-weight: 600;
+}
+
+.games-eco-code--overridden {
+	text-decoration: underline;
+	text-decoration-style: dotted;
+	text-underline-offset: 2px;
+}
+
+.games-eco-source {
+	opacity: 0.7;
+	font-size: 12px;
+	user-select: none;
+}
+
+.games-opening-name--deduced {
+	opacity: 0.8;
+	font-style: italic;
+}
+
+.games-opening-deduced {
+	opacity: 0.75;
+	font-size: 12px;
+	user-select: none;
+}

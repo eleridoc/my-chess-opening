@@ -906,14 +906,32 @@ export class ExplorerFacade {
 	private buildOpeningVm(headers: ExplorerGameHeaders | null): GameInfoOpeningVm | undefined {
 		if (!headers) return undefined;
 
-		const name = (headers.opening ?? '').trim() || undefined;
-		const eco = (headers.eco ?? '').trim() || undefined;
+		const providerEco = (headers.eco ?? '').trim() || undefined;
+		const determinedEco = (headers.ecoDetermined ?? '').trim() || undefined;
+
+		// Prefer determined ECO when available (dataset-based)
+		const eco = (determinedEco ?? providerEco)?.trim() || undefined;
+
+		const providerName = (headers.opening ?? '').trim() || undefined;
+		const deducedName = (headers.ecoOpeningName ?? '').trim() || undefined;
+
+		// Prefer provider opening name, fallback to deduced one
+		const name = (providerName ?? deducedName)?.trim() || undefined;
 
 		if (!name && !eco) return undefined;
+
+		const ecoIsDeduced = Boolean(determinedEco && providerEco && determinedEco !== providerEco);
+		const nameIsDeduced = Boolean(!providerName && deducedName);
 
 		return {
 			...(name ? { name } : {}),
 			...(eco ? { eco } : {}),
+
+			ecoIsDeduced,
+			nameIsDeduced,
+
+			// Optional: useful for tooltip/details when eco differs
+			providerEco: ecoIsDeduced ? providerEco : undefined,
 		};
 	}
 }

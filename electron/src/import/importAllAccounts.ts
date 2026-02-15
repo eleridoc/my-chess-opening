@@ -7,6 +7,8 @@ import {
 	Prisma,
 } from '@prisma/client';
 
+import { createHash } from 'node:crypto';
+
 import {
 	ImportOrchestrator,
 	ChessComImporter,
@@ -18,13 +20,24 @@ import {
 	type ImportRunStatus,
 } from 'my-chess-opening-core';
 
-import { createHash } from 'node:crypto';
+import { getEcoOpeningsCatalog, type EcoOpeningsCatalog } from '../eco/ecoOpeningsCatalog';
+import {
+	findBestEcoOpeningMatch,
+	findBestEcoOpeningMatchGlobal,
+	DEFAULT_MIN_GLOBAL_MATCH_PLY,
+} from '../eco/ecoOpeningMatcher';
 
 /**
  * How often we persist progress + emit UI progress updates during per-account processing.
  * This reduces DB writes and UI chatter while still providing a smooth progress signal.
  */
 const PROGRESS_COMMIT_EVERY = 25;
+
+/**
+ * Debug flag for ECO enrichment diagnostics.
+ * Enable by setting: MCO_ECO_DEBUG=1
+ */
+const ECO_DEBUG = process.env.MCO_ECO_DEBUG === '1';
 
 // -----------------------------------------------------------------------------
 // Small helpers
@@ -173,8 +186,9 @@ async function logImport(params: {
 async function persistGame(params: {
 	accountConfigId: string;
 	game: ImportedGameRaw;
+	ecoCatalog: EcoOpeningsCatalog;
 }): Promise<{ inserted: boolean }> {
-	const { accountConfigId, game } = params;
+	const { accountConfigId, game, ecoCatalog } = params;
 
 	// Perspective must be applied by the importer layer (applyOwnerPerspective).
 	if (!game.myColor || !game.myUsername || !game.opponentUsername || game.myResultKey == null) {
@@ -189,6 +203,182 @@ async function persistGame(params: {
 	const opponentUsername = game.opponentUsername;
 
 	const pgnHash = sha256Hex(game.pgn);
+
+	// Optional enrichment computed by the app using the bundled openings dataset.
+	// IMPORTANT:
+	// - We never overwrite `opening` (PGN/header/source-provided).
+	// - We store our best-effort deduction in ecoOpening* fields.
+	// - This must NEVER break imports (best-effort only).
+	let ecoOpeningName: string | null = null;
+	let ecoOpeningLinePgn: string | null = null;
+	let ecoOpeningMatchPly: number | null = null;
+
+	// ECO determined by the app.
+	// - `eco` remains the provider value from import (Chess.com/Lichess PGN).
+	// - `ecoDetermined` may differ when the provider ECO is inconsistent with the move sequence,
+	//   or when the provider did not provide an ECO.
+	let ecoDetermined: string | null = null;
+
+	try {
+		const providerEcoRaw = typeof game.eco === 'string' ? game.eco.trim() : '';
+		const providerEco = providerEcoRaw.length > 0 ? providerEcoRaw : null;
+
+		// Default:
+		// - if provider ECO exists: keep it
+		// - else: null until proven by a global match
+		ecoDetermined = providerEco;
+
+		const hasMoves = Boolean(game.moves?.length);
+
+		if (!hasMoves) {
+			if (ECO_DEBUG) {
+				console.warn('[ECO][debug] Determine ECO skipped (no moves).', {
+					gameRef: `${game.site}:${game.externalId}`,
+					providerEco,
+					hasOpeningHeader: Boolean(game.opening),
+				});
+			}
+		} else {
+			const gameMovesSan = (game.moves ?? []).map((m) => m.san);
+
+			// -----------------------------------------------------------------------------
+			// Step 1: Try to match within provider ECO bucket (fast path).
+			// If it matches, ecoDetermined stays equal to provider eco.
+			// -----------------------------------------------------------------------------
+			if (providerEco) {
+				const candidates = ecoCatalog.getCandidatesByEco(providerEco);
+
+				if (ECO_DEBUG) {
+					console.warn('[ECO][debug] Provider ECO bucket check', {
+						gameRef: `${game.site}:${game.externalId}`,
+						providerEco,
+						movesCount: gameMovesSan.length,
+						candidatesCount: candidates.length,
+						hasOpeningHeader: Boolean(game.opening),
+					});
+				}
+
+				const providerMatch =
+					candidates.length > 0
+						? findBestEcoOpeningMatch(gameMovesSan, candidates)
+						: null;
+
+				if (providerMatch) {
+					ecoDetermined = providerEco;
+					ecoOpeningName = providerMatch.name;
+					ecoOpeningLinePgn = providerMatch.linePgn;
+					ecoOpeningMatchPly = providerMatch.matchPly;
+
+					if (ECO_DEBUG) {
+						console.warn('[ECO][debug] Provider ECO match OK', {
+							gameRef: `${game.site}:${game.externalId}`,
+							providerEco,
+							ecoDetermined,
+							name: ecoOpeningName,
+							matchPly: ecoOpeningMatchPly,
+						});
+					}
+				} else {
+					// -----------------------------------------------------------------------------
+					// Step 2: Global scan fallback (more expensive but more accurate).
+					// Used when provider ECO seems wrong / too coarse / not in dataset.
+					// -----------------------------------------------------------------------------
+					const allCandidates =
+						// Safe fallback if the catalog type is not yet updated in some branch.
+						(((ecoCatalog as any).getAllCandidates?.() as unknown[]) ?? []) as any[];
+
+					if (ECO_DEBUG) {
+						console.warn('[ECO][debug] Provider ECO no match -> global scan', {
+							gameRef: `${game.site}:${game.externalId}`,
+							providerEco,
+							allCandidatesCount: allCandidates.length,
+							minMatchPly: DEFAULT_MIN_GLOBAL_MATCH_PLY,
+						});
+					}
+
+					const globalMatch =
+						allCandidates.length > 0
+							? findBestEcoOpeningMatchGlobal(gameMovesSan, allCandidates as any, {
+									minMatchPly: DEFAULT_MIN_GLOBAL_MATCH_PLY,
+								})
+							: null;
+
+					if (globalMatch) {
+						ecoDetermined = globalMatch.eco;
+						ecoOpeningName = globalMatch.name;
+						ecoOpeningLinePgn = globalMatch.linePgn;
+						ecoOpeningMatchPly = globalMatch.matchPly;
+
+						if (ECO_DEBUG) {
+							console.warn('[ECO][debug] Global match found (provider mismatch)', {
+								gameRef: `${game.site}:${game.externalId}`,
+								providerEco,
+								ecoDetermined,
+								name: ecoOpeningName,
+								matchPly: ecoOpeningMatchPly,
+							});
+						}
+					} else if (ECO_DEBUG) {
+						// Keep provider ECO as determined when global match failed.
+						console.warn('[ECO][debug] Global scan failed, keep provider ECO', {
+							gameRef: `${game.site}:${game.externalId}`,
+							providerEco,
+							ecoDetermined,
+							sampleMoves: gameMovesSan.slice(0, 16),
+						});
+					}
+				}
+			} else {
+				// -----------------------------------------------------------------------------
+				// No provider ECO: directly global scan (optional, but you asked for max coverage).
+				// -----------------------------------------------------------------------------
+				const allCandidates =
+					// Safe fallback if the catalog type is not yet updated in some branch.
+					(((ecoCatalog as any).getAllCandidates?.() as unknown[]) ?? []) as any[];
+
+				if (ECO_DEBUG) {
+					console.warn('[ECO][debug] No provider ECO -> global scan', {
+						gameRef: `${game.site}:${game.externalId}`,
+						allCandidatesCount: allCandidates.length,
+						minMatchPly: DEFAULT_MIN_GLOBAL_MATCH_PLY,
+						movesCount: gameMovesSan.length,
+					});
+				}
+
+				const globalMatch =
+					allCandidates.length > 0
+						? findBestEcoOpeningMatchGlobal(gameMovesSan, allCandidates as any, {
+								minMatchPly: DEFAULT_MIN_GLOBAL_MATCH_PLY,
+							})
+						: null;
+
+				if (globalMatch) {
+					ecoDetermined = globalMatch.eco;
+					ecoOpeningName = globalMatch.name;
+					ecoOpeningLinePgn = globalMatch.linePgn;
+					ecoOpeningMatchPly = globalMatch.matchPly;
+
+					if (ECO_DEBUG) {
+						console.warn('[ECO][debug] Global match found (no provider ECO)', {
+							gameRef: `${game.site}:${game.externalId}`,
+							ecoDetermined,
+							name: ecoOpeningName,
+							matchPly: ecoOpeningMatchPly,
+						});
+					}
+				} else if (ECO_DEBUG) {
+					console.warn('[ECO][debug] Global scan failed (no provider ECO)', {
+						gameRef: `${game.site}:${game.externalId}`,
+						sampleMoves: gameMovesSan.slice(0, 16),
+					});
+				}
+			}
+		}
+	} catch {
+		// Intentionally ignore: enrichment is best-effort and must never break imports.
+		const providerEcoRaw = typeof game.eco === 'string' ? game.eco.trim() : '';
+		ecoDetermined = providerEcoRaw.length > 0 ? providerEcoRaw : null;
+	}
 
 	try {
 		await prisma.$transaction(async (tx) => {
@@ -212,7 +402,11 @@ async function persistGame(params: {
 					resultKey: game.resultKey,
 					termination: game.termination ?? null,
 					eco: game.eco ?? null,
+					ecoDetermined,
 					opening: game.opening ?? null,
+					ecoOpeningName,
+					ecoOpeningLinePgn,
+					ecoOpeningMatchPly,
 
 					pgn: game.pgn,
 					pgnHash,
@@ -390,6 +584,9 @@ export async function importAllAccounts(params?: {
 	// Register importers from core (pure orchestrator: no DB side effects).
 	const importService = new ImportOrchestrator([new ChessComImporter(), new LichessImporter()]);
 
+	// Load once per batch (cached in-memory). If the dataset is missing, the catalog returns no candidates.
+	const ecoCatalog = await getEcoOpeningsCatalog();
+
 	let totalGamesFound = 0;
 	let totalInserted = 0;
 	let totalSkipped = 0;
@@ -483,6 +680,7 @@ export async function importAllAccounts(params?: {
 					const { inserted } = await persistGame({
 						accountConfigId: account.id,
 						game: g,
+						ecoCatalog,
 					});
 
 					if (inserted) {

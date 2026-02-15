@@ -15,6 +15,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import https from 'node:https';
+import { Chess } from 'chess.js';
 
 type EcoRow = {
 	source: 'lichess-chess-openings';
@@ -23,10 +24,12 @@ type EcoRow = {
 	pgn: string | null;
 	uci: string | null;
 	epd: string | null;
+	plies: number;
+	positionKey: string | null;
 };
 
 type OutputFile = {
-	schemaVersion: 1;
+	schemaVersion: 2;
 	source: 'lichess-chess-openings';
 	sourceUrl: string;
 	generatedAtIso: string;
@@ -98,6 +101,64 @@ async function ensureDir(filePath: string): Promise<void> {
 	await fs.mkdir(path.dirname(filePath), { recursive: true });
 }
 
+function parsePgnLineToSanMoves(pgnLine: string): string[] {
+	const raw = pgnLine.trim();
+	if (!raw) return [];
+
+	const tokens = raw.split(/\s+/g);
+
+	const resultTokens = new Set(['1-0', '0-1', '1/2-1/2', '*']);
+
+	return tokens.filter((t) => {
+		// Remove move numbers "1." or "1..."
+		if (/^\d+\.$/.test(t)) return false;
+		if (/^\d+\.\.\.$/.test(t)) return false;
+
+		// Remove results
+		if (resultTokens.has(t)) return false;
+
+		return true;
+	});
+}
+
+/**
+ * Compute a stable "position key" from a final FEN, ignoring clocks.
+ * We keep only the first 4 FEN fields:
+ * - piece placement
+ * - active color
+ * - castling rights
+ * - en-passant square
+ *
+ * This makes the key transposition-safe (order of moves does not matter as long as
+ * the final position is the same).
+ */
+function fenToPositionKey(fen: string): string | null {
+	const parts = fen.trim().split(/\s+/g);
+	if (parts.length < 4) return null;
+
+	const board = parts[0];
+	const turn = parts[1];
+	const castling = parts[2] || '-';
+	const ep = parts[3] || '-';
+
+	return `${board} ${turn} ${castling} ${ep}`;
+}
+
+function computePositionKeyFromSanMoves(movesSan: string[]): string | null {
+	try {
+		const chess = new Chess();
+
+		for (const san of movesSan) {
+			const res = chess.move(san, { strict: true });
+			if (!res) return null;
+		}
+
+		return fenToPositionKey(chess.fen());
+	} catch {
+		return null;
+	}
+}
+
 async function main(): Promise<void> {
 	console.log('[eco] Generating bundled dataset from Lichess TSV files...');
 
@@ -110,13 +171,36 @@ async function main(): Promise<void> {
 		const parsed = parseTsv(tsv);
 
 		for (const row of parsed) {
+			const pgn = row.pgn || null;
+
+			let plies = 0;
+			let positionKey: string | null = null;
+
+			if (pgn) {
+				const sanMoves = parsePgnLineToSanMoves(pgn);
+				plies = sanMoves.length;
+				positionKey = plies > 0 ? computePositionKeyFromSanMoves(sanMoves) : null;
+
+				// Keep this best-effort: if positionKey is null, we can still do prefix matching later.
+				// Do not fail the generation because of a few problematic lines.
+				if (!positionKey) {
+					console.warn('[eco] positionKey not computed (will rely on prefix matching):', {
+						eco: row.eco,
+						name: row.name,
+						pgn,
+					});
+				}
+			}
+
 			all.push({
 				source: 'lichess-chess-openings',
 				eco: row.eco,
 				name: row.name,
-				pgn: row.pgn,
+				pgn,
 				uci: null,
 				epd: null,
+				plies,
+				positionKey,
 			});
 		}
 	}
@@ -128,7 +212,7 @@ async function main(): Promise<void> {
 	});
 
 	const output: OutputFile = {
-		schemaVersion: 1,
+		schemaVersion: 2,
 		source: 'lichess-chess-openings',
 		sourceUrl: SOURCE_URL,
 		generatedAtIso: toIsoNow(),

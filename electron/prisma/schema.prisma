@@ -87,6 +87,17 @@ model Game {
   eco         String?
   opening     String?
 
+  // ECO determined by the app using the bundled Lichess dataset.
+  // - `eco` remains the provider value from import (Chess.com/Lichess PGN).
+  // - `ecoDetermined` may differ when the provider ECO is inconsistent with the move sequence.
+  ecoDetermined String?
+
+  // Optional enrichment computed by the app (based on ECO + moves).
+  // This is NOT the PGN header "Opening" (which stays in `opening` above).
+  ecoOpeningName      String?
+  ecoOpeningLinePgn   String?
+  ecoOpeningMatchPly  Int?
+
   // Result as numeric key for fast aggregation:
   //  1 = white win, 0 = draw, -1 = black win
   resultKey Int
@@ -125,6 +136,7 @@ model Game {
   @@index([accountConfigId, myColor])
   @@index([playedAt])
   @@index([eco])
+  @@index([ecoDetermined])
   @@index([resultKey])
   @@index([accountConfigId, myResultKey])
 }
@@ -229,67 +241,4 @@ model ImportLogEntry {
 
   @@index([importRunId, createdAt])
   @@index([level, createdAt])
-}
-
-//
-// ECO reference data (opening enrichment)
-//
-// We intentionally keep this "dataset table" decoupled from Game:
-// - Games store the ECO code from providers (Chess.com/Lichess) when available.
-// - This table provides optional enrichment (name, lines, position) for display and future features.
-//
-
-model EcoOpening {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Dataset identifier (e.g. "lichess-chess-openings")
-  source String
-
-  // ECO code (e.g. "C42")
-  eco   String
-  name  String
-
-  // Optional enrichment fields from the dataset (kept for future features).
-  // pgn: main line in PGN moves
-  // uci: main line in UCI moves
-  // epd: reference position (EPD)
-  pgn String?
-  uci String?
-  epd String?
-
-  // Deterministic unique key (computed at import/seed time).
-  // We use this to avoid duplicate rows and make upserts easy.
-  // Example: sha1(`${source}|${eco}|${name}|${pgn ?? ''}|${uci ?? ''}|${epd ?? ''}`)
-  signature String @unique
-
-  @@index([eco])
-  @@index([source, eco])
-  @@index([source])
-}
-
-//
-// Tracks the seeding/update status of the ECO dataset.
-//
-
-model EcoDatasetMeta {
-  // One row per dataset source (e.g. "lichess-chess-openings")
-  source String @id
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Where the dataset comes from (GitHub raw, release asset, etc.)
-  sourceUrl     String?
-  sourceVersion String?
-
-  // When we seeded the DB for the first time
-  seededAt DateTime?
-
-  // When we last updated from remote
-  lastUpdatedAt DateTime?
-
-  // Cached count for UI/status
-  openingsCount Int @default(0)
 }

@@ -139,8 +139,41 @@ export type GameInfoOpeningVm = {
 	/** Opening name (raw). */
 	name?: string;
 
-	/** ECO code (raw). */
+	/**
+	 * ECO code displayed by the UI.
+	 * In DB sessions, the facade may prefer `ecoDetermined` over provider `eco`.
+	 */
 	eco?: string;
+
+	/**
+	 * When true, `eco` comes from app computation (e.g. ecoDetermined),
+	 * and differs from the provider `eco`.
+	 */
+	ecoIsDeduced?: boolean;
+
+	/**
+	 * When true, `name` comes from app enrichment (ecoOpeningName),
+	 * because the provider opening name was missing.
+	 */
+	nameIsDeduced?: boolean;
+
+	/**
+	 * Provider ECO code (source/import value).
+	 * Useful for tooltips when `ecoIsDeduced` is true.
+	 */
+	providerEco?: string;
+
+	/**
+	 * Optional dataset line (with move numbers) used for the deduced opening name.
+	 * Useful for tooltips/debug.
+	 */
+	deducedLinePgn?: string;
+
+	/**
+	 * Optional number of plies matched for the deduced opening name.
+	 * Useful for diagnostics and confidence display.
+	 */
+	deducedMatchPly?: number;
 };
 
 /**
@@ -172,7 +205,7 @@ export type GameInfoHeaderVm = {
 	/** Optional result info (normalized key + tone). */
 	result?: GameInfoResultVm;
 
-	/** Optional opening info (name + ECO). */
+	/** Optional opening info (name + ECO + deduction flags). */
 	opening?: GameInfoOpeningVm;
 
 	/**

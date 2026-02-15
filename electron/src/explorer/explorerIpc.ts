@@ -86,8 +86,15 @@ export function registerExplorerIpc(): void {
 						variant: true,
 						myColor: true,
 						result: true,
+
 						eco: true,
+						ecoDetermined: true, // NEW
 						opening: true,
+
+						ecoOpeningName: true,
+						ecoOpeningLinePgn: true,
+						ecoOpeningMatchPly: true,
+
 						whiteUsername: true,
 						blackUsername: true,
 						whiteElo: true,
@@ -129,7 +136,12 @@ export function registerExplorerIpc(): void {
 						result: normalizeResult(game.result),
 
 						eco: game.eco ?? undefined,
+						ecoDetermined: game.ecoDetermined ?? undefined, // NEW
 						opening: game.opening ?? undefined,
+
+						ecoOpeningName: game.ecoOpeningName ?? undefined,
+						ecoOpeningLinePgn: game.ecoOpeningLinePgn ?? undefined,
+						ecoOpeningMatchPly: game.ecoOpeningMatchPly ?? undefined,
 
 						whiteElo: game.whiteElo != null ? String(game.whiteElo) : undefined,
 						blackElo: game.blackElo != null ? String(game.blackElo) : undefined,

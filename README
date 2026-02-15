@@ -49,3 +49,5 @@ npx ng g c dashboard-page --path src/app/pages/dashboard --flat --standalone --s
 
 npm run prisma:migrate -- --name x_x_x
 npm run prisma:generate
+
+MCO_ECO_DEBUG=1 npm run build:all:run:electron
