@@ -157,3 +157,10 @@
 	font-size: 12px;
 	user-select: none;
 }
+
+/* Hide the "opening" column below 1080p width (i.e. < 1920px). */
+@media (max-width: 1919px) {
+	.mat-column-opening {
+		display: none !important;
+	}
+}

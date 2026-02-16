@@ -1,5 +1,5 @@
 .page {
-	max-width: 640px;
+	max-width: 1040px;
 	margin: 0 auto;
 	padding: 24px;
 }
@@ -22,57 +22,118 @@
 	opacity: 0.85;
 }
 
-.getting-started__logo {
-	display: flex;
-	justify-content: center;
-	margin-top: 8px;
+.gs-grid {
+	display: grid;
+	gap: 16px;
+	align-items: start;
 }
 
-.getting-started__logo-img {
-	width: 128px;
-	height: 128px;
-	object-fit: contain;
-	/* Optional: tiny soft lift to separate it from the background */
-	filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.35));
+/* Two columns on wide screens, stacked on smaller widths. */
+@media (min-width: 960px) {
+	.gs-grid {
+		grid-template-columns: 1fr 1.2fr;
+	}
 }
 
-.content {
+.gs-right {
 	display: grid;
 	gap: 12px;
 }
 
-.block {
-	padding: 16px;
-	border-radius: var(--app-main-radius);
-	background: var(--app-card, rgba(255, 255, 255, 0.04));
-	border: 1px solid var(--app-border, rgba(255, 255, 255, 0.08));
+/* LEFT card */
+.gs-intro__content {
+	display: grid;
+	gap: 12px;
+}
+
+.gs-logo {
+	display: flex;
+	justify-content: center;
+	margin-bottom: 6px;
+}
+
+.gs-logo__img {
+	width: 96px;
+	height: 96px;
+	object-fit: contain;
+	filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.35));
+}
+
+.gs-card-title {
+	margin: 0;
+	font-size: 16px;
+	line-height: 1.3;
+	text-align: center;
+}
+
+.gs-card-text {
+	margin: 0;
+	opacity: 0.9;
+}
+
+.gs-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
 	display: grid;
 	gap: 10px;
 }
 
-.block-title {
+.gs-list li {
+	display: flex;
+	gap: 10px;
+	align-items: flex-start;
+}
+
+.gs-list mat-icon {
+	margin-top: 1px;
+	opacity: 0.9;
+}
+
+.gs-list span {
+	opacity: 0.9;
+}
+
+/* RIGHT card (steps) */
+.gs-steps {
+	/* Let each step manage spacing; avoids random margins/offsets. */
+	padding: 0 !important;
+}
+
+.gs-step {
+	display: grid;
+	gap: 10px;
+	padding: 16px;
+}
+
+.gs-step + .gs-step {
+	border-top: 1px solid var(--app-border, rgba(255, 255, 255, 0.08));
+}
+
+.gs-step__title {
 	margin: 0 0 6px 0;
 	font-size: 16px;
 	line-height: 1.3;
 }
 
-.block-text {
+.gs-step__text {
 	margin: 0;
 	opacity: 0.9;
 }
 
-.block-actions {
+.gs-step__actions {
 	display: flex;
 	align-items: center;
 	gap: 10px;
 	flex-wrap: wrap;
 }
 
-.block-hint {
+.gs-hint {
 	font-size: 12px;
 	opacity: 0.75;
 }
 
+/* Notes (kept as-is) */
 .note {
 	display: flex;
 	gap: 10px;

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, session, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, session, shell, screen } from 'electron';
 import * as path from 'node:path';
 import { PrismaClient } from '@prisma/client';
 import { coreIsReady } from 'my-chess-opening-core';
@@ -196,10 +196,52 @@ function registerContentSecurityPolicy(): void {
 	});
 }
 
+/**
+ * Default restored size (when the window is not maximized).
+ * We optimize for laptop/desktop usage, and maximize on launch.
+ */
+const DEFAULT_RESTORED_WINDOW = { width: 1280, height: 720 };
+
+/**
+ * Minimal supported window size.
+ * Keep <= 1280×720 so the app remains usable on smaller displays.
+ */
+const MIN_WINDOW = { width: 1280, height: 720 };
+
+function getInitialWindowBounds(): {
+	width: number;
+	height: number;
+	minWidth: number;
+	minHeight: number;
+} {
+	// Use the display where the cursor currently is (better for multi-monitor setups).
+	const display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
+	const workArea = display.workAreaSize;
+
+	// Clamp default size to the available work area to avoid off-screen windows.
+	const width = Math.min(DEFAULT_RESTORED_WINDOW.width, workArea.width);
+	const height = Math.min(DEFAULT_RESTORED_WINDOW.height, workArea.height);
+
+	// Also clamp min size to the work area to avoid impossible constraints.
+	const minWidth = Math.min(MIN_WINDOW.width, workArea.width);
+	const minHeight = Math.min(MIN_WINDOW.height, workArea.height);
+
+	return { width, height, minWidth, minHeight };
+}
+
 function createWindow(): void {
+	const { width, height, minWidth, minHeight } = getInitialWindowBounds();
+
 	mainWindow = new BrowserWindow({
-		width: 1000,
-		height: 700,
+		// Default "restored" bounds (used when the user restores down from maximized).
+		width,
+		height,
+		minWidth,
+		minHeight,
+
+		// Hide until ready to prevent a visible resize flash before maximizing.
+		show: false,
+
 		title: 'My Chess Opening',
 		icon: getIconPath(),
 		webPreferences: {
@@ -207,6 +249,15 @@ function createWindow(): void {
 			contextIsolation: true,
 			preload: path.join(__dirname, 'preload.js'),
 		},
+	});
+
+	/**
+	 * Open maximized (not fullscreen).
+	 * Maximized respects the OS work area and keeps the restored bounds above.
+	 */
+	mainWindow.once('ready-to-show', () => {
+		mainWindow?.maximize();
+		mainWindow?.show();
 	});
 
 	/**
