@@ -16,6 +16,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatTooltipModule } from '@angular/material/tooltip';
+
 import { firstValueFrom } from 'rxjs';
 
 import type { ExplorerMoveAttempt } from 'my-chess-opening-core/explorer';
@@ -54,6 +56,7 @@ type ResetReason = 'DB_LOAD' | 'PGN_IMPORT' | 'FEN_IMPORT';
 		MatTabsModule,
 		MatIconModule,
 		MatDialogModule,
+		MatTooltipModule,
 	],
 	templateUrl: './explorer-page.component.html',
 	styleUrl: './explorer-page.component.scss',

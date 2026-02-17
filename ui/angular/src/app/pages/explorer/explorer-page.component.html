@@ -8,8 +8,16 @@
 				<mat-tab-group mat-stretch-tabs="false" mat-align-tabs="end">
 					<mat-tab>
 						<ng-template mat-tab-label>
-							<mat-icon class="app-tab-icon">content_paste_go</mat-icon>
-							Import
+							<span
+								class="app-tab-label-icon"
+								matTooltip="Import"
+								[matTooltipDisabled]="false"
+								aria-label="Import"
+							>
+								<mat-icon class="app-tab-icon" aria-hidden="true">content_paste_go</mat-icon>
+							</span>
+
+							<span class="app-sr-only">Import</span>
 						</ng-template>
 
 						<app-explorer-import
@@ -23,31 +31,65 @@
 						/>
 					</mat-tab>
 
+					<!-- <mat-tab disabled>
+						<ng-template mat-tab-label>
+							<span
+								class="app-tab-label-icon"
+								matTooltip="Analysis"
+								[matTooltipDisabled]="false"
+								aria-label="Analysis"
+							>
+								<mat-icon class="app-tab-icon" aria-hidden="true">timeline</mat-icon>
+							</span>
+
+							<span class="app-sr-only">Analysis</span>
+						</ng-template>
+
+						Content
+					</mat-tab>
+
 					<mat-tab disabled>
 						<ng-template mat-tab-label>
-							<mat-icon class="app-tab-icon">timeline</mat-icon>
-							Analysis
-						</ng-template>
-						Content 1
-					</mat-tab>
+							<span
+								class="app-tab-label-icon"
+								matTooltip="Export"
+								[matTooltipDisabled]="false"
+								aria-label="Export"
+							>
+								<mat-icon class="app-tab-icon" aria-hidden="true">share</mat-icon>
+							</span>
 
-					<mat-tab>
-						<ng-template mat-tab-label>
-							<mat-icon class="app-tab-icon">share</mat-icon>
-							Export
+							<span class="app-sr-only">Export</span>
 						</ng-template>
-
-						<!-- <div *ngFor="let _ of [].constructor(100)">TEST div</div> -->
-					</mat-tab>
+						<div *ngFor="let _ of [].constructor(100)">TEST div</div>
+						Content
+					</mat-tab> -->
 
 					@if (isDevBuild) {
 						<mat-tab>
 							<ng-template mat-tab-label>
-								<mat-icon class="app-tab-icon">bug_report</mat-icon>
+								<span
+									class="app-tab-label-icon"
+									matTooltip="Debug"
+									[matTooltipDisabled]="false"
+									aria-label="Debug"
+								>
+									<mat-icon class="app-tab-icon" aria-hidden="true">bug_report</mat-icon>
+								</span>
+
+								<span class="app-sr-only">Debug</span>
 							</ng-template>
 
 							<app-explorer-debug-tab />
 						</mat-tab>
+
+						<!-- <mat-tab>
+							<ng-template mat-tab-label>
+								<mat-icon class="app-tab-icon">bug_report</mat-icon>
+							</ng-template>
+
+							
+						</mat-tab> -->
 					}
 				</mat-tab-group>
 			</div>
