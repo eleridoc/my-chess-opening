@@ -59,3 +59,25 @@
 	width: 18px;
 	height: 18px;
 }
+
+/* Leading icon */
+.snack__icon {
+	flex: 0 0 auto;
+	font-size: 22px;
+	width: 22px;
+	height: 22px;
+	opacity: 0.95;
+	color: var(--mco-snackbar-icon, currentColor);
+}
+
+/* Optional action label */
+.snack__action {
+	white-space: nowrap;
+	color: var(--mco-snackbar-action, currentColor);
+}
+
+/* Close button */
+.snack__close {
+	/* ...tes règles actuelles... */
+	color: var(--mco-snackbar-close, currentColor);
+}

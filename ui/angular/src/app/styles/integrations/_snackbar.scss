@@ -1,21 +1,124 @@
 /*
 	App snackbar styling (global)
-	- These styles target the MDC snackbar container rendered in the CDK overlay.
-	- `panelClass: ['mco-snackbar', 'mco-snackbar--<kind>']` is applied on
-	  `.mat-mdc-snack-bar-container`, so we scope everything from there.
+	- Snackbars are rendered inside the CDK overlay container.
+	- panelClass: ['mco-snackbar', `mco-snackbar--${kind}`] is applied on the snackbar container.
+	- We use CSS variables so colors can be fully customized per theme and per kind.
 */
 
-/* Base (shared) ----------------------------------------------------------- */
-.mat-mdc-snack-bar-container.mco-snackbar {
+/* ----------------------------------------------------------------------- */
+/* Theme palettes (edit these values to change all snackbar colors)         */
+/* ----------------------------------------------------------------------- */
+
+/* Dark theme palette */
+body.theme-dark {
+	/* INFO (blue) */
+	--mco-snackbar-info-bg: rgba(33, 150, 243, 0.18);
+	--mco-snackbar-info-fg: rgba(230, 244, 255, 0.98);
+	--mco-snackbar-info-border: rgba(33, 150, 243, 0.46);
+	--mco-snackbar-info-accent: rgba(144, 202, 249, 1);
+
+	/* SUCCESS (green) */
+	--mco-snackbar-success-bg: rgba(76, 175, 80, 0.18);
+	--mco-snackbar-success-fg: rgba(235, 255, 240, 0.98);
+	--mco-snackbar-success-border: rgba(76, 175, 80, 0.46);
+	--mco-snackbar-success-accent: rgba(165, 214, 167, 1);
+
+	/* WARN (amber) */
+	--mco-snackbar-warn-bg: rgba(255, 193, 7, 0.18);
+	--mco-snackbar-warn-fg: rgba(255, 250, 230, 0.98);
+	--mco-snackbar-warn-border: rgba(255, 193, 7, 0.5);
+	--mco-snackbar-warn-accent: rgba(255, 224, 130, 1);
+
+	/* ERROR (red) */
+	--mco-snackbar-error-bg: rgba(244, 67, 54, 0.18);
+	--mco-snackbar-error-fg: rgba(255, 235, 235, 0.98);
+	--mco-snackbar-error-border: rgba(244, 67, 54, 0.46);
+	--mco-snackbar-error-accent: rgba(239, 154, 154, 1);
+
+	/* Generic (optional) */
+	--mco-snackbar-shadow: var(--app-shadow-panel, none);
+}
+
+/* Light theme palette */
+body.theme-light {
+	/* INFO (blue) */
+	--mco-snackbar-info-bg: rgba(33, 150, 243, 0.1);
+	--mco-snackbar-info-fg: rgba(17, 24, 39, 0.96);
+	--mco-snackbar-info-border: rgba(33, 150, 243, 0.26);
+	--mco-snackbar-info-accent: rgba(25, 118, 210, 1);
+
+	/* SUCCESS (green) */
+	--mco-snackbar-success-bg: rgba(76, 175, 80, 0.1);
+	--mco-snackbar-success-fg: rgba(17, 24, 39, 0.96);
+	--mco-snackbar-success-border: rgba(76, 175, 80, 0.26);
+	--mco-snackbar-success-accent: rgba(46, 125, 50, 1);
+
+	/* WARN (amber) */
+	--mco-snackbar-warn-bg: rgba(255, 193, 7, 0.12);
+	--mco-snackbar-warn-fg: rgba(17, 24, 39, 0.96);
+	--mco-snackbar-warn-border: rgba(255, 193, 7, 0.3);
+	--mco-snackbar-warn-accent: rgba(245, 124, 0, 1);
+
+	/* ERROR (red) */
+	--mco-snackbar-error-bg: rgba(244, 67, 54, 0.1);
+	--mco-snackbar-error-fg: rgba(17, 24, 39, 0.96);
+	--mco-snackbar-error-border: rgba(244, 67, 54, 0.26);
+	--mco-snackbar-error-accent: rgba(211, 47, 47, 1);
+
+	/* Generic (optional) */
+	--mco-snackbar-shadow: var(--app-shadow-panel, none);
+}
+
+/*
+	Fallback when no theme class is present.
+	Choose a sensible default (dark-like).
+*/
+body {
+	--mco-snackbar-info-bg: rgba(33, 150, 243, 0.18);
+	--mco-snackbar-info-fg: rgba(230, 244, 255, 0.98);
+	--mco-snackbar-info-border: rgba(33, 150, 243, 0.46);
+	--mco-snackbar-info-accent: rgba(144, 202, 249, 1);
+
+	--mco-snackbar-success-bg: rgba(76, 175, 80, 0.18);
+	--mco-snackbar-success-fg: rgba(235, 255, 240, 0.98);
+	--mco-snackbar-success-border: rgba(76, 175, 80, 0.46);
+	--mco-snackbar-success-accent: rgba(165, 214, 167, 1);
+
+	--mco-snackbar-warn-bg: rgba(255, 193, 7, 0.18);
+	--mco-snackbar-warn-fg: rgba(255, 250, 230, 0.98);
+	--mco-snackbar-warn-border: rgba(255, 193, 7, 0.5);
+	--mco-snackbar-warn-accent: rgba(255, 224, 130, 1);
+
+	--mco-snackbar-error-bg: rgba(244, 67, 54, 0.18);
+	--mco-snackbar-error-fg: rgba(255, 235, 235, 0.98);
+	--mco-snackbar-error-border: rgba(244, 67, 54, 0.46);
+	--mco-snackbar-error-accent: rgba(239, 154, 154, 1);
+
+	--mco-snackbar-shadow: var(--app-shadow-panel, none);
+}
+
+/* ----------------------------------------------------------------------- */
+/* Base (shared)                                                           */
+/* ----------------------------------------------------------------------- */
+
+.cdk-overlay-container .mat-mdc-snack-bar-container.mco-snackbar {
 	/* Geometry */
 	--mco-snackbar-radius: var(--app-main-radius);
 	--mco-snackbar-pad-y: 4px; /* slimmer */
 	--mco-snackbar-pad-x: 10px;
 
-	/* Default colors (info-like) */
-	--mco-snackbar-bg: var(--mat-sys-inverse-surface);
-	--mco-snackbar-fg: var(--mat-sys-inverse-on-surface);
-	--mco-snackbar-border: color-mix(in oklab, var(--mco-snackbar-fg) 18%, transparent);
+	/*
+		Resolved per-variant (defaults to INFO-like values).
+		Each variant sets these to the theme palette tokens.
+	*/
+	--mco-snackbar-bg: var(--mco-snackbar-info-bg);
+	--mco-snackbar-fg: var(--mco-snackbar-info-fg);
+	--mco-snackbar-border: var(--mco-snackbar-info-border);
+	--mco-snackbar-accent: var(--mco-snackbar-info-accent);
+
+	/* You may want different colors for action/close later */
+	--mco-snackbar-action-fg: var(--mco-snackbar-fg);
+	--mco-snackbar-close-fg: var(--mco-snackbar-fg);
 
 	/* Offset from the viewport edge (works with bottom/end positioning) */
 	margin: 0 16px 16px 0;
@@ -25,7 +128,7 @@
 }
 
 /* Visible surface -------------------------------------------------------- */
-.mat-mdc-snack-bar-container.mco-snackbar .mdc-snackbar__surface {
+.cdk-overlay-container .mat-mdc-snack-bar-container.mco-snackbar .mdc-snackbar__surface {
 	background: var(--mco-snackbar-bg) !important;
 	color: var(--mco-snackbar-fg) !important;
 
@@ -36,48 +139,87 @@
 	padding: var(--mco-snackbar-pad-y) var(--mco-snackbar-pad-x) !important;
 
 	/* Keep it consistent with your app surfaces */
-	box-shadow: var(--app-shadow-panel, none) !important;
+	box-shadow: var(--mco-snackbar-shadow) !important;
 }
 
 /* MDC label wrapper (avoid default extra padding) ------------------------ */
-.mat-mdc-snack-bar-container.mco-snackbar .mdc-snackbar__label {
+.cdk-overlay-container .mat-mdc-snack-bar-container.mco-snackbar .mdc-snackbar__label {
 	color: var(--mco-snackbar-fg) !important;
 	padding: 0 !important;
 	margin: 0 !important;
 }
 
-/* Make actions inherit the same foreground (including your close button) */
-.mat-mdc-snack-bar-container.mco-snackbar button,
-.mat-mdc-snack-bar-container.mco-snackbar .mat-icon,
-.mat-mdc-snack-bar-container.mco-snackbar .mdc-button__label {
+/*
+	Ensure your custom snackbar component inherits the intended colors.
+	We keep the rule broad to cover MDC internals + your buttons/icons.
+*/
+.cdk-overlay-container .mat-mdc-snack-bar-container.mco-snackbar {
+	/* Text */
 	color: var(--mco-snackbar-fg) !important;
+
+	/* Icons */
+	.snack__icon {
+		color: var(--mco-snackbar-accent) !important;
+	}
+
+	/* Action button */
+	.snack__action,
+	.snack__action .mdc-button__label {
+		color: var(--mco-snackbar-action-fg) !important;
+	}
+
+	/* Close button */
+	.snack__close,
+	.snack__close .mat-icon {
+		color: var(--mco-snackbar-close-fg) !important;
+	}
 }
 
-/* Variants (only override tokens) ---------------------------------------- */
-.mat-mdc-snack-bar-container.mco-snackbar--info {
-	--mco-snackbar-bg: var(--mat-sys-inverse-surface);
-	--mco-snackbar-fg: var(--mat-sys-inverse-on-surface);
+/* ----------------------------------------------------------------------- */
+/* Variants (only resolve tokens)                                           */
+/* ----------------------------------------------------------------------- */
+
+.cdk-overlay-container .mat-mdc-snack-bar-container.mco-snackbar--info {
+	--mco-snackbar-bg: var(--mco-snackbar-info-bg);
+	--mco-snackbar-fg: var(--mco-snackbar-info-fg);
+	--mco-snackbar-border: var(--mco-snackbar-info-border);
+	--mco-snackbar-accent: var(--mco-snackbar-info-accent);
 }
 
-.mat-mdc-snack-bar-container.mco-snackbar--success {
-	--mco-snackbar-bg: color-mix(
-		in oklab,
-		var(--mat-sys-primary) 20%,
-		var(--mat-sys-surface-container-high)
-	);
-	--mco-snackbar-fg: var(--mat-sys-on-surface);
+.cdk-overlay-container .mat-mdc-snack-bar-container.mco-snackbar--success {
+	--mco-snackbar-bg: var(--mco-snackbar-success-bg);
+	--mco-snackbar-fg: var(--mco-snackbar-success-fg);
+	--mco-snackbar-border: var(--mco-snackbar-success-border);
+	--mco-snackbar-accent: var(--mco-snackbar-success-accent);
 }
 
-.mat-mdc-snack-bar-container.mco-snackbar--warn {
-	--mco-snackbar-bg: color-mix(
-		in oklab,
-		var(--mat-sys-tertiary) 22%,
-		var(--mat-sys-surface-container-high)
-	);
-	--mco-snackbar-fg: var(--mat-sys-on-surface);
+.cdk-overlay-container .mat-mdc-snack-bar-container.mco-snackbar--warn {
+	--mco-snackbar-bg: var(--mco-snackbar-warn-bg);
+	--mco-snackbar-fg: var(--mco-snackbar-warn-fg);
+	--mco-snackbar-border: var(--mco-snackbar-warn-border);
+	--mco-snackbar-accent: var(--mco-snackbar-warn-accent);
 }
 
-.mat-mdc-snack-bar-container.mco-snackbar--error {
-	--mco-snackbar-bg: var(--mat-sys-error-container);
-	--mco-snackbar-fg: var(--mat-sys-on-error-container);
+.cdk-overlay-container .mat-mdc-snack-bar-container.mco-snackbar--error {
+	--mco-snackbar-bg: var(--mco-snackbar-error-bg);
+	--mco-snackbar-fg: var(--mco-snackbar-error-fg);
+	--mco-snackbar-border: var(--mco-snackbar-error-border);
+	--mco-snackbar-accent: var(--mco-snackbar-error-accent);
+}
+
+.cdk-overlay-container .mat-mdc-snack-bar-container.mco-snackbar .snack__action {
+	border-radius: 999px;
+}
+
+.cdk-overlay-container .mat-mdc-snack-bar-container.mco-snackbar .snack__action:hover {
+	background: color-mix(in oklab, var(--mco-snackbar-fg) 10%, transparent);
+}
+
+.cdk-overlay-container .mat-mdc-snack-bar-container.mco-snackbar .snack__action:focus-visible {
+	outline: 2px solid color-mix(in oklab, var(--mco-snackbar-accent) 70%, transparent);
+	outline-offset: 2px;
+}
+
+.cdk-overlay-container .mat-mdc-snack-bar-container.mco-snackbar {
+	--mco-snackbar-close-fg: color-mix(in oklab, var(--mco-snackbar-fg) 75%, transparent);
 }
