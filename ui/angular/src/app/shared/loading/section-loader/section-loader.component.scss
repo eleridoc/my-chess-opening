@@ -59,7 +59,7 @@
 	align-items: center;
 	justify-content: center;
 
-	background: rgba(0, 0, 0, 0.12);
+	background: var(--app-overlay-section);
 	backdrop-filter: blur(1px);
 
 	/* Non-blocking by default (click-through) */

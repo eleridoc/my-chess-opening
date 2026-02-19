@@ -88,6 +88,48 @@ body.theme-dark {
 	--app-me-win: #4fe0a5;
 	--app-me-loss: #ff5a66;
 	--app-me-draw: #7a7a7a;
+
+	/* -----------------------------------------------------------------------
+	   Extra tokens to keep component SCSS free of hard-coded colors.
+	   These will be properly defined for the light theme in V1.6.12.6.
+	   ----------------------------------------------------------------------- */
+
+	/* Shadows */
+	--app-topbar-shadow: 0 0px 0 rgba(255, 255, 255, 0.04), 0 8px 24px rgba(0, 0, 0, 0.5);
+	--app-logo-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+
+	/* Overlays / backdrops */
+	--app-overlay-backdrop: rgba(0, 0, 0, 0.45);
+	--app-overlay-global: rgba(0, 0, 0, 0.25);
+	--app-overlay-section: rgba(0, 0, 0, 0.12);
+
+	/* Pills */
+	--app-pill-border: rgba(255, 255, 255, 0.14);
+	--app-pill-bg: rgba(255, 255, 255, 0.04);
+
+	/* Table sticky header subtle separator */
+	--app-sticky-sep: rgba(255, 255, 255, 0.12);
+
+	/* Getting started notes (semantic) */
+	--app-success-bg: rgba(76, 175, 80, 0.12);
+	--app-success-border: rgba(76, 175, 80, 0.25);
+	--app-info-bg: rgba(171, 199, 255, 0.1);
+	--app-info-border: rgba(171, 199, 255, 0.22);
+
+	/* Chess UI */
+	--app-piece-outline: rgba(255, 255, 255, 0.95);
+
+	--app-chess-white-icon: #000000;
+	--app-chess-black-icon: #ffffff;
+
+	--app-chess-dot-border: rgba(255, 255, 255, 0.35);
+	--app-chess-dot-bg: rgba(255, 255, 255, 0.15);
+
+	--app-chess-white-bg: rgba(255, 255, 255, 0.85);
+	--app-chess-white-border: rgba(0, 0, 0, 0.15);
+
+	--app-chess-black-bg: rgba(0, 0, 0, 0.75);
+	--app-chess-black-border: rgba(255, 255, 255, 0.25);
 }
 
 /* Light theme overrides */

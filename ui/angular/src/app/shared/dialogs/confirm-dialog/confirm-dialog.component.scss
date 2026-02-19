@@ -32,8 +32,8 @@
 	word-break: break-word;
 	overflow-wrap: anywhere;
 
-	background: rgba(0, 0, 0, 0.18);
-	border: 1px solid rgba(255, 255, 255, 0.08);
+	background: var(--app-surface-3);
+	border: 1px solid var(--app-border);
 }
 
 .confirm-dialog__actions {

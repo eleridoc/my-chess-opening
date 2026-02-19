@@ -99,8 +99,8 @@
 	justify-content: space-between;
 
 	padding: 12px;
-	border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-	background: rgba(0, 0, 0, 0.22);
+	border-bottom: 1px solid var(--app-border);
+	background: var(--app-surface-4);
 }
 
 .drawer-title {
@@ -132,10 +132,10 @@
 }
 
 .drawer-section {
-	border: 1px solid rgba(255, 255, 255, 0.08);
 	border-radius: var(--app-main-radius);
 	padding: 10px;
-	background: rgba(0, 0, 0, 0.1);
+	border: 1px solid var(--app-border);
+	background: var(--app-surface-2);
 }
 
 .drawer-subtitle {
@@ -184,8 +184,8 @@
 	margin: 0;
 	padding: 10px;
 	border-radius: var(--app-main-radius);
-	background: rgba(0, 0, 0, 0.22);
-	border: 1px solid rgba(255, 255, 255, 0.06);
+	background: var(--app-surface-4);
+	border: 1px solid var(--app-sep);
 
 	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
 	font-size: 12px;

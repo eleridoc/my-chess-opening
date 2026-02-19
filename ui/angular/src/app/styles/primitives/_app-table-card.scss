@@ -205,7 +205,7 @@
 
 /* Optional: subtle separation line under sticky header */
 .app-table-card__sticky-header .mat-mdc-header-cell {
-	box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.12);
+	box-shadow: inset 0 -1px 0 var(--app-sticky-sep);
 }
 
 /* --------------------------------------------------------------------------

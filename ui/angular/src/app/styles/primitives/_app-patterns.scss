@@ -65,18 +65,18 @@
 	font-weight: 600;
 	font-size: 12px;
 
-	border: 1px solid rgba(255, 255, 255, 0.14);
-	background: rgba(255, 255, 255, 0.04);
+	border: 1px solid var(--app-pill-border);
+	background: var(--app-pill-bg);
 }
 
 .app-pill--warn {
-	border-color: rgba(255, 193, 7, 0.35);
-	background: rgba(255, 193, 7, 0.1);
+	border-color: var(--app-warn-border);
+	background: var(--app-warn-bg);
 }
 
 .app-pill--error {
-	border-color: rgba(244, 67, 54, 0.35);
-	background: rgba(244, 67, 54, 0.12);
+	border-color: var(--app-error-border);
+	background: var(--app-error-bg);
 }
 
 .app-separator {

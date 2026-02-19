@@ -26,11 +26,10 @@
 	}
 
 	&--white .player-card__icon {
-		color: black;
+		color: var(--app-chess-white-icon);
 	}
-
 	&--black .player-card__icon {
-		color: white;
+		color: var(--app-chess-black-icon);
 	}
 
 	&__right {
@@ -81,20 +80,20 @@
 		width: 20px;
 		height: 20px;
 		border-radius: 999px;
-		border: 2px solid rgba(255, 255, 255, 0.35);
-		background: rgba(255, 255, 255, 0.15);
+		border: 2px solid var(--app-chess-dot-border);
+		background: var(--app-chess-dot-bg);
 	}
 
 	&--white .player-card__left,
 	&--white .player-card__dot {
-		background: rgba(255, 255, 255, 0.85);
-		border-color: rgba(0, 0, 0, 0.15);
+		background: var(--app-chess-white-bg);
+		border-color: var(--app-chess-white-border);
 	}
 
 	&--black .player-card__left,
 	&--black .player-card__dot {
-		background: rgba(0, 0, 0, 0.75);
-		border-color: rgba(255, 255, 255, 0.25);
+		background: var(--app-chess-black-bg);
+		border-color: var(--app-chess-black-border);
 	}
 
 	&__elo {

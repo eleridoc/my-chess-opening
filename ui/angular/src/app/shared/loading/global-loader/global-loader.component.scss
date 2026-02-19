@@ -8,7 +8,7 @@
 	justify-content: center;
 
 	/* Subtle overlay */
-	background: rgba(0, 0, 0, 0.25);
+	background: var(--app-overlay-global);
 	backdrop-filter: blur(1px);
 
 	/* Non-blocking by default (click-through) */
