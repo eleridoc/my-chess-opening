@@ -202,49 +202,138 @@ body.theme-dark {
 body.theme-light {
 	color-scheme: light;
 
-	--app-bg: #f3f3f3; /* base page */
-	--app-bg-plus-1: #ededed; /* slightly darker than bg */
-	--app-bg-plus-2: #e7e7e7;
-	--app-bg-plus-3: #dcdcdc; /* more contrast (panels, headers) */
-	--app-bg-less-1: #f8f8f8; /* slightly lighter than bg */
-	--app-bg-less-2: #ffffff; /* pure white (cards if needed) */
-
-	--app-card: #ffffff;
-	--app-divider: rgba(0, 0, 0, 0.12);
-	--app-border: rgba(0, 0, 0, 0.1);
-
-	/* Pattern surfaces (used by app-patterns) */
-	--app-surface-0: transparent;
-	--app-surface-1: rgba(255, 255, 255, 0.55);
-	--app-surface-2: rgba(255, 255, 255, 0.72);
-	--app-surface-3: rgba(255, 255, 255, 0.82);
-	--app-surface-4: rgba(255, 255, 255, 0.92);
-
-	--app-shadow-panel: 0 12px 28px rgba(0, 0, 0, 0.12);
-
 	/* -----------------------------------------------------------------------
-	   Snackbars (light theme)
+	   Light theme goals:
+	   - Soft "Windows 98-like" greys with modern nuance
+	   - Not too bright / not pure white everywhere
+	   - Keep the brand primary close to the dark theme identity
 	   ----------------------------------------------------------------------- */
 
-	/* INFO (blue) */
+	/* Background + main surfaces */
+	--app-bg: #e9e9e9; /* base page (soft grey, not white) */
+
+	--app-bg-plus-1: #e3e3e3;
+	--app-bg-plus-1-half: #e1e1e1;
+	--app-bg-plus-2: #dddddd;
+	--app-bg-plus-3: #d7d7d7;
+
+	--app-bg-plus-4: #d1d1d1;
+	--app-bg-plus-5: #cbcbcb;
+
+	--app-bg-plus-6: #c5c5c5;
+	--app-bg-plus-7: #bfbfbf;
+	--app-bg-plus-8: #b9b9b9;
+	--app-bg-plus-9: #b3b3b3;
+
+	--app-bg-less-1: #f0f0f0; /* a bit lighter than bg */
+	--app-bg-less-2: #f6f6f6; /* "almost white" (cards if needed) */
+
+	/* Brand */
+	--app-primary: #425e90; /* close to your M3 light primary */
+	--app-primary-nuance: #5f77a3; /* softer primary nuance (borders/scrollbars) */
+
+	/* Cards / dividers / borders */
+	--app-card: #f2f2f2; /* avoid pure white cards */
+	--app-divider: rgba(0, 0, 0, 0.12);
+	--app-border: rgba(0, 0, 0, 0.12);
+	--app-sep: rgba(0, 0, 0, 0.08);
+
+	--app-hover: rgba(0, 0, 0, 0.03);
+	--app-hover-less: rgba(0, 0, 0, 0.015);
+	--app-hover-more: rgba(0, 0, 0, 0.05);
+
+	--app-border-primary: var(--app-primary-nuance);
+	--app-mat-border: #c6c6cb;
+
+	/* Secondary text */
+	--app-on-surface-variant: #45474b;
+
+	/* App surfaces (used across patterns + small panels) */
+	--app-surface-0: transparent;
+	--app-surface-1: rgba(0, 0, 0, 0.03);
+	--app-surface-2: rgba(0, 0, 0, 0.05);
+	--app-surface-3: rgba(0, 0, 0, 0.08);
+	--app-surface-4: rgba(0, 0, 0, 0.1);
+
+	/* Primary container (used for emphasis panels) */
+	--app-primary-container: #d7e2ff;
+	--app-on-primary-container: #001b3f;
+
+	/* Shadows */
+	--app-shadow-panel: 0 12px 28px rgba(0, 0, 0, 0.14);
+	--app-topbar-shadow: 0 0px 0 rgba(255, 255, 255, 0), 0 6px 18px rgba(0, 0, 0, 0.18);
+	--app-logo-shadow: 0 8px 18px rgba(0, 0, 0, 0.22);
+
+	/* Overlays / backdrops */
+	--app-overlay-backdrop: rgba(0, 0, 0, 0.25);
+	--app-overlay-global: rgba(0, 0, 0, 0.16);
+	--app-overlay-section: rgba(0, 0, 0, 0.08);
+
+	/* Accent states (override light versions) */
+	--app-warn-border: rgba(245, 124, 0, 0.35);
+	--app-warn-bg: rgba(245, 124, 0, 0.1);
+
+	--app-error-border: rgba(211, 47, 47, 0.35);
+	--app-error-bg: rgba(211, 47, 47, 0.1);
+
+	/* Scrollbars */
+	--app-scrollbar-track: var(--app-bg-plus-4);
+	--app-scrollbar-thumb: var(--app-primary-nuance);
+	--app-scrollbar-thumb-hover: color-mix(in oklab, var(--app-primary) 70%, #000000);
+	--app-scrollbar-thumb-active: color-mix(in oklab, var(--app-primary) 80%, #000000);
+
+	/* "Me" highlighting (readable on light, not neon) */
+	--app-me-win: #148a63;
+	--app-me-loss: #d6454f;
+	--app-me-draw: #5e5e5e;
+
+	/* Pills */
+	--app-pill-border: rgba(0, 0, 0, 0.18);
+	--app-pill-bg: rgba(0, 0, 0, 0.03);
+
+	/* Table sticky header subtle separator */
+	--app-sticky-sep: rgba(0, 0, 0, 0.12);
+
+	/* Getting started notes (semantic) */
+	--app-success-bg: rgba(46, 125, 50, 0.1);
+	--app-success-border: rgba(46, 125, 50, 0.25);
+
+	--app-info-bg: color-mix(in oklab, var(--app-primary) 12%, transparent);
+	--app-info-border: color-mix(in oklab, var(--app-primary) 24%, transparent);
+
+	/* Chess UI */
+	--app-piece-outline: rgba(0, 0, 0, 0.72);
+
+	--app-chess-white-icon: #000000;
+	--app-chess-black-icon: #ffffff;
+
+	--app-chess-dot-border: rgba(0, 0, 0, 0.22);
+	--app-chess-dot-bg: rgba(0, 0, 0, 0.08);
+
+	--app-chess-white-bg: #f1f1f1;
+	--app-chess-white-border: rgba(0, 0, 0, 0.12);
+
+	--app-chess-black-bg: rgba(0, 0, 0, 0.65);
+	--app-chess-black-border: rgba(255, 255, 255, 0.25);
+
+	/* -----------------------------------------------------------------------
+	   Snackbars (light theme) — keep your current values
+	   ----------------------------------------------------------------------- */
 	--mco-snackbar-info-bg: rgba(33, 150, 243, 0.1);
 	--mco-snackbar-info-fg: rgba(17, 24, 39, 0.96);
 	--mco-snackbar-info-border: rgba(33, 150, 243, 0.26);
 	--mco-snackbar-info-accent: rgba(25, 118, 210, 1);
 
-	/* SUCCESS (green) */
 	--mco-snackbar-success-bg: rgba(76, 175, 80, 0.1);
 	--mco-snackbar-success-fg: rgba(17, 24, 39, 0.96);
 	--mco-snackbar-success-border: rgba(76, 175, 80, 0.26);
 	--mco-snackbar-success-accent: rgba(46, 125, 50, 1);
 
-	/* WARN (amber) */
 	--mco-snackbar-warn-bg: rgba(255, 193, 7, 0.12);
 	--mco-snackbar-warn-fg: rgba(17, 24, 39, 0.96);
 	--mco-snackbar-warn-border: rgba(255, 193, 7, 0.3);
 	--mco-snackbar-warn-accent: rgba(245, 124, 0, 1);
 
-	/* ERROR (red) */
 	--mco-snackbar-error-bg: rgba(244, 67, 54, 0.1);
 	--mco-snackbar-error-fg: rgba(17, 24, 39, 0.96);
 	--mco-snackbar-error-border: rgba(244, 67, 54, 0.26);
@@ -253,7 +342,7 @@ body.theme-light {
 	--mco-snackbar-shadow: var(--app-shadow-panel, none);
 
 	/* -----------------------------------------------------------------------
-	   cm-chessboard markers (light theme)
+	   cm-chessboard markers (light theme) — keep your current values
 	   ----------------------------------------------------------------------- */
 	--mco-marker-last-from: color-mix(in oklab, var(--mat-sys-primary) 14%, transparent);
 	--mco-marker-last-to: color-mix(in oklab, var(--mat-sys-primary) 14%, transparent);

@@ -29,7 +29,6 @@ $_base-light: (
 	density: 0,
 );
 
-/* Your exact role overrides */
 $_overrides-light: (
 	primary: #425e90,
 	on-primary: #ffffff,
@@ -56,16 +55,19 @@ $_overrides-light: (
 	tertiary-fixed-dim: #ebb5ec,
 	on-tertiary-fixed: #310a37,
 	on-tertiary-fixed-variant: #613765,
-	background: #fcf8f8,
+
+	/* Updated to match the "soft grey" light tokens (less bright than pure white). */
+	background: #efefef,
 	on-background: #1c1b1c,
-	surface: #fcf8f8,
-	surface-dim: #ddd9d9,
-	surface-bright: #fcf8f8,
-	surface-container-lowest: #ffffff,
-	surface-container-low: #f7f3f2,
-	surface-container: #f1eded,
-	surface-container-high: #ebe7e7,
-	surface-container-highest: #e5e2e1,
+	surface: #efefef,
+	surface-dim: #e0e0e0,
+	surface-bright: #f2f2f2,
+	surface-container-lowest: #f7f7f7,
+	surface-container-low: #f2f2f2,
+	surface-container: #ebebeb,
+	surface-container-high: #e4e4e4,
+	surface-container-highest: #dddddd,
+
 	on-surface: #1c1b1c,
 	shadow: #000000,
 	scrim: #000000,
