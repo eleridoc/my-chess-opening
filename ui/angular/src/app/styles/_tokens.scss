@@ -130,6 +130,55 @@ body.theme-dark {
 
 	--app-chess-black-bg: rgba(0, 0, 0, 0.75);
 	--app-chess-black-border: rgba(255, 255, 255, 0.25);
+
+	/* -----------------------------------------------------------------------
+	   Snackbars (colors only live in tokens)
+	   ----------------------------------------------------------------------- */
+
+	/* INFO (blue) */
+	--mco-snackbar-info-bg: rgba(33, 150, 243, 0.18);
+	--mco-snackbar-info-fg: rgba(230, 244, 255, 0.98);
+	--mco-snackbar-info-border: rgba(33, 150, 243, 0.46);
+	--mco-snackbar-info-accent: rgba(144, 202, 249, 1);
+
+	/* SUCCESS (green) */
+	--mco-snackbar-success-bg: rgba(76, 175, 80, 0.18);
+	--mco-snackbar-success-fg: rgba(235, 255, 240, 0.98);
+	--mco-snackbar-success-border: rgba(76, 175, 80, 0.46);
+	--mco-snackbar-success-accent: rgba(165, 214, 167, 1);
+
+	/* WARN (amber) */
+	--mco-snackbar-warn-bg: rgba(255, 193, 7, 0.18);
+	--mco-snackbar-warn-fg: rgba(255, 250, 230, 0.98);
+	--mco-snackbar-warn-border: rgba(255, 193, 7, 0.5);
+	--mco-snackbar-warn-accent: rgba(255, 224, 130, 1);
+
+	/* ERROR (red) */
+	--mco-snackbar-error-bg: rgba(244, 67, 54, 0.18);
+	--mco-snackbar-error-fg: rgba(255, 235, 235, 0.98);
+	--mco-snackbar-error-border: rgba(244, 67, 54, 0.46);
+	--mco-snackbar-error-accent: rgba(239, 154, 154, 1);
+
+	--mco-snackbar-shadow: var(--app-shadow-panel, none);
+
+	/* -----------------------------------------------------------------------
+	   cm-chessboard markers (colors only live in tokens)
+	   ----------------------------------------------------------------------- */
+	--mco-marker-last-from: rgba(0, 255, 0, 0.1);
+	--mco-marker-last-to: rgba(0, 255, 0, 0.1);
+	--mco-marker-last-glow: rgba(255, 255, 255, 0.38);
+
+	--mco-marker-hint-selected: rgba(255, 255, 255, 0.22);
+	--mco-marker-hint-hover: rgba(255, 255, 255, 0.18);
+	--mco-marker-hint-glow: rgba(255, 255, 255, 0.3);
+
+	--mco-marker-dot-fill: rgba(255, 255, 255, 0.76);
+	--mco-marker-dot-glow-dark: rgba(0, 0, 0, 0.6);
+	--mco-marker-dot-glow-light: rgba(255, 255, 255, 0.24);
+
+	--mco-marker-capture-stroke: rgba(255, 255, 255, 0.86);
+	--mco-marker-capture-stroke-width: 2.3px;
+	--mco-marker-capture-shadow: rgba(0, 0, 0, 0.7);
 }
 
 /* Light theme overrides */
@@ -155,4 +204,53 @@ body.theme-light {
 	--app-surface-4: rgba(255, 255, 255, 0.92);
 
 	--app-shadow-panel: 0 12px 28px rgba(0, 0, 0, 0.12);
+
+	/* -----------------------------------------------------------------------
+	   Snackbars (light theme)
+	   ----------------------------------------------------------------------- */
+
+	/* INFO (blue) */
+	--mco-snackbar-info-bg: rgba(33, 150, 243, 0.1);
+	--mco-snackbar-info-fg: rgba(17, 24, 39, 0.96);
+	--mco-snackbar-info-border: rgba(33, 150, 243, 0.26);
+	--mco-snackbar-info-accent: rgba(25, 118, 210, 1);
+
+	/* SUCCESS (green) */
+	--mco-snackbar-success-bg: rgba(76, 175, 80, 0.1);
+	--mco-snackbar-success-fg: rgba(17, 24, 39, 0.96);
+	--mco-snackbar-success-border: rgba(76, 175, 80, 0.26);
+	--mco-snackbar-success-accent: rgba(46, 125, 50, 1);
+
+	/* WARN (amber) */
+	--mco-snackbar-warn-bg: rgba(255, 193, 7, 0.12);
+	--mco-snackbar-warn-fg: rgba(17, 24, 39, 0.96);
+	--mco-snackbar-warn-border: rgba(255, 193, 7, 0.3);
+	--mco-snackbar-warn-accent: rgba(245, 124, 0, 1);
+
+	/* ERROR (red) */
+	--mco-snackbar-error-bg: rgba(244, 67, 54, 0.1);
+	--mco-snackbar-error-fg: rgba(17, 24, 39, 0.96);
+	--mco-snackbar-error-border: rgba(244, 67, 54, 0.26);
+	--mco-snackbar-error-accent: rgba(211, 47, 47, 1);
+
+	--mco-snackbar-shadow: var(--app-shadow-panel, none);
+
+	/* -----------------------------------------------------------------------
+	   cm-chessboard markers (light theme)
+	   ----------------------------------------------------------------------- */
+	--mco-marker-last-from: color-mix(in oklab, var(--mat-sys-primary) 14%, transparent);
+	--mco-marker-last-to: color-mix(in oklab, var(--mat-sys-primary) 14%, transparent);
+	--mco-marker-last-glow: color-mix(in oklab, var(--mat-sys-primary) 38%, transparent);
+
+	--mco-marker-hint-selected: rgba(0, 0, 0, 0.1);
+	--mco-marker-hint-hover: rgba(0, 0, 0, 0.08);
+	--mco-marker-hint-glow: rgba(0, 0, 0, 0.18);
+
+	--mco-marker-dot-fill: rgba(0, 0, 0, 0.55);
+	--mco-marker-dot-glow-dark: rgba(0, 0, 0, 0.25);
+	--mco-marker-dot-glow-light: rgba(255, 255, 255, 0.6);
+
+	--mco-marker-capture-stroke: rgba(0, 0, 0, 0.65);
+	--mco-marker-capture-stroke-width: 2.3px;
+	--mco-marker-capture-shadow: rgba(255, 255, 255, 0.7);
 }
