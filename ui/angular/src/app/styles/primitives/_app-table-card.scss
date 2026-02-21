@@ -15,6 +15,9 @@
 	border-top-left-radius: var(--app-main-radius);
 	border-top-right-radius: var(--app-main-radius);
 	overflow: hidden;
+
+	background: var(--app-panel-bg);
+	//box-shadow: var(--app-panel-shadow);
 	//background: var(--app-bg-plus-2);
 
 	// background: var(--app-primary-container);
@@ -93,19 +96,19 @@
 }
 
 .app-table-card .mat-mdc-row:nth-child(odd) {
-	background-color: var(--app-bg-plus-1);
+	background-color: var(--app-table-row-odd-bg);
 }
 
 .app-table-card .mat-mdc-row:nth-child(even) {
-	background-color: var(--app-bg-plus-1-half);
+	background-color: var(--app-table-row-even-bg);
 }
 
 .app-table-card .mat-mdc-header-row {
-	background-color: var(--app-bg-plus-2);
+	background-color: var(--app-table-header-bg);
 }
 
 .app-table-card .mat-mdc-paginator {
-	background-color: var(--app-bg-plus-2);
+	background-color: var(--app-table-paginator-bg);
 }
 
 /* --------------------------------------------------------------------------

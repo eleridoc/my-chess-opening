@@ -48,3 +48,25 @@
 	backdrop-filter: blur(var(--app-blur-dialog-backdrop));
 	-webkit-backdrop-filter: blur(var(--app-blur-dialog-backdrop));
 }
+
+/* ---------------------------------------------------------------------------
+   Angular Material (MDC): filled text-field container (light theme only)
+   Give more separation from the panel background.
+   --------------------------------------------------------------------------- */
+
+body.theme-light {
+	.mdc-text-field--filled:not(.mdc-text-field--disabled) {
+		background-color: var(--app-field-fill-bg) !important;
+		box-shadow: inset 0 0 0 1px var(--app-field-fill-border);
+	}
+
+	.mdc-text-field--filled:hover:not(.mdc-text-field--disabled) {
+		background-color: var(--app-field-fill-bg-hover) !important;
+	}
+
+	.mdc-text-field--filled.mdc-text-field--focused:not(.mdc-text-field--disabled) {
+		background-color: var(--app-field-fill-bg-focus) !important;
+		box-shadow: inset 0 0 0 1px
+			color-mix(in oklab, var(--app-primary) 35%, var(--app-field-fill-border));
+	}
+}

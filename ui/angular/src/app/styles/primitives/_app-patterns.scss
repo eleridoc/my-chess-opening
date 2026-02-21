@@ -88,7 +88,8 @@
 .app-container {
 	border-top-left-radius: var(--app-main-radius);
 	border-top-right-radius: var(--app-main-radius);
-	background: var(--app-bg-plus-1);
+	background: var(--app-panel-bg);
+	//box-shadow: var(--app-panel-shadow);
 }
 
 .app-container {

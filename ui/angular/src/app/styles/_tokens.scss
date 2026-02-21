@@ -196,6 +196,30 @@ body.theme-dark {
 	--mco-marker-capture-stroke: rgba(255, 255, 255, 0.86);
 	--mco-marker-capture-stroke-width: 2.3px;
 	--mco-marker-capture-shadow: rgba(0, 0, 0, 0.7);
+
+	/* -----------------------------------------------------------------------
+	   Panel elevation (used by app-container / app-card-flat / app-table-card)
+	   Keep dark identical: no extra shadow/outline.
+	   ----------------------------------------------------------------------- */
+	--app-panel-bg: var(--app-bg-plus-1);
+	--app-panel-top-bg: var(--app-bg-plus-2);
+	--app-panel-shadow: none;
+
+	/* Small blocks (app-card) */
+	--app-card-bg: var(--app-bg-less-1);
+	--app-card-shadow: none;
+
+	/* Table surfaces */
+	--app-table-row-odd-bg: var(--app-bg-plus-1);
+	--app-table-row-even-bg: var(--app-bg-plus-1-half);
+	--app-table-header-bg: var(--app-bg-plus-2);
+	--app-table-paginator-bg: var(--app-bg-plus-2);
+
+	/* Filled fields (light-only overrides consume these) */
+	--app-field-fill-bg: var(--app-bg-plus-2);
+	--app-field-fill-bg-hover: var(--app-bg-plus-2);
+	--app-field-fill-bg-focus: var(--app-bg-plus-2);
+	--app-field-fill-border: transparent;
 }
 
 /* Light theme overrides */
@@ -359,4 +383,31 @@ body.theme-light {
 	--mco-marker-capture-stroke: rgba(0, 0, 0, 0.65);
 	--mco-marker-capture-stroke-width: 2.3px;
 	--mco-marker-capture-shadow: rgba(255, 255, 255, 0.7);
+
+	/* -----------------------------------------------------------------------
+	   Panel elevation (light theme)
+	   - Slightly raised background + subtle outline + soft shadow
+	   - "Windows 98 grey" vibe but modern (no harsh borders)
+	   ----------------------------------------------------------------------- */
+	--app-panel-bg: var(--app-card);
+	--app-panel-top-bg: var(--app-bg-plus-3);
+
+	/* Shadow includes the outline using inset to avoid layout shifts */
+	--app-panel-shadow: 0 10px 24px rgba(0, 0, 0, 0.08), inset 0 0 0 1px rgba(0, 0, 0, 0.14);
+
+	/* Small blocks (app-card): slightly softer than big panels */
+	--app-card-bg: var(--app-bg-less-2);
+	--app-card-shadow: 0 8px 18px rgba(0, 0, 0, 0.06), inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+
+	/* Table surfaces (avoid dark stripes inside a light panel) */
+	--app-table-row-odd-bg: var(--app-panel-bg);
+	--app-table-row-even-bg: color-mix(in oklab, var(--app-panel-bg) 96%, var(--app-bg) 4%);
+	--app-table-header-bg: var(--app-panel-top-bg);
+	--app-table-paginator-bg: var(--app-panel-top-bg);
+
+	/* Filled fields (more separation than the panel background) */
+	--app-field-fill-bg: #f7f7f7;
+	--app-field-fill-bg-hover: #fafafa;
+	--app-field-fill-bg-focus: #fbfbfb; /* avoid pure white */
+	--app-field-fill-border: rgba(0, 0, 0, 0.18);
 }

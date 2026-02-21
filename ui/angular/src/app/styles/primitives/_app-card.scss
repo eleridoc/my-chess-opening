@@ -1,7 +1,8 @@
 .app-card-flat {
 	border-top-left-radius: var(--app-main-radius);
 	border-top-right-radius: var(--app-main-radius);
-	background: var(--app-bg-plus-1);
+	background: var(--app-panel-bg);
+	//box-shadow: var(--app-panel-shadow);
 	//border: 1px solid var(--app-border);
 }
 
@@ -13,8 +14,7 @@
 	font-weight: 700;
 	font-size: 14px;
 	border-bottom: 1px solid var(--app-border);
-	//background: var(--app-surface-1);
-	background: var(--app-bg-plus-2);
+	background: var(--app-panel-top-bg);
 }
 
 .app-card-flat-content {
@@ -31,14 +31,15 @@
 
 .app-card-flat-bottom,
 .app-card-flat-bottom-fit {
-	background: var(--app-bg-plus-1);
+	background: var(--app-panel-bg);
 }
 
 /* Generic card used for small blocks (run context, etc.) */
 .app-card {
 	border: 1px solid var(--app-border);
 	border-radius: var(--app-radius-md);
-	background: var(--app-bg-less-1);
+	background: var(--app-card-bg);
+	//box-shadow: var(--app-card-shadow);
 	// padding: 10px 12px;
 }
 
