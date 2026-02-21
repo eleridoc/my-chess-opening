@@ -45,6 +45,6 @@
 
 .cdk-overlay-backdrop.app-confirm-dialog-backdrop {
 	background: var(--app-overlay-backdrop);
-	backdrop-filter: blur(4px);
-	-webkit-backdrop-filter: blur(4px);
+	backdrop-filter: blur(var(--app-blur-dialog-backdrop));
+	-webkit-backdrop-filter: blur(var(--app-blur-dialog-backdrop));
 }

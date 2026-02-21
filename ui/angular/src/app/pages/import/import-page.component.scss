@@ -133,7 +133,7 @@
 }
 
 .import__state--error {
-	color: var(--mco-error, #c62828);
+	color: var(--mat-sys-error);
 }
 
 .import__empty {
@@ -199,7 +199,7 @@
 	overflow: auto;
 
 	padding: 8px 10px;
-	border-radius: 10px;
+	border-radius: var(--app-radius-lg);
 	background: var(--app-hover);
 	border: 1px solid var(--app-border);
 }

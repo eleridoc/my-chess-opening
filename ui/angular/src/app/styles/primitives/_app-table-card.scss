@@ -181,7 +181,7 @@
 .app-table-card__sticky-header {
 	position: sticky;
 	top: 0;
-	z-index: 3;
+	z-index: var(--app-z-sticky);
 	// background: var(--app-surface-2);
 }
 

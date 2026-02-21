@@ -1,7 +1,7 @@
 .global-loader {
 	position: fixed;
 	inset: 0;
-	z-index: 5000;
+	z-index: var(--app-z-global-loader);
 
 	display: flex;
 	align-items: center;
@@ -9,7 +9,7 @@
 
 	/* Subtle overlay */
 	background: var(--app-overlay-global);
-	backdrop-filter: blur(1px);
+	backdrop-filter: blur(var(--app-blur-loader));
 
 	/* Non-blocking by default (click-through) */
 	pointer-events: none;

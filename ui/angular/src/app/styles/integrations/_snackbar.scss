@@ -117,7 +117,7 @@
 }
 
 .cdk-overlay-container .mat-mdc-snack-bar-container.mco-snackbar .snack__action {
-	border-radius: 999px;
+	border-radius: var(--app-radius-pill);
 }
 
 .cdk-overlay-container .mat-mdc-snack-bar-container.mco-snackbar .snack__action:hover {

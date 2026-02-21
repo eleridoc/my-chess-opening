@@ -144,7 +144,7 @@
 	justify-content: flex-start;
 	min-height: 32px;
 	padding: 0 8px;
-	border-radius: 999px;
+	border-radius: var(--app-radius-pill);
 	opacity: 0.75;
 	font-weight: 700;
 	user-select: none;

@@ -53,14 +53,14 @@
 .section-loader__overlay {
 	position: absolute;
 	inset: 0;
-	z-index: 9999;
+	z-index: var(--app-z-section-overlay);
 
 	display: flex;
 	align-items: center;
 	justify-content: center;
 
 	background: var(--app-overlay-section);
-	backdrop-filter: blur(1px);
+	backdrop-filter: blur(var(--app-blur-loader));
 
 	/* Non-blocking by default (click-through) */
 	pointer-events: none;

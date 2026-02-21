@@ -41,8 +41,8 @@ body {
 
 /* Chromium / Electron */
 *::-webkit-scrollbar {
-	width: 10px;
-	height: 10px;
+	width: var(--app-scrollbar-size);
+	height: var(--app-scrollbar-size);
 }
 
 *::-webkit-scrollbar-track {
@@ -51,10 +51,10 @@ body {
 
 *::-webkit-scrollbar-thumb {
 	background: var(--app-scrollbar-thumb);
-	border-radius: 10px;
+	border-radius: var(--app-radius-lg);
 
 	/* Adds padding so the thumb looks cleaner on dark themes */
-	border: 2px solid var(--app-scrollbar-track);
+	border: var(--app-scrollbar-thumb-pad) solid var(--app-scrollbar-track);
 }
 
 *::-webkit-scrollbar-thumb:hover {

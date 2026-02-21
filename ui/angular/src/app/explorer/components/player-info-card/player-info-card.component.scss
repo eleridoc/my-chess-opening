@@ -79,7 +79,7 @@
 	&__dot {
 		width: 20px;
 		height: 20px;
-		border-radius: 999px;
+		border-radius: var(--app-radius-pill);
 		border: 2px solid var(--app-chess-dot-border);
 		background: var(--app-chess-dot-bg);
 	}
