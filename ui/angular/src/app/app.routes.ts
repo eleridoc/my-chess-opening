@@ -30,6 +30,7 @@ export const routes: Routes = [
 				path: 'qa-mat',
 				loadComponent: () =>
 					import('./pages/qa-mat/qa-mat-page.component').then((m) => m.QaMatPageComponent),
+				canMatch: [devModeGuard],
 			},
 			{
 				path: 'import',
