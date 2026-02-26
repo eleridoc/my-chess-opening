@@ -1,4 +1,4 @@
-import { Component, computed, effect, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -14,6 +14,7 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { ExternalLinkService } from '../../shared/system/external-link.service';
 
 import type {
 	ExternalSite,
@@ -54,6 +55,8 @@ type TimePreset = 'none' | '1h' | '24h' | '7d';
 	styleUrls: ['./logs-page.component.scss'],
 })
 export class LogsPageComponent {
+	private readonly externalLink = inject(ExternalLinkService);
+
 	readonly displayedColumns = [
 		'createdAt',
 		'level',
@@ -292,9 +295,8 @@ export class LogsPageComponent {
 		this.selectedDetails.set(null);
 	}
 
-	openUrl(url: string | null): void {
-		if (!url) return;
-		window.open(url, '_blank');
+	openUrl(url: string | null, event?: Event): void {
+		this.externalLink.open(url, event);
 	}
 
 	viewRun(importRunId: string): void {

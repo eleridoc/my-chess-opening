@@ -46,11 +46,7 @@
 							<span>URL</span>
 							<ng-container *ngIf="d.url; else noUrl">
 								<!-- Keep anchor semantics; prevent default and delegate to system open -->
-								<a
-									class="drawer-link"
-									[attr.href]="d.url"
-									(click)="openUrl(d.url); $event.preventDefault()"
-								>
+								<a class="drawer-link" [attr.href]="d.url" (click)="openUrl(d.url, $event)">
 									{{ d.url }}
 								</a>
 							</ng-container>
