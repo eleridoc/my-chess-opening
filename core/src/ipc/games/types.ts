@@ -1,15 +1,5 @@
 import type { ExternalSite, GameSpeed, PlayerColor } from '../../import/types';
-
-/**
- * Result key encoding used for fast filtering/aggregations.
- *
- * Conventions:
- * - resultKey (objective, White POV):
- *   1 = White win, 0 = draw/unknown, -1 = Black win
- * - myResultKey (owner POV):
- *   1 = owner win, 0 = draw/unknown, -1 = owner loss
- */
-export type ResultKey = 1 | 0 | -1;
+import type { ResultKey } from '../../import/types';
 
 // Add near other exported types (e.g. after ResultKey)
 export type SortOrder = 'asc' | 'desc';
