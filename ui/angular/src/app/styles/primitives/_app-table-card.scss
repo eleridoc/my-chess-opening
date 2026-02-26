@@ -178,36 +178,22 @@
 	background: var(--app-bg-plus-3);
 }
 
-/* Sticky header: put this class on the header row:
+/* Sticky header (Material table)
+   Put this class on the header row:
    <tr mat-header-row ... class="app-table-card__sticky-header"></tr>
 */
 .app-table-card__sticky-header {
 	position: sticky;
 	top: 0;
-	z-index: var(--app-z-sticky);
-	// background: var(--app-surface-2);
-}
-
-/* --- Sticky header (Material table) --- */
-/* Put this class on the header row:
-   <tr mat-header-row ... class="app-table-card__sticky-header"></tr>
-*/
-.app-table-card__sticky-header {
-	position: sticky;
-	top: 0;
-	z-index: 3;
+	z-index: var(--app-z-sticky, 3);
 
 	/* Must be opaque so rows don't show behind */
 	// background: var(--app-surface-2);
 }
 
-/* Ensure header cells keep the opaque background too */
+/* Ensure header cells keep the opaque background too + subtle separation line */
 .app-table-card__sticky-header .mat-mdc-header-cell {
 	background: inherit;
-}
-
-/* Optional: subtle separation line under sticky header */
-.app-table-card__sticky-header .mat-mdc-header-cell {
 	box-shadow: inset 0 -1px 0 var(--app-sticky-sep);
 }
 
