@@ -63,4 +63,6 @@ Thumbs.db
 
 # --- Help files ---
 
-help/
+# Local help snapshots
+help_versions/
+.ignore

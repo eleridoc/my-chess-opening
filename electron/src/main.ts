@@ -3,6 +3,7 @@ import * as path from 'node:path';
 import { PrismaClient } from '@prisma/client';
 import { coreIsReady } from 'my-chess-opening-core';
 
+import { getAssetsDir } from './system/paths';
 import { cleanupAbortedImportRuns } from './import/importAllAccounts';
 import { registerAccountsIpc } from './accounts/accountsIpc';
 import { registerLogsIpc } from './logs/logsIpc';
@@ -56,18 +57,6 @@ function emitImportEvent(event: ImportEvent): void {
  * Keep it configurable so you can run on another port without touching code.
  */
 const DEV_SERVER_URL = process.env['MCO_DEV_SERVER_URL'] ?? 'http://localhost:4200';
-
-/**
- * Resolve the assets directory for the app icon and other resources.
- *
- * - In dev, __dirname points to compiled output (usually electron/dist).
- * - In packaged apps, resources are located under process.resourcesPath.
- */
-function getAssetsDir(): string {
-	return app.isPackaged
-		? path.join(process.resourcesPath, 'assets')
-		: path.join(__dirname, '../assets');
-}
 
 /**
  * OS-specific application icon.

@@ -1,6 +1,6 @@
-import { app } from 'electron';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
+import { getAssetsDir } from '../system/paths';
 
 import { normalizeSanLine } from './ecoSan';
 
@@ -113,18 +113,6 @@ export function getEcoOpeningsCatalog(): Promise<EcoOpeningsCatalog> {
 // -----------------------------------------------------------------------------
 // Implementation
 // -----------------------------------------------------------------------------
-
-/**
- * Resolve the "assets" directory.
- *
- * - In dev, __dirname points to compiled output (electron/dist).
- * - In packaged apps, resources are located under process.resourcesPath.
- */
-function getAssetsDir(): string {
-	return app.isPackaged
-		? path.join(process.resourcesPath, 'assets')
-		: path.join(__dirname, '../../assets');
-}
 
 /**
  * Extract SAN move tokens from a compact PGN line.
