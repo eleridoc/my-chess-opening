@@ -1,10 +1,7 @@
 import { ipcMain } from 'electron';
 import { prisma } from '../db/prisma';
 import type { GamesListInput, GamesListResult } from 'my-chess-opening-core';
-
-function clamp(n: number, min: number, max: number): number {
-	return Math.max(min, Math.min(max, n));
-}
+import { clamp } from '../shared/math';
 
 function parseIsoDateStart(iso: string): Date | null {
 	const s = iso.trim();

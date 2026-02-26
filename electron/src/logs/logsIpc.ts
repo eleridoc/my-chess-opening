@@ -1,15 +1,13 @@
 import { ipcMain } from 'electron';
 import { prisma } from '../db/prisma';
+import { clamp } from '../shared/math';
+
 import type {
 	LogsListInput,
 	LogsListResult,
 	LogsFacetsResult,
 	LogEntryDetails,
 } from 'my-chess-opening-core';
-
-function clamp(n: number, min: number, max: number): number {
-	return Math.max(min, Math.min(max, n));
-}
 
 function buildWhere(filters: NonNullable<LogsListInput['filters']>) {
 	const and: any[] = [];
