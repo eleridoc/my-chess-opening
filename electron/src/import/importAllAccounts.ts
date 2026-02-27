@@ -27,6 +27,14 @@ import {
 	DEFAULT_MIN_GLOBAL_MATCH_PLY,
 } from '../eco/ecoOpeningMatcher';
 
+import type {
+	ImportAllAccountsParams,
+	ImportBatchSummary,
+	ImportEventPayload,
+} from './importAllAccounts.types';
+
+export type { ImportBatchSummary } from './importAllAccounts.types';
+
 /**
  * How often we persist progress + emit UI progress updates during per-account processing.
  * This reduces DB writes and UI chatter while still providing a smooth progress signal.
@@ -40,7 +48,25 @@ const PROGRESS_COMMIT_EVERY = 25;
 const ECO_DEBUG = process.env.MCO_ECO_DEBUG === '1';
 
 // -----------------------------------------------------------------------------
-// Small helpers
+// REFACTOR MAP (V1.6.13.8.x)
+// -----------------------------------------------------------------------------
+// This file is intentionally split into clear sections to enable safe extraction
+// without changing runtime behavior.
+//
+// Planned extractions:
+// - types:      importAllAccounts.types.ts
+// - pure utils: importAllAccounts.helpers.ts
+// - progress:   progressCommit.ts
+// - persistence: persistGame.ts / persistImportRun.ts
+// - eco:        ecoEnricher.ts
+// - runner:     runAccountImport.ts + runImportBatch.ts
+//
+// IMPORTANT: Refactor-only. Do not change IPC/core contracts, event payloads,
+// throttling policy, or lastSyncAt watermark rules.
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// SECTION: Utilities (pure)
 // -----------------------------------------------------------------------------
 
 function sha256Hex(input: string): string {
@@ -84,14 +110,6 @@ function mapPrismaSite(site: CoreExternalSite): PrismaExternalSite {
 		: PrismaExternalSite.LICHESS;
 }
 
-export type ImportBatchSummary = {
-	status: ImportRunStatus;
-	totalGamesFound: number;
-	totalInserted: number;
-	totalSkipped: number;
-	totalFailed: number;
-};
-
 function mapRunStatus(status: ImportStatus): ImportRunStatus {
 	switch (status) {
 		case ImportStatus.SUCCESS:
@@ -102,6 +120,10 @@ function mapRunStatus(status: ImportStatus): ImportRunStatus {
 			return 'PARTIAL';
 	}
 }
+
+// -----------------------------------------------------------------------------
+// SECTION: Import run recovery (DB writes)
+// -----------------------------------------------------------------------------
 
 /**
  * Marks "running" ImportRuns left in an unfinished state as aborted.
@@ -152,6 +174,10 @@ export async function cleanupAbortedImportRuns(): Promise<number> {
 	return abortedRuns.length;
 }
 
+// -----------------------------------------------------------------------------
+// SECTION: Import logging (DB writes)
+// -----------------------------------------------------------------------------
+
 async function logImport(params: {
 	importRunId: string;
 	level: 'INFO' | 'WARN' | 'ERROR';
@@ -174,6 +200,10 @@ async function logImport(params: {
 	});
 }
 
+// -----------------------------------------------------------------------------
+// SECTION: Game persistence (DB writes)
+// -----------------------------------------------------------------------------
+
 /**
  * Persist one imported game:
  * - Creates Game (unique per accountConfigId+site+externalId)
@@ -190,6 +220,8 @@ async function persistGame(params: {
 }): Promise<{ inserted: boolean }> {
 	const { accountConfigId, game, ecoCatalog } = params;
 
+	// SUBSECTION: Validate required owner-perspective fields (must be provided by core).
+
 	// Perspective must be applied by the importer layer (applyOwnerPerspective).
 	if (!game.myColor || !game.myUsername || !game.opponentUsername || game.myResultKey == null) {
 		throw new Error(
@@ -203,6 +235,8 @@ async function persistGame(params: {
 	const opponentUsername = game.opponentUsername;
 
 	const pgnHash = sha256Hex(game.pgn);
+
+	// SUBSECTION: ECO enrichment (best-effort, must never fail the import).
 
 	// Optional enrichment computed by the app using the bundled openings dataset.
 	// IMPORTANT:
@@ -380,6 +414,8 @@ async function persistGame(params: {
 		ecoDetermined = providerEcoRaw.length > 0 ? providerEcoRaw : null;
 	}
 
+	// SUBSECTION: Transactional insert (game + players + moves).
+
 	try {
 		await prisma.$transaction(async (tx) => {
 			const created = await tx.game.create({
@@ -476,6 +512,7 @@ async function persistGame(params: {
 		});
 
 		return { inserted: true };
+		// SUBSECTION: Duplicate handling (unique constraint => skipped).
 	} catch (e: any) {
 		// Prisma unique constraint error code (P2002) => duplicate.
 		if (e?.code === 'P2002') {
@@ -486,7 +523,7 @@ async function persistGame(params: {
 }
 
 // -----------------------------------------------------------------------------
-// Import batch runner
+// SECTION: Import batch runner (entrypoint)
 // -----------------------------------------------------------------------------
 
 /**
@@ -498,37 +535,10 @@ async function persistGame(params: {
  *
  * The conditional type below distributes over the union, keeping the per-variant fields intact.
  */
-type WithoutBase<T> = T extends unknown ? Omit<T, 'batchId' | 'emittedAtIso'> : never;
-type ImportEventPayload = WithoutBase<ImportEvent>;
 
-export async function importAllAccounts(params?: {
-	sinceOverride?: Date | null;
-	maxGamesPerAccount?: number | null;
-
-	/**
-	 * If provided, import only these enabled accounts.
-	 * When null/undefined, imports all enabled accounts.
-	 */
-	accountIds?: string[] | null;
-
-	/**
-	 * Required when `onEvent` is provided.
-	 * Used to correlate all streamed events on the UI side.
-	 */
-	batchId?: string | null;
-
-	/**
-	 * When provided, used as the batch "started at" watermark.
-	 * This is typically the timestamp emitted in the `runStarted` event.
-	 */
-	batchStartedAtIso?: string | null;
-
-	/**
-	 * Optional event callback for streaming progress to the UI.
-	 * This should be wired by the Electron main process (webContents.send).
-	 */
-	onEvent?: (event: ImportEvent) => void;
-}): Promise<ImportBatchSummary> {
+export async function importAllAccounts(
+	params?: ImportAllAccountsParams,
+): Promise<ImportBatchSummary> {
 	const maxGamesPerAccount = params?.maxGamesPerAccount ?? null;
 	const isLimitedRun = typeof maxGamesPerAccount === 'number' && maxGamesPerAccount > 0;
 
@@ -553,6 +563,7 @@ export async function importAllAccounts(params?: {
 		return Number.isFinite(d.getTime()) ? d : new Date();
 	})();
 
+	// SECTION: Event emitter (IPC streaming)
 	function nowIso(): string {
 		return new Date().toISOString();
 	}
@@ -571,6 +582,7 @@ export async function importAllAccounts(params?: {
 		} as ImportEvent);
 	}
 
+	// SECTION: Load enabled accounts (DB reads)
 	const whereAccount: Prisma.AccountConfigWhereInput = { isEnabled: true };
 	if (Array.isArray(accountIds) && accountIds.length > 0) {
 		whereAccount.id = { in: accountIds };
@@ -581,12 +593,14 @@ export async function importAllAccounts(params?: {
 		orderBy: [{ site: 'asc' }, { username: 'asc' }],
 	});
 
+	// SECTION: Initialize orchestrator + ECO catalog (in-memory)
 	// Register importers from core (pure orchestrator: no DB side effects).
 	const importService = new ImportOrchestrator([new ChessComImporter(), new LichessImporter()]);
 
 	// Load once per batch (cached in-memory). If the dataset is missing, the catalog returns no candidates.
 	const ecoCatalog = await getEcoOpeningsCatalog();
 
+	// SECTION: Batch totals + lastSyncAt watermark policy
 	let totalGamesFound = 0;
 	let totalInserted = 0;
 	let totalSkipped = 0;
@@ -602,9 +616,11 @@ export async function importAllAccounts(params?: {
 	 */
 	const accountsToUpdateLastSyncAt: string[] = [];
 
+	// SECTION: Per-account import loop
 	for (const account of accounts) {
 		const since = sinceOverride ?? account.lastSyncAt ?? null;
 
+		// SUBSECTION: Create ImportRun + emit accountStarted
 		// Create per-account ImportRun.
 		const run = await prisma.importRun.create({
 			data: {
@@ -641,6 +657,7 @@ export async function importAllAccounts(params?: {
 		let gamesFailed = 0;
 
 		try {
+			// SUBSECTION: Import from provider (core orchestrator)
 			const options: ImportOptions = {
 				username: account.username,
 				since,
@@ -675,6 +692,7 @@ export async function importAllAccounts(params?: {
 				failed: 0,
 			});
 
+			// SUBSECTION: Persist games (DB writes) + emit progress/errors
 			for (const g of games) {
 				try {
 					const { inserted } = await persistGame({
@@ -758,6 +776,7 @@ export async function importAllAccounts(params?: {
 				failed: gamesFailed,
 			});
 
+			// SUBSECTION: Finalize run status + emit accountFinished
 			// Decide final status.
 			const status =
 				gamesFailed === 0
@@ -803,6 +822,7 @@ export async function importAllAccounts(params?: {
 				finishedAtIso,
 			});
 		} catch (err: any) {
+			// SUBSECTION: Run-level failure handling (DB writes + emit failed)
 			const errorMessage = String(err?.message ?? err);
 
 			await prisma.importRun.update({
@@ -847,6 +867,7 @@ export async function importAllAccounts(params?: {
 			});
 		}
 
+		// SUBSECTION: Accumulate batch totals
 		// Update batch totals from this account run.
 		totalGamesFound += gamesFound;
 		totalInserted += gamesInserted;
@@ -854,6 +875,7 @@ export async function importAllAccounts(params?: {
 		totalFailed += gamesFailed;
 	}
 
+	// SECTION: Apply lastSyncAt watermark update (batch-level)
 	// Apply the batch-level watermark update once everything is finished.
 	if (!isLimitedRun && accountsToUpdateLastSyncAt.length > 0) {
 		await prisma.accountConfig.updateMany({
@@ -883,6 +905,7 @@ export async function importAllAccounts(params?: {
 		});
 	}
 
+	// SECTION: Return batch summary
 	const status: ImportRunStatus =
 		totalFailed === 0 ? 'SUCCESS' : totalInserted > 0 ? 'PARTIAL' : 'FAILED';
 
