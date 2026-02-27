@@ -20,7 +20,7 @@ import type {
 	PlayerSide,
 } from '../view-models/game-info-header.vm';
 
-import * as gameInfoBuilders from './explorer-game-info.builders';
+import * as gameInfoBuilders from './explorer-facade.game-info.builders';
 import {
 	getPerspectiveColor,
 	type LastMoveSquares,
