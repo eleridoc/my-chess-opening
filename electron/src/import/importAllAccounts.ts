@@ -5,7 +5,6 @@ import {
 	ImportOrchestrator,
 	ChessComImporter,
 	LichessImporter,
-	type ImportOptions,
 	type ImportEvent,
 	type ImportRunStatus,
 } from 'my-chess-opening-core';
@@ -18,27 +17,17 @@ import type {
 	ImportEventPayload,
 } from './importAllAccounts.types';
 
-export type { ImportBatchSummary } from './importAllAccounts.types';
-
-import { mapSite, mapRunStatus } from './importAllAccounts.helpers';
-
-import { createAccountProgressCommitter, type ImportRunCounters } from './progress/progressCommit';
-
-import { persistGame } from './persistence/persistGame';
-
 import { logImport } from './persistence/importLogger';
+
+import { runAccountImport } from './runner/runAccountImport';
+
+export type { ImportBatchSummary } from './importAllAccounts.types';
 
 /**
  * How often we persist progress + emit UI progress updates during per-account processing.
  * This reduces DB writes and UI chatter while still providing a smooth progress signal.
  */
 const PROGRESS_COMMIT_EVERY = 25;
-
-/**
- * Debug flag for ECO enrichment diagnostics.
- * Enable by setting: MCO_ECO_DEBUG=1
- */
-const ECO_DEBUG = process.env.MCO_ECO_DEBUG === '1';
 
 // -----------------------------------------------------------------------------
 // REFACTOR MAP (V1.6.13.8.x)
@@ -199,238 +188,23 @@ export async function importAllAccounts(
 	for (const account of accounts) {
 		const since = sinceOverride ?? account.lastSyncAt ?? null;
 
-		// SUBSECTION: Create ImportRun + emit accountStarted
-		// Create per-account ImportRun.
-		const run = await prisma.importRun.create({
-			data: {
-				accountConfigId: account.id,
-				status: ImportStatus.PARTIAL, // used as "RUNNING" in our minimal enum set
-				gamesFound: 0,
-				gamesInserted: 0,
-				gamesSkipped: 0,
-				gamesFailed: 0,
-			},
+		const result = await runAccountImport({
+			account,
+			since,
+			importService,
+			ecoCatalog,
+			maxGamesPerAccount,
+			isLimitedRun,
+			commitEvery: PROGRESS_COMMIT_EVERY,
+			emit,
+			nowIso,
+			accountsToUpdateLastSyncAt,
 		});
 
-		emit({
-			type: 'accountStarted',
-			accountId: account.id,
-			site: mapSite(account.site),
-			username: account.username,
-		});
-
-		await logImport({
-			importRunId: run.id,
-			level: 'INFO',
-			scope: 'RUN',
-			site: account.site,
-			username: account.username,
-			message: `Import started (since=${since ? since.toISOString() : 'FULL'}${
-				isLimitedRun ? `, maxGames=${maxGamesPerAccount}` : ''
-			})`,
-		});
-
-		let gamesFound = 0;
-		let gamesInserted = 0;
-		let gamesSkipped = 0;
-		let gamesFailed = 0;
-
-		try {
-			// SUBSECTION: Import from provider (core orchestrator)
-			const options: ImportOptions = {
-				username: account.username,
-				since,
-				ratedOnly: true,
-				speeds: ['bullet', 'blitz', 'rapid'],
-				includeMoves: true,
-				maxGames: maxGamesPerAccount ?? undefined,
-			};
-
-			const games = await importService.importGames(mapSite(account.site), options);
-			gamesFound = games.length;
-
-			await prisma.importRun.update({
-				where: { id: run.id },
-				data: { gamesFound },
-			});
-
-			emit({
-				type: 'accountNewGamesFound',
-				accountId: account.id,
-				gamesFound,
-			});
-
-			const progress = createAccountProgressCommitter({
-				commitEvery: PROGRESS_COMMIT_EVERY,
-				runId: run.id,
-				accountId: account.id,
-				gamesFound,
-				emit,
-				updateRunCounters: async ({ runId, inserted, skipped, failed }) => {
-					await prisma.importRun.update({
-						where: { id: runId },
-						data: {
-							gamesInserted: inserted,
-							gamesSkipped: skipped,
-							gamesFailed: failed,
-						},
-					});
-				},
-			});
-
-			progress.emitInitial();
-
-			// SUBSECTION: Persist games (DB writes) + emit progress/errors
-			for (const g of games) {
-				try {
-					const { inserted } = await persistGame({
-						accountConfigId: account.id,
-						game: g,
-						ecoCatalog,
-					});
-
-					if (inserted) {
-						gamesInserted += 1;
-					} else {
-						gamesSkipped += 1;
-					}
-				} catch (err: any) {
-					gamesFailed += 1;
-
-					const errorMessage = String(err?.message ?? err);
-
-					await logImport({
-						importRunId: run.id,
-						level: 'ERROR',
-						scope: 'PERSIST',
-						site: account.site,
-						username: account.username,
-						externalId: g.externalId,
-						message: 'Failed to persist game',
-						data: { error: errorMessage },
-					});
-
-					emit({
-						type: 'accountError',
-						accountId: account.id,
-						externalId: g.externalId ?? null,
-						message: errorMessage,
-					});
-				}
-
-				const counters: ImportRunCounters = {
-					inserted: gamesInserted,
-					skipped: gamesSkipped,
-					failed: gamesFailed,
-				};
-
-				await progress.maybeCommit(counters);
-			}
-
-			// Final counters.
-			await progress.commitFinal({
-				inserted: gamesInserted,
-				skipped: gamesSkipped,
-				failed: gamesFailed,
-			});
-
-			// SUBSECTION: Finalize run status + emit accountFinished
-			// Decide final status.
-			const status =
-				gamesFailed === 0
-					? ImportStatus.SUCCESS
-					: gamesInserted > 0
-						? ImportStatus.PARTIAL
-						: ImportStatus.FAILED;
-
-			// Defer lastSyncAt update to batch completion (watermark = batchStartedAt).
-			// We only update accounts that finished SUCCESS, to avoid skipping games after failures.
-			if (!isLimitedRun && status === ImportStatus.SUCCESS) {
-				accountsToUpdateLastSyncAt.push(account.id);
-			}
-
-			const finishedAtIso = nowIso();
-
-			await prisma.importRun.update({
-				where: { id: run.id },
-				data: {
-					status,
-					finishedAt: new Date(finishedAtIso),
-					errorMessage: gamesFailed ? `Some games failed (${gamesFailed}).` : null,
-				},
-			});
-
-			await logImport({
-				importRunId: run.id,
-				level: status === ImportStatus.SUCCESS ? 'INFO' : 'WARN',
-				scope: 'RUN',
-				site: account.site,
-				username: account.username,
-				message: `Import finished: found=${gamesFound} inserted=${gamesInserted} skipped=${gamesSkipped} failed=${gamesFailed} status=${status}`,
-			});
-
-			emit({
-				type: 'accountFinished',
-				accountId: account.id,
-				status: mapRunStatus(status),
-				gamesFound,
-				inserted: gamesInserted,
-				skipped: gamesSkipped,
-				failed: gamesFailed,
-				finishedAtIso,
-			});
-		} catch (err: any) {
-			// SUBSECTION: Run-level failure handling (DB writes + emit failed)
-			const errorMessage = String(err?.message ?? err);
-
-			await prisma.importRun.update({
-				where: { id: run.id },
-				data: {
-					status: ImportStatus.FAILED,
-					finishedAt: new Date(),
-					errorMessage,
-					gamesFound,
-					gamesInserted,
-					gamesSkipped,
-					gamesFailed,
-				},
-			});
-
-			await logImport({
-				importRunId: run.id,
-				level: 'ERROR',
-				scope: 'RUN',
-				site: account.site,
-				username: account.username,
-				message: `Import failed: ${errorMessage}`,
-				data: { error: String(err?.stack ?? err) },
-			});
-
-			emit({
-				type: 'accountError',
-				accountId: account.id,
-				externalId: null,
-				message: errorMessage,
-			});
-
-			emit({
-				type: 'accountFinished',
-				accountId: account.id,
-				status: 'FAILED',
-				gamesFound,
-				inserted: gamesInserted,
-				skipped: gamesSkipped,
-				failed: gamesFailed,
-				finishedAtIso: nowIso(),
-			});
-		}
-
-		// SUBSECTION: Accumulate batch totals
-		// Update batch totals from this account run.
-		totalGamesFound += gamesFound;
-		totalInserted += gamesInserted;
-		totalSkipped += gamesSkipped;
-		totalFailed += gamesFailed;
+		totalGamesFound += result.gamesFound;
+		totalInserted += result.inserted;
+		totalSkipped += result.skipped;
+		totalFailed += result.failed;
 	}
 
 	// SECTION: Apply lastSyncAt watermark update (batch-level)
