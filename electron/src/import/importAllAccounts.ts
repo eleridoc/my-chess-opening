@@ -7,8 +7,6 @@ import {
 	Prisma,
 } from '@prisma/client';
 
-import { createHash } from 'node:crypto';
-
 import {
 	ImportOrchestrator,
 	ChessComImporter,
@@ -34,6 +32,15 @@ import type {
 } from './importAllAccounts.types';
 
 export type { ImportBatchSummary } from './importAllAccounts.types';
+
+import {
+	sha256Hex,
+	mapSpeed,
+	mapColor,
+	mapSite,
+	mapPrismaSite,
+	mapRunStatus,
+} from './importAllAccounts.helpers';
 
 /**
  * How often we persist progress + emit UI progress updates during per-account processing.
@@ -64,62 +71,6 @@ const ECO_DEBUG = process.env.MCO_ECO_DEBUG === '1';
 // IMPORTANT: Refactor-only. Do not change IPC/core contracts, event payloads,
 // throttling policy, or lastSyncAt watermark rules.
 // -----------------------------------------------------------------------------
-
-// -----------------------------------------------------------------------------
-// SECTION: Utilities (pure)
-// -----------------------------------------------------------------------------
-
-function sha256Hex(input: string): string {
-	return createHash('sha256').update(input).digest('hex');
-}
-
-function mapSpeed(speed: ImportedGameRaw['speed']): PrismaGameSpeed {
-	switch (speed) {
-		case 'bullet':
-			return PrismaGameSpeed.BULLET;
-		case 'blitz':
-			return PrismaGameSpeed.BLITZ;
-		case 'rapid':
-			return PrismaGameSpeed.RAPID;
-		default:
-			// Defensive fallback: treat unknown values as classical.
-			return PrismaGameSpeed.CLASSICAL;
-	}
-}
-
-function mapColor(color: 'white' | 'black'): PrismaPlayerColor {
-	return color === 'white' ? PrismaPlayerColor.WHITE : PrismaPlayerColor.BLACK;
-}
-
-/**
- * Map Prisma enum -> Core enum for orchestrator calls and UI events.
- */
-function mapSite(site: PrismaExternalSite): CoreExternalSite {
-	return site === PrismaExternalSite.CHESSCOM
-		? CoreExternalSite.CHESSCOM
-		: CoreExternalSite.LICHESS;
-}
-
-/**
- * Map Core enum -> Prisma enum for DB persistence.
- * This avoids unsafe casts (`as unknown as`) at write-time.
- */
-function mapPrismaSite(site: CoreExternalSite): PrismaExternalSite {
-	return site === CoreExternalSite.CHESSCOM
-		? PrismaExternalSite.CHESSCOM
-		: PrismaExternalSite.LICHESS;
-}
-
-function mapRunStatus(status: ImportStatus): ImportRunStatus {
-	switch (status) {
-		case ImportStatus.SUCCESS:
-			return 'SUCCESS';
-		case ImportStatus.FAILED:
-			return 'FAILED';
-		default:
-			return 'PARTIAL';
-	}
-}
 
 // -----------------------------------------------------------------------------
 // SECTION: Import run recovery (DB writes)
