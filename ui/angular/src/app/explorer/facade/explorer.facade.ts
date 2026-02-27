@@ -58,24 +58,17 @@ import type { BoardOrientation } from '../board/board-adapter';
 
 import * as gameInfoBuilders from './explorer-game-info.builders';
 
-/**
- * UI-friendly representation of a "promotion required" situation.
- * The UI can decide to:
- * - show a promotion picker
- * - disable input until resolved
- * - or cancel promotion by navigating elsewhere (depending on adapter strategy)
- */
-type PromotionPending = {
-	from: string;
-	to: string;
-	options: PromotionPiece[];
-};
-
-/**
- * UI hint: squares to highlight for the last applied move in the current path.
- * Derived from the current node incoming move (root has no incoming move).
- */
-type LastMoveSquares = { from: string; to: string } | null;
+import {
+	applyDbLoadOrientationRule,
+	clearTransientUiState,
+	getPerspectiveColor,
+	refreshFromCore,
+	setImportError,
+	type CoreSyncSignals,
+	type LastMoveSquares,
+	type PromotionPending,
+	type TransientSignals,
+} from './explorer-facade.internal';
 
 @Injectable({ providedIn: 'root' })
 export class ExplorerFacade {
@@ -176,6 +169,36 @@ export class ExplorerFacade {
 	/** PGN headers parsed from an ephemeral import (UI-side cache). */
 	private readonly _ephemeralPgnTags = signal<PgnTags | null>(null);
 
+	private readonly _coreSync: CoreSyncSignals = {
+		mode: this._mode,
+		source: this._source,
+		fen: this._fen,
+		ply: this._ply,
+		currentNodeId: this._currentNodeId,
+
+		moveListRows: this._moveListRows,
+		variationsByNodeId: this._variationsByNodeId,
+
+		moves: this._moves,
+
+		canPrev: this._canPrev,
+		canNext: this._canNext,
+
+		normalizedFen: this._normalizedFen,
+		positionKey: this._positionKey,
+		dbGameSnapshot: this._dbGameSnapshot,
+
+		lastMoveSquares: this._lastMoveSquares,
+		rev: this._rev,
+	};
+
+	private readonly _transient: TransientSignals = {
+		lastError: this._lastError,
+		importFenError: this._importFenError,
+		importPgnError: this._importPgnError,
+		promotionPending: this._promotionPending,
+	};
+
 	// ---------------------------------------------------------------------------
 	// Public readonly signals (what the UI should consume)
 	// ---------------------------------------------------------------------------
@@ -265,7 +288,7 @@ export class ExplorerFacade {
 		this._rev();
 
 		const headers = this.gameHeaders();
-		const myColor = this.getPerspectiveColor();
+		const myColor = getPerspectiveColor(this._dbGameSnapshot());
 		const boardOrientation = this.boardOrientation();
 
 		// Cursor-dependent core selectors.
@@ -359,7 +382,7 @@ export class ExplorerFacade {
 	}));
 
 	constructor() {
-		this.refreshFromCore();
+		refreshFromCore(this.session, this._coreSync);
 	}
 
 	// ---------------------------------------------------------------------------
@@ -371,19 +394,19 @@ export class ExplorerFacade {
 	 * Clears UI transient state, resets core, then refreshes signals.
 	 */
 	reset(): void {
-		this.clearTransientUiState();
+		clearTransientUiState(this._transient);
 		this.setPendingDbGameId(null);
 		this.session.resetToInitial();
 		this._ephemeralPgnTags.set(null);
-		this.refreshFromCore();
+		refreshFromCore(this.session, this._coreSync);
 	}
 
 	/** Starts a fresh exploration (alias kept for UI readability). */
 	loadInitial(): void {
-		this.clearTransientUiState();
+		clearTransientUiState(this._transient);
 		this.session.loadInitial();
 		this._ephemeralPgnTags.set(null);
-		this.refreshFromCore();
+		refreshFromCore(this.session, this._coreSync);
 	}
 
 	/** Manual board rotation (UI preference). */
@@ -407,15 +430,15 @@ export class ExplorerFacade {
 	 * On failure, sets `importFenError` (and `lastError` for QA/legacy use).
 	 */
 	loadFenForCase1(fen: string): void {
-		this.clearTransientUiState();
+		clearTransientUiState(this._transient);
 
 		const result = this.session.loadFenForCase1(fen);
 		if (result.ok) {
-			this.refreshFromCore();
+			refreshFromCore(this.session, this._coreSync);
 			return;
 		}
 
-		this.setImportError('FEN', result.error);
+		setImportError('FEN', result.error, this._transient);
 	}
 
 	/**
@@ -423,16 +446,16 @@ export class ExplorerFacade {
 	 * On failure, sets `importPgnError` (and `lastError` for QA/legacy use).
 	 */
 	loadPgn(pgn: string, meta?: { name?: string }): void {
-		this.clearTransientUiState();
+		clearTransientUiState(this._transient);
 
 		const result = this.session.loadPgn(pgn, meta);
 		if (result.ok) {
 			this._ephemeralPgnTags.set(parsePgnTags(pgn));
-			this.refreshFromCore();
+			refreshFromCore(this.session, this._coreSync);
 			return;
 		}
 
-		this.setImportError('PGN', result.error);
+		setImportError('PGN', result.error, this._transient);
 	}
 
 	/**
@@ -443,11 +466,11 @@ export class ExplorerFacade {
 	 * Prefer loadDbGameSnapshot() for future-proof "single payload" DB loading.
 	 */
 	loadGameMovesSan(movesSan: string[], meta: ExplorerDbGameMeta): void {
-		this.clearTransientUiState();
+		clearTransientUiState(this._transient);
 
 		const result = this.session.loadGameMovesSan(movesSan, meta);
 		if (result.ok) {
-			this.refreshFromCore();
+			refreshFromCore(this.session, this._coreSync);
 			return;
 		}
 
@@ -459,7 +482,7 @@ export class ExplorerFacade {
 	 * On failure, sets `lastError`.
 	 */
 	loadDbGameSnapshot(snapshot: ExplorerGameSnapshot): void {
-		this.clearTransientUiState();
+		clearTransientUiState(this._transient);
 
 		const result = this.session.loadDbGameSnapshot(snapshot);
 		if (result.ok) {
@@ -469,9 +492,9 @@ export class ExplorerFacade {
 			this._ephemeralPgnTags.set(null);
 
 			// DB-load rule: if the snapshot provides a perspective color, keep the owner at the bottom.
-			this.applyDbLoadOrientationRule(snapshot);
+			applyDbLoadOrientationRule(snapshot, (o) => this.setBoardOrientation(o));
 
-			this.refreshFromCore();
+			refreshFromCore(this.session, this._coreSync);
 			return;
 		}
 
@@ -496,39 +519,39 @@ export class ExplorerFacade {
 	 * This ensures errors/promotions don't remain visible after unrelated actions.
 	 */
 	goStart(): void {
-		this.clearTransientUiState();
+		clearTransientUiState(this._transient);
 		this.session.goStart();
-		this.refreshFromCore();
+		refreshFromCore(this.session, this._coreSync);
 	}
 
 	goEnd(): void {
-		this.clearTransientUiState();
+		clearTransientUiState(this._transient);
 		this.session.goEnd();
-		this.refreshFromCore();
+		refreshFromCore(this.session, this._coreSync);
 	}
 
 	goPrev(): void {
-		this.clearTransientUiState();
+		clearTransientUiState(this._transient);
 		this.session.goPrev();
-		this.refreshFromCore();
+		refreshFromCore(this.session, this._coreSync);
 	}
 
 	goNext(): void {
-		this.clearTransientUiState();
+		clearTransientUiState(this._transient);
 		this.session.goNext();
-		this.refreshFromCore();
+		refreshFromCore(this.session, this._coreSync);
 	}
 
 	goPrevVariation(): void {
-		this.clearTransientUiState();
+		clearTransientUiState(this._transient);
 		this.session.goPrevVariation();
-		this.refreshFromCore();
+		refreshFromCore(this.session, this._coreSync);
 	}
 
 	goNextVariation(): void {
-		this.clearTransientUiState();
+		clearTransientUiState(this._transient);
 		this.session.goNextVariation();
-		this.refreshFromCore();
+		refreshFromCore(this.session, this._coreSync);
 	}
 
 	/**
@@ -536,9 +559,9 @@ export class ExplorerFacade {
 	 * For variations, prefer goToNode(nodeId).
 	 */
 	goToPly(ply: number): void {
-		this.clearTransientUiState();
+		clearTransientUiState(this._transient);
 		this.session.goToPly(ply);
-		this.refreshFromCore();
+		refreshFromCore(this.session, this._coreSync);
 	}
 
 	/**
@@ -549,9 +572,9 @@ export class ExplorerFacade {
 	 * We cast locally to keep the facade API ergonomic without leaking core types into templates.
 	 */
 	goToNode(nodeId: string): void {
-		this.clearTransientUiState();
+		clearTransientUiState(this._transient);
 		this.session.goToNode(nodeId as unknown as any);
-		this.refreshFromCore();
+		refreshFromCore(this.session, this._coreSync);
 	}
 
 	// ---------------------------------------------------------------------------
@@ -570,11 +593,11 @@ export class ExplorerFacade {
 	 * - otherwise -> populate lastError
 	 */
 	attemptMove(attempt: ExplorerMoveAttempt): boolean {
-		this.clearTransientUiState();
+		clearTransientUiState(this._transient);
 
 		const result = this.session.applyMoveUci(attempt);
 		if (result.ok) {
-			this.refreshFromCore();
+			refreshFromCore(this.session, this._coreSync);
 			return true;
 		}
 
@@ -637,88 +660,5 @@ export class ExplorerFacade {
 	/** Clears the last PGN import error (called by Import component on edit/empty). */
 	clearImportPgnError(): void {
 		this._importPgnError.set(null);
-	}
-
-	// ---------------------------------------------------------------------------
-	// Internal helpers
-	// ---------------------------------------------------------------------------
-
-	private setImportError(kind: 'FEN' | 'PGN', error: ExplorerError): void {
-		if (kind === 'FEN') this._importFenError.set(error);
-		else this._importPgnError.set(error);
-
-		// Keep for QA/debug (and any legacy UI still reading lastError).
-		this._lastError.set(error);
-	}
-
-	/**
-	 * Clears UI-only transient state (errors and promotion prompt).
-	 * This must NOT mutate core state.
-	 */
-	private clearTransientUiState(): void {
-		this._lastError.set(null);
-		this._promotionPending.set(null);
-		this.clearImportFenError();
-		this.clearImportPgnError();
-	}
-
-	/**
-	 * Pulls fresh state from the core session into signals.
-	 * Must be called after any successful action that mutates the core.
-	 */
-	private refreshFromCore(): void {
-		// Core state
-		this._mode.set(this.session.getMode());
-		this._source.set(this.session.getSource());
-		this._fen.set(this.session.getCurrentFen());
-		this._normalizedFen.set(this.session.getCurrentNormalizedFen());
-		this._positionKey.set(this.session.getCurrentPositionKey());
-		this._dbGameSnapshot.set(this.session.getDbGameSnapshot());
-		this._ply.set(this.session.getCurrentPly());
-		this._currentNodeId.set(this.session.getCurrentNodeId());
-
-		// MoveList VM (preferred)
-		const vm = this.session.getMoveListViewModel();
-		this._moveListRows.set(vm.rows);
-		this._variationsByNodeId.set(vm.variationsByNodeId);
-
-		// Legacy mainline list (remove if unused)
-		this._moves.set(this.session.getMainlineMovesWithMeta());
-
-		// Navigation capabilities
-		this._canPrev.set(this.session.canGoPrev());
-		this._canNext.set(this.session.canGoNext());
-
-		// Derived last move squares
-		const incoming = this.session.getCurrentNode().incomingMove;
-		this._lastMoveSquares.set(incoming ? { from: incoming.from, to: incoming.to } : null);
-
-		// Notify computed selectors that depend on core (variationInfo, canPrevVariation, ...)
-		this._rev.update((v) => v + 1);
-	}
-
-	/**
-	 * Applies the DB-load orientation rule:
-	 * When loading a DB snapshot and it provides myColor, keep that color at the bottom.
-	 * For non-DB loads (FEN/PGN), we keep the current orientation as-is.
-	 */
-	private applyDbLoadOrientationRule(snapshot: ExplorerGameSnapshot): void {
-		if (snapshot.kind !== 'DB') return;
-
-		const c = snapshot.myColor;
-		if (c === 'white' || c === 'black') {
-			this.setBoardOrientation(c);
-		}
-	}
-
-	/**
-	 * Returns the perspective color when we are in DB snapshot mode.
-	 * Used for:
-	 * - players "isMe" flags
-	 * - result tone (win/lose)
-	 */
-	private getPerspectiveColor(): 'white' | 'black' | undefined {
-		const db = this._dbGameSnapshot();
-		return db?.kind === 'DB' ? db.myColor : undefined;
 	}
 }
