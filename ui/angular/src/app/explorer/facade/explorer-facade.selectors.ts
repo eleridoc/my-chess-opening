@@ -1,5 +1,8 @@
 import { computed } from '@angular/core';
 
+import type { ExplorerSession, ExplorerGameHeaders, PgnTags } from 'my-chess-opening-core/explorer';
+import { mapPgnTagsToExplorerHeaders } from 'my-chess-opening-core/explorer';
+
 import type {
 	ExplorerError,
 	ExplorerGameSnapshot,
@@ -10,9 +13,6 @@ import type {
 	ExplorerVariationLine,
 } from 'my-chess-opening-core/explorer';
 
-import { mapPgnTagsToExplorerHeaders } from 'my-chess-opening-core/explorer';
-import type { ExplorerSession, ExplorerGameHeaders, PgnTags } from 'my-chess-opening-core/explorer';
-
 import type { BoardOrientation } from '../board/board-adapter';
 import type {
 	GameInfoHeaderVm,
@@ -21,19 +21,26 @@ import type {
 } from '../view-models/game-info-header.vm';
 
 import * as gameInfoBuilders from './explorer-facade.game-info.builders';
-import {
-	getPerspectiveColor,
-	type LastMoveSquares,
-	type PromotionPending,
-} from './explorer-facade.internal';
+import type { LastMoveSquares, PromotionPending } from './explorer-facade.internal';
+import { getPerspectiveColor } from './explorer-facade.internal';
 
 type Getter<T> = () => T;
 
+/**
+ * Dependencies required to build ExplorerFacade selectors.
+ *
+ * Notes:
+ * - "Getter" is used because Angular signals can be passed as functions (e.g. `signal<T>()`).
+ * - This layer is intentionally decoupled from ExplorerFacadeState/ExplorerFacade internals.
+ */
 export type ExplorerFacadeSelectorDeps = {
-	// Core
+	// Core engine
 	session: ExplorerSession;
 
-	// Tick for cursor-dependent selectors
+	/**
+	 * Tick for cursor-dependent selectors.
+	 * The facade refresh logic updates this tick after any successful core mutation.
+	 */
 	rev: Getter<number>;
 
 	// Core-mirrored UI state
@@ -46,7 +53,7 @@ export type ExplorerFacadeSelectorDeps = {
 	moveListRows: Getter<ExplorerMoveListRow[]>;
 	variationsByNodeId: Getter<Record<string, ExplorerVariationLine[]>>;
 
-	// legacy
+	/** Legacy mainline list (kept only if some UI still consumes it). */
 	moves: Getter<ExplorerMainlineMove[]>;
 
 	canPrev: Getter<boolean>;
@@ -70,18 +77,31 @@ export type ExplorerFacadeSelectorDeps = {
 };
 
 /**
- * Creates the computed selectors used by ExplorerFacade.
+ * Creates the computed selectors used by ExplorerFacade/ExplorerFacadeState.
  *
  * Goals:
- * - Keep ExplorerFacade focused on orchestration + public API.
- * - Keep computed blocks centralized, readable, and easier to test/maintain.
- * - Preserve behavior: code here is a direct extraction from ExplorerFacade.
+ * - Keep ExplorerFacade focused on the public imperative API.
+ * - Centralize computed blocks (headers, game-info VM, snapshot, navigation helpers).
+ * - Preserve behavior: this is a direct extraction from ExplorerFacade.
+ *
+ * Important:
+ * - Selectors must remain pure (no side effects); they may call into `ExplorerSession`
+ *   for cursor-dependent reads, but should never mutate session state.
  */
 export function createExplorerFacadeSelectors(d: ExplorerFacadeSelectorDeps) {
+	// -------------------------------------------------------------------------
+	// Simple UI helpers
+	// -------------------------------------------------------------------------
+
 	const canStart = computed(() => d.canPrev());
 	const canEnd = computed(() => d.canNext());
 
+	/** Ephemeral import is only allowed from CASE1_FREE. */
 	const importRequiresReset = computed(() => d.mode() !== 'CASE1_FREE');
+
+	// -------------------------------------------------------------------------
+	// Variation navigation (cursor-dependent, requires rev tick)
+	// -------------------------------------------------------------------------
 
 	const canPrevVariation = computed(() => {
 		d.rev();
@@ -98,6 +118,10 @@ export function createExplorerFacadeSelectors(d: ExplorerFacadeSelectorDeps) {
 		return d.session.getVariationInfoAtCurrentPly();
 	});
 
+	// -------------------------------------------------------------------------
+	// Headers source resolution (DB snapshot > ephemeral PGN)
+	// -------------------------------------------------------------------------
+
 	const gameHeaders = computed<ExplorerGameHeaders | null>(() => {
 		const db = d.dbGameSnapshot();
 		if (db?.headers) return db.headers;
@@ -108,6 +132,10 @@ export function createExplorerFacadeSelectors(d: ExplorerFacadeSelectorDeps) {
 
 		return null;
 	});
+
+	// -------------------------------------------------------------------------
+	// Game-info header VM (cursor-dependent, requires rev tick)
+	// -------------------------------------------------------------------------
 
 	const gameInfoHeaderVm = computed<GameInfoHeaderVm>(() => {
 		// Recompute when cursor-dependent selectors change (navigation, variations, etc.).
@@ -155,6 +183,10 @@ export function createExplorerFacadeSelectors(d: ExplorerFacadeSelectorDeps) {
 			material,
 		};
 	});
+
+	// -------------------------------------------------------------------------
+	// Debug-friendly snapshot (single object, heavy - keep it here)
+	// -------------------------------------------------------------------------
 
 	const snapshot = computed(() => ({
 		mode: d.mode(),

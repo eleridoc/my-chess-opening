@@ -14,14 +14,26 @@ import type {
 } from '../view-models/game-info-header.vm';
 
 /**
- * Explorer "game-info" builders (pure functions).
+ * ExplorerFacade - Game info builders (pure functions).
  *
- * Goals:
- * - Keep ExplorerFacade smaller and focused on orchestration (signals, session, loaders).
- * - Provide deterministic, easily testable VM builders (no Angular dependencies, no side effects).
- * - Preserve behavior: code here is a direct extraction from ExplorerFacade.
+ * Responsibilities:
+ * - Convert `ExplorerGameHeaders` (DB snapshot or PGN-derived) into UI-friendly view models.
+ * - Provide deterministic outputs (no Angular dependencies, no side effects).
+ *
+ * Non-responsibilities:
+ * - No core/session mutations.
+ * - No UI formatting beyond simple, stable hints (e.g. "15+10").
+ *
+ * Notes:
+ * - These helpers are designed to be called from computed selectors.
+ * - Keep them pure to make future unit-testing straightforward.
  */
 
+// -----------------------------------------------------------------------------
+// URL helpers
+// -----------------------------------------------------------------------------
+
+/** Returns true when the input is a valid HTTP(S) URL string. */
 function isHttpUrl(v: string | undefined): boolean {
 	return !!v && /^https?:\/\//i.test(v.trim());
 }
@@ -37,6 +49,10 @@ function pickFirstHttpUrl(...candidates: Array<string | undefined | null>): stri
 	}
 	return undefined;
 }
+
+// -----------------------------------------------------------------------------
+// Result
+// -----------------------------------------------------------------------------
 
 /**
  * Returns a UI tone for the result:
@@ -55,12 +71,42 @@ function computeResultTone(result?: string, myColor?: 'white' | 'black'): GameRe
 	return 'normal';
 }
 
-export function toSpeedKey(speed: ExplorerGameHeaders['speed'] | undefined): GameSpeedKey {
-	if (speed === 'bullet') return 'bullet';
-	if (speed === 'blitz') return 'blitz';
-	if (speed === 'rapid') return 'rapid';
-	if (speed === 'classical') return 'classical';
+function toResultKey(result?: string): GameResultKey {
+	if (result === '1-0') return 'white_win';
+	if (result === '0-1') return 'black_win';
+	if (result === '1/2-1/2') return 'draw';
+	if (result === '*') return 'ongoing';
 	return 'unknown';
+}
+
+export function buildResultVm(
+	resultRaw: string | undefined,
+	myColor?: 'white' | 'black',
+): GameInfoResultVm {
+	const raw = (resultRaw ?? '').trim() || undefined;
+	const key = toResultKey(raw);
+
+	return {
+		key,
+		...(raw ? { raw } : {}),
+		tone: computeResultTone(raw, myColor),
+	};
+}
+
+// -----------------------------------------------------------------------------
+// Meta keys
+// -----------------------------------------------------------------------------
+
+export function toSpeedKey(speed: ExplorerGameHeaders['speed'] | undefined): GameSpeedKey {
+	switch (speed) {
+		case 'bullet':
+		case 'blitz':
+		case 'rapid':
+		case 'classical':
+			return speed;
+		default:
+			return 'unknown';
+	}
 }
 
 export function toRatedKey(rated: boolean | undefined): GameRatedKey {
@@ -69,6 +115,14 @@ export function toRatedKey(rated: boolean | undefined): GameRatedKey {
 	return 'unknown';
 }
 
+// -----------------------------------------------------------------------------
+// Players
+// -----------------------------------------------------------------------------
+
+/**
+ * Builds a minimal player VM for the header panel.
+ * This is UI-focused (no chess logic).
+ */
 export function buildGameInfoPlayerVm(
 	side: PlayerSide,
 	headers: ExplorerGameHeaders | null,
@@ -80,31 +134,37 @@ export function buildGameInfoPlayerVm(
 	const name = (nameRaw ?? '').trim() || (side === 'white' ? 'White' : 'Black');
 	const elo = (eloRaw ?? '').trim() || undefined;
 
-	const isMe = myColor === side;
-
-	return { name, ...(elo ? { elo } : {}), ...(isMe ? { isMe: true } : {}) };
+	return { name, ...(elo ? { elo } : {}), ...(myColor === side ? { isMe: true } : {}) };
 }
+
+// -----------------------------------------------------------------------------
+// Time control
+// -----------------------------------------------------------------------------
 
 /**
  * Builds a structured time control VM.
  *
  * Goals:
- * - Keep numeric fields when known (DB snapshot).
+ * - Prefer numeric fields when known (DB snapshot).
  * - Accept PGN raw strings (e.g. "900+10" or "15+10").
- * - Provide a normalized display hint (text) when we can safely do so.
+ * - Provide a normalized "text" hint when we can safely infer minutes+increment.
  */
 export function buildTimeControlVm(
 	headers: ExplorerGameHeaders | null,
 ): GameTimeControlVm | undefined {
 	if (!headers) return undefined;
 
-	const a = headers.initialSeconds;
-	const b = headers.incrementSeconds;
+	const initialSeconds = headers.initialSeconds;
+	const incrementSeconds = headers.incrementSeconds;
 
-	// DB snapshots usually have preferred numeric values.
-	if (typeof a === 'number' && typeof b === 'number') {
-		const minutes = Math.round(a / 60);
-		return { initialSeconds: a, incrementSeconds: b, text: `${minutes}+${b}` };
+	// DB snapshots usually have the preferred numeric values.
+	if (typeof initialSeconds === 'number' && typeof incrementSeconds === 'number') {
+		const minutes = Math.round(initialSeconds / 60);
+		return {
+			initialSeconds,
+			incrementSeconds,
+			text: `${minutes}+${incrementSeconds}`,
+		};
 	}
 
 	const raw = (headers.timeControl ?? '').trim();
@@ -143,6 +203,10 @@ export function buildTimeControlVm(
 	return { initialSeconds: initial, incrementSeconds: inc, raw };
 }
 
+// -----------------------------------------------------------------------------
+// Site
+// -----------------------------------------------------------------------------
+
 function inferSiteKey(label?: string, url?: string): 'lichess' | 'chesscom' | 'unknown' {
 	const a = (label ?? '').toLowerCase();
 	const b = (url ?? '').toLowerCase();
@@ -175,27 +239,9 @@ export function buildSiteVm(headers: ExplorerGameHeaders | null): GameInfoSiteVm
 	};
 }
 
-function toResultKey(result?: string): GameResultKey {
-	if (result === '1-0') return 'white_win';
-	if (result === '0-1') return 'black_win';
-	if (result === '1/2-1/2') return 'draw';
-	if (result === '*') return 'ongoing';
-	return 'unknown';
-}
-
-export function buildResultVm(
-	resultRaw: string | undefined,
-	myColor?: 'white' | 'black',
-): GameInfoResultVm {
-	const raw = resultRaw && resultRaw.length ? resultRaw : undefined;
-	const key = toResultKey(raw);
-
-	return {
-		key,
-		...(raw ? { raw } : {}),
-		tone: computeResultTone(raw, myColor),
-	};
-}
+// -----------------------------------------------------------------------------
+// Opening (provider vs deduced)
+// -----------------------------------------------------------------------------
 
 export function buildOpeningVm(headers: ExplorerGameHeaders | null): GameInfoOpeningVm | undefined {
 	if (!headers) return undefined;
@@ -203,13 +249,13 @@ export function buildOpeningVm(headers: ExplorerGameHeaders | null): GameInfoOpe
 	const providerEco = (headers.eco ?? '').trim() || undefined;
 	const determinedEco = (headers.ecoDetermined ?? '').trim() || undefined;
 
-	// Prefer determined ECO when available (dataset-based)
+	// Prefer determined ECO when available (dataset-based).
 	const eco = (determinedEco ?? providerEco)?.trim() || undefined;
 
 	const providerName = (headers.opening ?? '').trim() || undefined;
 	const deducedName = (headers.ecoOpeningName ?? '').trim() || undefined;
 
-	// Prefer provider opening name, fallback to deduced one
+	// Prefer provider opening name, fallback to deduced one.
 	const name = (providerName ?? deducedName)?.trim() || undefined;
 
 	if (!name && !eco) return undefined;
@@ -224,7 +270,7 @@ export function buildOpeningVm(headers: ExplorerGameHeaders | null): GameInfoOpe
 		ecoIsDeduced,
 		nameIsDeduced,
 
-		// Optional: useful for tooltip/details when eco differs
+		// Optional: useful for tooltip/details when eco differs.
 		providerEco: ecoIsDeduced ? providerEco : undefined,
 	};
 }

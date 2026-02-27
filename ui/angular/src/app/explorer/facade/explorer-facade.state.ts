@@ -1,17 +1,15 @@
 import { signal } from '@angular/core';
 
+import type { ExplorerSession, PgnTags } from 'my-chess-opening-core/explorer';
 import type {
 	ExplorerError,
+	ExplorerGameSnapshot,
+	ExplorerMainlineMove,
 	ExplorerMode,
 	ExplorerMoveListRow,
 	ExplorerSessionSource,
 	ExplorerVariationLine,
-	ExplorerMainlineMove,
-	ExplorerGameSnapshot,
 } from 'my-chess-opening-core/explorer';
-
-import type { ExplorerSession } from 'my-chess-opening-core/explorer';
-import type { PgnTags } from 'my-chess-opening-core/explorer';
 
 import type { BoardOrientation } from '../board/board-adapter';
 
@@ -23,22 +21,28 @@ import type {
 } from './explorer-facade.internal';
 
 import {
-	type ExplorerFacadeSelectorDeps,
 	createExplorerFacadeSelectors,
+	type ExplorerFacadeSelectorDeps,
 } from './explorer-facade.selectors';
 
 /**
  * ExplorerFacade state factory.
  *
  * Goals:
- * - Avoid class field initialization order issues with `session`.
- * - Centralize all writable signals + computed selectors used by ExplorerFacade.
+ * - Centralize writable signals + computed selectors wiring.
  * - Keep ExplorerFacade focused on the public imperative API.
+ * - Avoid class field initialization order issues with `session`.
+ *
+ * Notes:
+ * - The returned object exposes:
+ *   - a few writable signals for facade-only mutations (prefixed with `_`)
+ *   - readonly signals for UI consumption
+ *   - `coreSync` and `transient` bundles for internal helpers
  */
 export function createExplorerFacadeState(session: ExplorerSession) {
-	// ---------------------------------------------------------------------------
-	// Writable signals (internal source of truth)
-	// ---------------------------------------------------------------------------
+	// -------------------------------------------------------------------------
+	// Writable signals (source of truth)
+	// -------------------------------------------------------------------------
 
 	const _pendingDbGameId = signal<string | null>(null);
 	const _boardOrientation = signal<BoardOrientation>('white');
@@ -53,7 +57,7 @@ export function createExplorerFacadeState(session: ExplorerSession) {
 	const _moveListRows = signal<ExplorerMoveListRow[]>([]);
 	const _variationsByNodeId = signal<Record<string, ExplorerVariationLine[]>>({});
 
-	// Legacy (remove later if unused by UI)
+	// Legacy (remove later if unused)
 	const _moves = signal<ExplorerMainlineMove[]>(session.getMainlineMovesWithMeta());
 
 	const _canPrev = signal<boolean>(session.canGoPrev());
@@ -66,6 +70,10 @@ export function createExplorerFacadeState(session: ExplorerSession) {
 	const _promotionPending = signal<PromotionPending | null>(null);
 	const _lastMoveSquares = signal<LastMoveSquares>(null);
 
+	/**
+	 * Tick used by selectors that call into session cursor-dependent methods.
+	 * Refreshed by `refreshFromCore()` after each successful core mutation.
+	 */
 	const _rev = signal(0);
 
 	const _normalizedFen = signal<string>(session.getCurrentNormalizedFen());
@@ -73,11 +81,12 @@ export function createExplorerFacadeState(session: ExplorerSession) {
 
 	const _dbGameSnapshot = signal<ExplorerGameSnapshot | null>(session.getDbGameSnapshot());
 
+	/** PGN headers parsed from an ephemeral import (UI-side cache). */
 	const _ephemeralPgnTags = signal<PgnTags | null>(null);
 
-	// ---------------------------------------------------------------------------
-	// Bundles used by internal helpers
-	// ---------------------------------------------------------------------------
+	// -------------------------------------------------------------------------
+	// Bundles for internal helpers
+	// -------------------------------------------------------------------------
 
 	const coreSync: CoreSyncSignals = {
 		mode: _mode,
@@ -109,9 +118,9 @@ export function createExplorerFacadeState(session: ExplorerSession) {
 		promotionPending: _promotionPending,
 	};
 
-	// ---------------------------------------------------------------------------
+	// -------------------------------------------------------------------------
 	// Computed selectors
-	// ---------------------------------------------------------------------------
+	// -------------------------------------------------------------------------
 
 	const selectors = createExplorerFacadeSelectors({
 		session,
@@ -147,22 +156,23 @@ export function createExplorerFacadeState(session: ExplorerSession) {
 		lastMoveSquares: _lastMoveSquares,
 	} satisfies ExplorerFacadeSelectorDeps);
 
-	// ---------------------------------------------------------------------------
-	// Public readonly signals (same API shape as before)
-	// ---------------------------------------------------------------------------
+	// -------------------------------------------------------------------------
+	// Public API (readonly signals + a few writable internals for the facade)
+	// -------------------------------------------------------------------------
 
 	return {
-		// Expose internals needed by ExplorerFacade methods
+		// Writable internals (facade-only)
 		_pendingDbGameId,
 		_boardOrientation,
 		_lastError,
 		_promotionPending,
 		_ephemeralPgnTags,
 
+		// Bundles for helpers
 		coreSync,
 		transient,
 
-		// Public readonly signals
+		// Readonly signals
 		pendingDbGameId: _pendingDbGameId.asReadonly(),
 		boardOrientation: _boardOrientation.asReadonly(),
 
@@ -194,7 +204,6 @@ export function createExplorerFacadeState(session: ExplorerSession) {
 		// Selectors
 		canStart: selectors.canStart,
 		canEnd: selectors.canEnd,
-
 		importRequiresReset: selectors.importRequiresReset,
 
 		canPrevVariation: selectors.canPrevVariation,

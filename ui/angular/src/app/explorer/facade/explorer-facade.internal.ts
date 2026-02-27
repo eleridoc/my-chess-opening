@@ -17,20 +17,52 @@ import type { BoardOrientation } from '../board/board-adapter';
 /**
  * ExplorerFacade internals (pure-ish helpers).
  *
+ * This module centralizes small helper types and functions used by the facade.
+ * The helpers here are "pure-ish":
+ * - They do not mutate the core domain engine directly (except via explicit callbacks).
+ * - They DO mutate Angular signals, by design (this is the facade boundary).
+ *
  * Goals:
- * - Keep ExplorerFacade focused on the public API.
- * - Centralize core-to-signal synchronization and transient UI state handling.
- * - Preserve behavior: this is a direct extraction from ExplorerFacade.
+ * - Keep ExplorerFacade focused on the public imperative API.
+ * - Provide a single place for core-to-signal synchronization.
+ * - Keep transient UI state rules consistent across all intents (navigation, imports, moves).
+ *
+ * Non-goals:
+ * - No UI formatting.
+ * - No chess rules (handled by `ExplorerSession` in the core package).
  */
 
+// -----------------------------------------------------------------------------
+// Small shared types
+// -----------------------------------------------------------------------------
+
+/**
+ * UI-friendly representation of a "promotion required" situation.
+ * The UI can decide to:
+ * - show a promotion picker
+ * - disable input until resolved
+ * - or cancel by navigating elsewhere (depending on adapter strategy)
+ */
 export type PromotionPending = {
 	from: string;
 	to: string;
 	options: PromotionPiece[];
 };
 
+/**
+ * UI hint: squares to highlight for the last applied move in the current path.
+ * Derived from the current node incoming move (root has no incoming move).
+ */
 export type LastMoveSquares = { from: string; to: string } | null;
 
+// -----------------------------------------------------------------------------
+// Signal bundles
+// -----------------------------------------------------------------------------
+
+/**
+ * Group of signals that mirror core session state.
+ * Updated by `refreshFromCore()` after any successful core mutation.
+ */
 export type CoreSyncSignals = {
 	mode: WritableSignal<ExplorerMode>;
 	source: WritableSignal<ExplorerSessionSource>;
@@ -41,7 +73,7 @@ export type CoreSyncSignals = {
 	moveListRows: WritableSignal<ExplorerMoveListRow[]>;
 	variationsByNodeId: WritableSignal<Record<string, ExplorerVariationLine[]>>;
 
-	// legacy
+	/** Legacy mainline list (kept only if some UI still consumes it). */
 	moves: WritableSignal<ExplorerMainlineMove[]>;
 
 	canPrev: WritableSignal<boolean>;
@@ -52,9 +84,18 @@ export type CoreSyncSignals = {
 	dbGameSnapshot: WritableSignal<ExplorerGameSnapshot | null>;
 
 	lastMoveSquares: WritableSignal<LastMoveSquares>;
+
+	/**
+	 * "Tick" signal used to re-run computed selectors that call into the core session directly.
+	 * We do NOT mirror every core selector as a signal; selectors depend on this tick instead.
+	 */
 	rev: WritableSignal<number>;
 };
 
+/**
+ * Group of UI-only transient signals.
+ * These must be cleared whenever an unrelated intent occurs (navigation, load, etc.).
+ */
 export type TransientSignals = {
 	lastError: WritableSignal<ExplorerError | null>;
 	importFenError: WritableSignal<ExplorerError | null>;
@@ -62,6 +103,14 @@ export type TransientSignals = {
 	promotionPending: WritableSignal<PromotionPending | null>;
 };
 
+// -----------------------------------------------------------------------------
+// Transient errors helpers
+// -----------------------------------------------------------------------------
+
+/**
+ * Sets an import error and also mirrors it into `lastError` for QA/debug purposes.
+ * This ensures a single "most relevant" error remains available for generic UIs.
+ */
 export function setImportError(
 	kind: 'FEN' | 'PGN',
 	error: ExplorerError,
@@ -84,6 +133,10 @@ export function clearTransientUiState(signals: TransientSignals): void {
 	signals.importFenError.set(null);
 	signals.importPgnError.set(null);
 }
+
+// -----------------------------------------------------------------------------
+// Core -> UI sync
+// -----------------------------------------------------------------------------
 
 /**
  * Pulls fresh state from the core session into signals.
@@ -120,6 +173,10 @@ export function refreshFromCore(session: ExplorerSession, s: CoreSyncSignals): v
 	s.rev.update((v) => v + 1);
 }
 
+// -----------------------------------------------------------------------------
+// DB-load orientation rule
+// -----------------------------------------------------------------------------
+
 /**
  * Applies the DB-load orientation rule:
  * When loading a DB snapshot and it provides myColor, keep that color at the bottom.
@@ -136,6 +193,10 @@ export function applyDbLoadOrientationRule(
 		setBoardOrientation(c);
 	}
 }
+
+// -----------------------------------------------------------------------------
+// Perspective helpers
+// -----------------------------------------------------------------------------
 
 /**
  * Returns the perspective color when we are in DB snapshot mode.

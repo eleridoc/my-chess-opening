@@ -2,24 +2,24 @@
  * ExplorerFacade (UI / Angular)
  *
  * Orchestration layer between Angular UI components and the core domain engine
- * (ExplorerSession from `my-chess-opening-core`).
+ * (`ExplorerSession` from `my-chess-opening-core`).
  *
  * This file intentionally focuses on:
- * - Owning a single ExplorerSession instance for the whole application lifetime.
+ * - Owning a single `ExplorerSession` instance for the whole application lifetime.
  * - Exposing UI-friendly reactive state (signals) via a dedicated state factory.
- * - Providing an imperative API for UI intents (reset, navigation, loaders, move attempts).
+ * - Providing an imperative API for UI intents (reset, navigation, imports, move attempts).
  * - Ensuring transient UI state is cleared and core-to-UI synchronization is refreshed
  *   after any successful core mutation.
  *
  * Implementation notes:
  * - Writable signals, computed selectors, and game-info builders are extracted to keep this file small:
- *   - `createExplorerFacadeState()` centralizes signals + computed selectors wiring.
+ *   - `createExplorerFacadeState()` centralizes writable signals + computed selectors wiring.
  *   - `createExplorerFacadeSelectors()` hosts the heavy computed blocks.
- *   - `explorer-game-info.builders.ts` contains pure VM builder helpers.
- * - This facade re-exports the state signals with the same public names for template ergonomics.
+ *   - `explorer-facade.game-info.builders.ts` contains pure VM builder helpers used by selectors.
+ * - This facade re-exports the state signals with stable public names for template ergonomics.
  *
  * Non-responsibilities:
- * - No chess rules here (all rules live in ExplorerSession).
+ * - No chess rules here (all rules live in the core `ExplorerSession`).
  * - No UI rendering here (snackbars/dialogs are handled by pages/components).
  *
  * Notes:
@@ -59,7 +59,13 @@ export class ExplorerFacade {
 
 	private readonly session = new ExplorerSession();
 
-	// Centralized state (signals + computed selectors)
+	/**
+	 * Centralized state (writable signals + computed selectors).
+	 *
+	 * Important:
+	 * - UI components should only consume the readonly signals re-exported by this facade.
+	 * - Only the facade (imperative API) mutates writable state (e.g. `_ephemeralPgnTags`).
+	 */
 	private readonly state = createExplorerFacadeState(this.session);
 
 	// ---------------------------------------------------------------------------
@@ -109,7 +115,7 @@ export class ExplorerFacade {
 
 	constructor() {
 		// Ensure signals are consistent with the initial core state.
-		refreshFromCore(this.session, this.state.coreSync);
+		this.refresh();
 	}
 
 	// ---------------------------------------------------------------------------
@@ -121,30 +127,29 @@ export class ExplorerFacade {
 	 * Clears transient UI state, resets core, then refreshes signals.
 	 */
 	reset(): void {
-		clearTransientUiState(this.state.transient);
+		this.clearTransient();
 		this.setPendingDbGameId(null);
 
 		this.session.resetToInitial();
 		this.state._ephemeralPgnTags.set(null);
 
-		refreshFromCore(this.session, this.state.coreSync);
+		this.refresh();
 	}
 
 	/** Starts a fresh exploration (alias kept for UI readability). */
 	loadInitial(): void {
-		clearTransientUiState(this.state.transient);
+		this.clearTransient();
 
 		this.session.loadInitial();
 		this.state._ephemeralPgnTags.set(null);
 
-		refreshFromCore(this.session, this.state.coreSync);
+		this.refresh();
 	}
 
 	/** Manual board rotation (UI preference). */
 	toggleBoardOrientation(): void {
-		this.state._boardOrientation.set(
-			this.state._boardOrientation() === 'white' ? 'black' : 'white',
-		);
+		// Use update() to avoid reading the signal twice.
+		this.state._boardOrientation.update((o) => (o === 'white' ? 'black' : 'white'));
 	}
 
 	/** Force an orientation (used by DB-load perspective rule). */
@@ -154,6 +159,7 @@ export class ExplorerFacade {
 
 	/** UI-friendly alias for ephemeral import. */
 	loadFen(fen: string): void {
+		// Ephemeral PGN cache becomes irrelevant as soon as we load a FEN.
 		this.state._ephemeralPgnTags.set(null);
 		this.loadFenForCase1(fen);
 	}
@@ -163,11 +169,11 @@ export class ExplorerFacade {
 	 * On failure, sets `importFenError` (and `lastError` for QA/legacy use).
 	 */
 	loadFenForCase1(fen: string): void {
-		clearTransientUiState(this.state.transient);
+		this.clearTransient();
 
 		const result = this.session.loadFenForCase1(fen);
 		if (result.ok) {
-			refreshFromCore(this.session, this.state.coreSync);
+			this.refresh();
 			return;
 		}
 
@@ -179,12 +185,12 @@ export class ExplorerFacade {
 	 * On failure, sets `importPgnError` (and `lastError` for QA/legacy use).
 	 */
 	loadPgn(pgn: string, meta?: { name?: string }): void {
-		clearTransientUiState(this.state.transient);
+		this.clearTransient();
 
 		const result = this.session.loadPgn(pgn, meta);
 		if (result.ok) {
 			this.state._ephemeralPgnTags.set(parsePgnTags(pgn));
-			refreshFromCore(this.session, this.state.coreSync);
+			this.refresh();
 			return;
 		}
 
@@ -199,11 +205,11 @@ export class ExplorerFacade {
 	 * Prefer loadDbGameSnapshot() for future-proof "single payload" DB loading.
 	 */
 	loadGameMovesSan(movesSan: string[], meta: ExplorerDbGameMeta): void {
-		clearTransientUiState(this.state.transient);
+		this.clearTransient();
 
 		const result = this.session.loadGameMovesSan(movesSan, meta);
 		if (result.ok) {
-			refreshFromCore(this.session, this.state.coreSync);
+			this.refresh();
 			return;
 		}
 
@@ -215,7 +221,7 @@ export class ExplorerFacade {
 	 * On failure, sets `lastError`.
 	 */
 	loadDbGameSnapshot(snapshot: ExplorerGameSnapshot): void {
-		clearTransientUiState(this.state.transient);
+		this.clearTransient();
 
 		const result = this.session.loadDbGameSnapshot(snapshot);
 		if (result.ok) {
@@ -225,9 +231,9 @@ export class ExplorerFacade {
 			this.state._ephemeralPgnTags.set(null);
 
 			// DB-load rule: if the snapshot provides a perspective color, keep the owner at the bottom.
-			applyDbLoadOrientationRule(snapshot, (o) => this.setBoardOrientation(o));
+			applyDbLoadOrientationRule(snapshot, (o: BoardOrientation) => this.setBoardOrientation(o));
 
-			refreshFromCore(this.session, this.state.coreSync);
+			this.refresh();
 			return;
 		}
 
@@ -252,39 +258,39 @@ export class ExplorerFacade {
 	 * This ensures errors/promotions don't remain visible after unrelated actions.
 	 */
 	goStart(): void {
-		clearTransientUiState(this.state.transient);
+		this.clearTransient();
 		this.session.goStart();
-		refreshFromCore(this.session, this.state.coreSync);
+		this.refresh();
 	}
 
 	goEnd(): void {
-		clearTransientUiState(this.state.transient);
+		this.clearTransient();
 		this.session.goEnd();
-		refreshFromCore(this.session, this.state.coreSync);
+		this.refresh();
 	}
 
 	goPrev(): void {
-		clearTransientUiState(this.state.transient);
+		this.clearTransient();
 		this.session.goPrev();
-		refreshFromCore(this.session, this.state.coreSync);
+		this.refresh();
 	}
 
 	goNext(): void {
-		clearTransientUiState(this.state.transient);
+		this.clearTransient();
 		this.session.goNext();
-		refreshFromCore(this.session, this.state.coreSync);
+		this.refresh();
 	}
 
 	goPrevVariation(): void {
-		clearTransientUiState(this.state.transient);
+		this.clearTransient();
 		this.session.goPrevVariation();
-		refreshFromCore(this.session, this.state.coreSync);
+		this.refresh();
 	}
 
 	goNextVariation(): void {
-		clearTransientUiState(this.state.transient);
+		this.clearTransient();
 		this.session.goNextVariation();
-		refreshFromCore(this.session, this.state.coreSync);
+		this.refresh();
 	}
 
 	/**
@@ -292,9 +298,9 @@ export class ExplorerFacade {
 	 * For variations, prefer goToNode(nodeId).
 	 */
 	goToPly(ply: number): void {
-		clearTransientUiState(this.state.transient);
+		this.clearTransient();
 		this.session.goToPly(ply);
-		refreshFromCore(this.session, this.state.coreSync);
+		this.refresh();
 	}
 
 	/**
@@ -305,9 +311,9 @@ export class ExplorerFacade {
 	 * We cast locally to keep the facade API ergonomic without leaking core types into templates.
 	 */
 	goToNode(nodeId: string): void {
-		clearTransientUiState(this.state.transient);
+		this.clearTransient();
 		this.session.goToNode(nodeId as unknown as any);
-		refreshFromCore(this.session, this.state.coreSync);
+		this.refresh();
 	}
 
 	// ---------------------------------------------------------------------------
@@ -326,11 +332,11 @@ export class ExplorerFacade {
 	 * - otherwise -> populate lastError
 	 */
 	attemptMove(attempt: ExplorerMoveAttempt): boolean {
-		clearTransientUiState(this.state.transient);
+		this.clearTransient();
 
 		const result = this.session.applyMoveUci(attempt);
 		if (result.ok) {
-			refreshFromCore(this.session, this.state.coreSync);
+			this.refresh();
 			return true;
 		}
 
@@ -393,5 +399,17 @@ export class ExplorerFacade {
 	/** Clears the last PGN import error (called by Import component on edit/empty). */
 	clearImportPgnError(): void {
 		this.state.transient.importPgnError.set(null);
+	}
+
+	// ---------------------------------------------------------------------------
+	// Internal helpers (facade-local)
+	// ---------------------------------------------------------------------------
+
+	private clearTransient(): void {
+		clearTransientUiState(this.state.transient);
+	}
+
+	private refresh(): void {
+		refreshFromCore(this.session, this.state.coreSync);
 	}
 }
