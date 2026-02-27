@@ -1,6 +1,3 @@
-import { prisma } from '../../db/prisma';
-import { type Prisma } from '@prisma/client';
-
 import {
 	ImportOrchestrator,
 	ChessComImporter,
@@ -9,6 +6,9 @@ import {
 	type ImportRunStatus,
 } from 'my-chess-opening-core';
 
+import type { Prisma } from '@prisma/client';
+
+import { prisma } from '../../db/prisma';
 import { getEcoOpeningsCatalog } from '../../eco/ecoOpeningsCatalog';
 
 import type {
@@ -25,6 +25,16 @@ import { runAccountImport } from './runAccountImport';
  * This reduces DB writes and UI chatter while still providing a smooth progress signal.
  */
 const PROGRESS_COMMIT_EVERY = 25;
+
+/**
+ * Parse an optional batch timestamp provided by IPC.
+ * Falls back to "now" when invalid or missing.
+ */
+function parseBatchStartedAt(batchStartedAtIso: string | null): Date {
+	if (!batchStartedAtIso) return new Date();
+	const d = new Date(batchStartedAtIso);
+	return Number.isFinite(d.getTime()) ? d : new Date();
+}
 
 /**
  * Run a full import batch (all enabled accounts or a filtered subset).
@@ -47,18 +57,15 @@ export async function runImportBatch(
 	const onEvent = params?.onEvent ?? null;
 	const shouldEmit = Boolean(onEvent && batchId);
 
-	const batchStartedAtIso = params?.batchStartedAtIso ?? null;
-
 	/**
 	 * Timestamp used to update lastSyncAt after the batch is fully completed.
 	 * We prefer the "runStarted" timestamp emitted by IPC to keep UI/DB consistent.
 	 */
-	const batchStartedAt = (() => {
-		if (!batchStartedAtIso) return new Date();
-		const d = new Date(batchStartedAtIso);
-		return Number.isFinite(d.getTime()) ? d : new Date();
-	})();
+	const batchStartedAt = parseBatchStartedAt(params?.batchStartedAtIso ?? null);
 
+	/**
+	 * ISO timestamp generator used for event emission and finishedAt updates.
+	 */
 	function nowIso(): string {
 		return new Date().toISOString();
 	}
@@ -77,7 +84,9 @@ export async function runImportBatch(
 		} as ImportEvent);
 	}
 
+	// -------------------------------------------------------------------------
 	// Load enabled accounts (DB reads)
+	// -------------------------------------------------------------------------
 	const whereAccount: Prisma.AccountConfigWhereInput = { isEnabled: true };
 	if (Array.isArray(accountIds) && accountIds.length > 0) {
 		whereAccount.id = { in: accountIds };
@@ -88,16 +97,23 @@ export async function runImportBatch(
 		orderBy: [{ site: 'asc' }, { username: 'asc' }],
 	});
 
+	// -------------------------------------------------------------------------
 	// Initialize orchestrator + ECO catalog (in-memory)
+	// -------------------------------------------------------------------------
 	const importService = new ImportOrchestrator([new ChessComImporter(), new LichessImporter()]);
 	const ecoCatalog = await getEcoOpeningsCatalog();
 
+	// -------------------------------------------------------------------------
 	// Batch totals + lastSyncAt watermark policy
+	// -------------------------------------------------------------------------
 	let totalGamesFound = 0;
 	let totalInserted = 0;
 	let totalSkipped = 0;
 	let totalFailed = 0;
 
+	/**
+	 * Accounts that finished with SUCCESS and can safely receive the batch watermark.
+	 */
 	const accountsToUpdateLastSyncAt: string[] = [];
 
 	for (const account of accounts) {
@@ -122,13 +138,16 @@ export async function runImportBatch(
 		totalFailed += result.failed;
 	}
 
+	// -------------------------------------------------------------------------
 	// Apply lastSyncAt watermark update (batch-level)
+	// -------------------------------------------------------------------------
 	if (!isLimitedRun && accountsToUpdateLastSyncAt.length > 0) {
 		await prisma.accountConfig.updateMany({
 			where: { id: { in: accountsToUpdateLastSyncAt } },
 			data: { lastSyncAt: batchStartedAt },
 		});
 
+		// Best-effort: failures here must not affect the import summary.
 		await logImport({
 			importRunId:
 				(
@@ -142,7 +161,7 @@ export async function runImportBatch(
 			scope: 'BATCH',
 			message: `lastSyncAt updated after batch finished (watermark=${batchStartedAt.toISOString()}, updatedAccounts=${accountsToUpdateLastSyncAt.length})`,
 		}).catch(() => {
-			// Best-effort logging only; do not fail the whole import summary for this.
+			// Best-effort logging only.
 		});
 
 		console.log('[IMPORT] lastSyncAt updated after batch finished', {

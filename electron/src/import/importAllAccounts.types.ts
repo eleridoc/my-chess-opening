@@ -20,7 +20,16 @@ export type ImportBatchSummary = {
  * - Dates are passed as JS Date objects (DB stores ISO 8601; not handled here).
  */
 export type ImportAllAccountsParams = {
+	/**
+	 * Optional override for all accounts in the batch.
+	 * When omitted, each account uses its own `lastSyncAt` watermark (or FULL if null).
+	 */
 	sinceOverride?: Date | null;
+
+	/**
+	 * Optional cap mainly used for development/testing.
+	 * When set, the batch should not update `lastSyncAt` to avoid skipping games.
+	 */
 	maxGamesPerAccount?: number | null;
 
 	/**

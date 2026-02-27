@@ -1,16 +1,15 @@
-import { prisma } from '../../db/prisma';
+import type { ImportOrchestrator, ImportOptions } from 'my-chess-opening-core';
 
 import { ImportStatus, type AccountConfig } from '@prisma/client';
 
-import type { ImportOrchestrator, ImportOptions } from 'my-chess-opening-core';
-
 import type { EcoOpeningsCatalog } from '../../eco/ecoOpeningsCatalog';
+import { prisma } from '../../db/prisma';
 
+import { mapRunStatus, mapSite } from '../importAllAccounts.helpers';
 import type { ImportEventPayload } from '../importAllAccounts.types';
-import { mapSite, mapRunStatus } from '../importAllAccounts.helpers';
 
-import { persistGame } from '../persistence/persistGame';
 import { logImport } from '../persistence/importLogger';
+import { persistGame } from '../persistence/persistGame';
 
 import { createAccountProgressCommitter, type ImportRunCounters } from '../progress/progressCommit';
 
@@ -22,12 +21,7 @@ export type RunAccountImportResult = {
 	shouldUpdateLastSyncAt: boolean;
 };
 
-/**
- * Run the import for a single account (DB + events + logs).
- *
- * IMPORTANT: Refactor-only, behavior must stay identical to the previous inline loop.
- */
-export async function runAccountImport(params: {
+type RunAccountImportParams = {
 	account: Pick<AccountConfig, 'id' | 'site' | 'username' | 'lastSyncAt'>;
 	since: Date | null;
 
@@ -43,7 +37,18 @@ export async function runAccountImport(params: {
 	nowIso: () => string;
 
 	accountsToUpdateLastSyncAt: string[];
-}): Promise<RunAccountImportResult> {
+};
+
+/**
+ * Run the import for a single account (DB + events + logs).
+ *
+ * IMPORTANT:
+ * - Refactor-only: behavior must stay identical to the previous inline loop.
+ * - Never throw because of a single game persistence error: those are tracked and surfaced.
+ */
+export async function runAccountImport(
+	params: RunAccountImportParams,
+): Promise<RunAccountImportResult> {
 	const {
 		account,
 		since,
@@ -58,10 +63,11 @@ export async function runAccountImport(params: {
 	} = params;
 
 	// Create per-account ImportRun.
+	// Note: ImportStatus.PARTIAL is used as our "RUNNING" surrogate until `finishedAt` is set.
 	const run = await prisma.importRun.create({
 		data: {
 			accountConfigId: account.id,
-			status: ImportStatus.PARTIAL, // used as "RUNNING" in our minimal enum set
+			status: ImportStatus.PARTIAL,
 			gamesFound: 0,
 			gamesInserted: 0,
 			gamesSkipped: 0,
@@ -188,6 +194,7 @@ export async function runAccountImport(params: {
 			failed: gamesFailed,
 		});
 
+		// Decide final status.
 		const status =
 			gamesFailed === 0
 				? ImportStatus.SUCCESS
@@ -195,6 +202,8 @@ export async function runAccountImport(params: {
 					? ImportStatus.PARTIAL
 					: ImportStatus.FAILED;
 
+		// Defer lastSyncAt update to batch completion (watermark = batchStartedAt).
+		// We only update accounts that finished SUCCESS, to avoid skipping games after failures.
 		if (!isLimitedRun && status === ImportStatus.SUCCESS) {
 			accountsToUpdateLastSyncAt.push(account.id);
 		}

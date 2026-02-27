@@ -2,9 +2,9 @@ import type { ImportedGameRaw } from 'my-chess-opening-core';
 
 import type { EcoOpeningsCatalog } from '../../eco/ecoOpeningsCatalog';
 import {
+	DEFAULT_MIN_GLOBAL_MATCH_PLY,
 	findBestEcoOpeningMatch,
 	findBestEcoOpeningMatchGlobal,
-	DEFAULT_MIN_GLOBAL_MATCH_PLY,
 } from '../../eco/ecoOpeningMatcher';
 
 /**
@@ -27,6 +27,11 @@ export type EcoEnrichmentResult = {
  * - Must NEVER throw (import must not fail because of ECO).
  * - Never overwrite provider `opening` / `eco` fields.
  * - `ecoDetermined` is the app-derived ECO (may differ from provider).
+ *
+ * Notes:
+ * - When provider ECO exists, we try to validate it against the corresponding dataset bucket.
+ * - If provider ECO does not match, we optionally scan globally to find a better candidate.
+ * - When provider ECO is missing, we rely on a global scan only.
  */
 export function enrichEcoFields(params: {
 	game: ImportedGameRaw;
@@ -34,10 +39,11 @@ export function enrichEcoFields(params: {
 }): EcoEnrichmentResult {
 	const { game, ecoCatalog } = params;
 
+	// Always initialize with safe defaults: enrichment must remain best-effort.
+	let ecoDetermined: string | null = null;
 	let ecoOpeningName: string | null = null;
 	let ecoOpeningLinePgn: string | null = null;
 	let ecoOpeningMatchPly: number | null = null;
-	let ecoDetermined: string | null = null;
 
 	try {
 		const providerEcoRaw = typeof game.eco === 'string' ? game.eco.trim() : '';
@@ -48,8 +54,8 @@ export function enrichEcoFields(params: {
 		// - else: null until proven by a global match
 		ecoDetermined = providerEco;
 
-		const hasMoves = Boolean(game.moves?.length);
-		if (!hasMoves) {
+		// Without moves, we cannot match anything against the dataset.
+		if (!game.moves?.length) {
 			if (ECO_DEBUG) {
 				console.warn('[ECO][debug] Determine ECO skipped (no moves).', {
 					gameRef: `${game.site}:${game.externalId}`,
@@ -58,17 +64,13 @@ export function enrichEcoFields(params: {
 				});
 			}
 
-			return {
-				ecoDetermined,
-				ecoOpeningName,
-				ecoOpeningLinePgn,
-				ecoOpeningMatchPly,
-			};
+			return { ecoDetermined, ecoOpeningName, ecoOpeningLinePgn, ecoOpeningMatchPly };
 		}
 
-		const gameMovesSan = (game.moves ?? []).map((m) => m.san);
+		const gameMovesSan = game.moves.map((m) => m.san);
 
 		if (providerEco) {
+			// Fast path: match inside the provider ECO bucket.
 			const candidates = ecoCatalog.getCandidatesByEco(providerEco);
 
 			if (ECO_DEBUG) {
@@ -99,62 +101,20 @@ export function enrichEcoFields(params: {
 						matchPly: ecoOpeningMatchPly,
 					});
 				}
-			} else {
-				// Global scan fallback
-				const allCandidates = (((ecoCatalog as any).getAllCandidates?.() as unknown[]) ??
-					[]) as any[];
 
-				if (ECO_DEBUG) {
-					console.warn('[ECO][debug] Provider ECO no match -> global scan', {
-						gameRef: `${game.site}:${game.externalId}`,
-						providerEco,
-						allCandidatesCount: allCandidates.length,
-						minMatchPly: DEFAULT_MIN_GLOBAL_MATCH_PLY,
-					});
-				}
-
-				const globalMatch =
-					allCandidates.length > 0
-						? findBestEcoOpeningMatchGlobal(gameMovesSan, allCandidates as any, {
-								minMatchPly: DEFAULT_MIN_GLOBAL_MATCH_PLY,
-							})
-						: null;
-
-				if (globalMatch) {
-					ecoDetermined = globalMatch.eco;
-					ecoOpeningName = globalMatch.name;
-					ecoOpeningLinePgn = globalMatch.linePgn;
-					ecoOpeningMatchPly = globalMatch.matchPly;
-
-					if (ECO_DEBUG) {
-						console.warn('[ECO][debug] Global match found (provider mismatch)', {
-							gameRef: `${game.site}:${game.externalId}`,
-							providerEco,
-							ecoDetermined,
-							name: ecoOpeningName,
-							matchPly: ecoOpeningMatchPly,
-						});
-					}
-				} else if (ECO_DEBUG) {
-					console.warn('[ECO][debug] Global scan failed, keep provider ECO', {
-						gameRef: `${game.site}:${game.externalId}`,
-						providerEco,
-						ecoDetermined,
-						sampleMoves: gameMovesSan.slice(0, 16),
-					});
-				}
+				return { ecoDetermined, ecoOpeningName, ecoOpeningLinePgn, ecoOpeningMatchPly };
 			}
-		} else {
-			// No provider ECO -> global scan
+
+			// Fallback: global scan to find a better match.
 			const allCandidates = (((ecoCatalog as any).getAllCandidates?.() as unknown[]) ??
 				[]) as any[];
 
 			if (ECO_DEBUG) {
-				console.warn('[ECO][debug] No provider ECO -> global scan', {
+				console.warn('[ECO][debug] Provider ECO no match -> global scan', {
 					gameRef: `${game.site}:${game.externalId}`,
+					providerEco,
 					allCandidatesCount: allCandidates.length,
 					minMatchPly: DEFAULT_MIN_GLOBAL_MATCH_PLY,
-					movesCount: gameMovesSan.length,
 				});
 			}
 
@@ -172,27 +132,69 @@ export function enrichEcoFields(params: {
 				ecoOpeningMatchPly = globalMatch.matchPly;
 
 				if (ECO_DEBUG) {
-					console.warn('[ECO][debug] Global match found (no provider ECO)', {
+					console.warn('[ECO][debug] Global match found (provider mismatch)', {
 						gameRef: `${game.site}:${game.externalId}`,
+						providerEco,
 						ecoDetermined,
 						name: ecoOpeningName,
 						matchPly: ecoOpeningMatchPly,
 					});
 				}
 			} else if (ECO_DEBUG) {
-				console.warn('[ECO][debug] Global scan failed (no provider ECO)', {
+				// Keep provider ECO as the determined value when global scan fails.
+				console.warn('[ECO][debug] Global scan failed, keep provider ECO', {
 					gameRef: `${game.site}:${game.externalId}`,
+					providerEco,
+					ecoDetermined,
 					sampleMoves: gameMovesSan.slice(0, 16),
 				});
 			}
+
+			return { ecoDetermined, ecoOpeningName, ecoOpeningLinePgn, ecoOpeningMatchPly };
 		}
 
-		return {
-			ecoDetermined,
-			ecoOpeningName,
-			ecoOpeningLinePgn,
-			ecoOpeningMatchPly,
-		};
+		// No provider ECO -> global scan only.
+		const allCandidates = (((ecoCatalog as any).getAllCandidates?.() as unknown[]) ??
+			[]) as any[];
+
+		if (ECO_DEBUG) {
+			console.warn('[ECO][debug] No provider ECO -> global scan', {
+				gameRef: `${game.site}:${game.externalId}`,
+				allCandidatesCount: allCandidates.length,
+				minMatchPly: DEFAULT_MIN_GLOBAL_MATCH_PLY,
+				movesCount: gameMovesSan.length,
+			});
+		}
+
+		const globalMatch =
+			allCandidates.length > 0
+				? findBestEcoOpeningMatchGlobal(gameMovesSan, allCandidates as any, {
+						minMatchPly: DEFAULT_MIN_GLOBAL_MATCH_PLY,
+					})
+				: null;
+
+		if (globalMatch) {
+			ecoDetermined = globalMatch.eco;
+			ecoOpeningName = globalMatch.name;
+			ecoOpeningLinePgn = globalMatch.linePgn;
+			ecoOpeningMatchPly = globalMatch.matchPly;
+
+			if (ECO_DEBUG) {
+				console.warn('[ECO][debug] Global match found (no provider ECO)', {
+					gameRef: `${game.site}:${game.externalId}`,
+					ecoDetermined,
+					name: ecoOpeningName,
+					matchPly: ecoOpeningMatchPly,
+				});
+			}
+		} else if (ECO_DEBUG) {
+			console.warn('[ECO][debug] Global scan failed (no provider ECO)', {
+				gameRef: `${game.site}:${game.externalId}`,
+				sampleMoves: gameMovesSan.slice(0, 16),
+			});
+		}
+
+		return { ecoDetermined, ecoOpeningName, ecoOpeningLinePgn, ecoOpeningMatchPly };
 	} catch {
 		// Best-effort fallback: keep provider ECO (if any), ignore everything else.
 		const providerEcoRaw = typeof game.eco === 'string' ? game.eco.trim() : '';

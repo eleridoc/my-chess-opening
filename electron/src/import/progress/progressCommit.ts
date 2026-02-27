@@ -15,18 +15,28 @@ export type AccountProgressCommitter = {
 	commitFinal: (counters: ImportRunCounters) => Promise<void>;
 };
 
+type UpdateRunCountersFn = (args: {
+	runId: string;
+	inserted: number;
+	skipped: number;
+	failed: number;
+}) => Promise<void>;
+
+/**
+ * Commit throttled per-account progress:
+ * - Persists counters to the DB every N processed games
+ * - Emits `accountProgress` events at the same cadence
+ *
+ * IMPORTANT:
+ * This is refactor-only: keep the throttle rule identical to the legacy inline implementation.
+ */
 export function createAccountProgressCommitter(params: {
 	commitEvery: number;
 	runId: string;
 	accountId: string;
 	gamesFound: number;
 	emit: (payload: ImportEventPayload) => void;
-	updateRunCounters: (args: {
-		runId: string;
-		inserted: number;
-		skipped: number;
-		failed: number;
-	}) => Promise<void>;
+	updateRunCounters: UpdateRunCountersFn;
 }): AccountProgressCommitter {
 	const { commitEvery, runId, accountId, gamesFound, emit, updateRunCounters } = params;
 
@@ -42,11 +52,23 @@ export function createAccountProgressCommitter(params: {
 		};
 	}
 
+	function emitSnapshot(snapshot: {
+		processed: number;
+		gamesFound: number;
+		inserted: number;
+		skipped: number;
+		failed: number;
+	}): void {
+		emit({
+			type: 'accountProgress',
+			accountId,
+			...snapshot,
+		});
+	}
+
 	return {
 		emitInitial() {
-			emit({
-				type: 'accountProgress',
-				accountId,
+			emitSnapshot({
 				processed: 0,
 				gamesFound,
 				inserted: 0,
@@ -56,41 +78,35 @@ export function createAccountProgressCommitter(params: {
 		},
 
 		async maybeCommit(counters: ImportRunCounters): Promise<void> {
-			const { processed, inserted, skipped, failed } = buildSnapshot(counters);
+			const snapshot = buildSnapshot(counters);
 
 			// Keep the exact rule from the original implementation:
 			// - only commit when processed > 0
 			// - commit every N processed games
-			if (processed > 0 && processed % commitEvery === 0) {
-				await updateRunCounters({ runId, inserted, skipped, failed });
-
-				emit({
-					type: 'accountProgress',
-					accountId,
-					processed,
-					gamesFound,
-					inserted,
-					skipped,
-					failed,
+			if (snapshot.processed > 0 && snapshot.processed % commitEvery === 0) {
+				await updateRunCounters({
+					runId,
+					inserted: snapshot.inserted,
+					skipped: snapshot.skipped,
+					failed: snapshot.failed,
 				});
+
+				emitSnapshot(snapshot);
 			}
 		},
 
 		async commitFinal(counters: ImportRunCounters): Promise<void> {
-			const { processed, inserted, skipped, failed } = buildSnapshot(counters);
+			const snapshot = buildSnapshot(counters);
 
 			// Final counters are always persisted (even if 0).
-			await updateRunCounters({ runId, inserted, skipped, failed });
-
-			emit({
-				type: 'accountProgress',
-				accountId,
-				processed,
-				gamesFound,
-				inserted,
-				skipped,
-				failed,
+			await updateRunCounters({
+				runId,
+				inserted: snapshot.inserted,
+				skipped: snapshot.skipped,
+				failed: snapshot.failed,
 			});
+
+			emitSnapshot(snapshot);
 		},
 	};
 }

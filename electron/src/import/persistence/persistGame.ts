@@ -1,9 +1,12 @@
-import { prisma } from '../../db/prisma';
-import { PlayerColor as PrismaPlayerColor } from '@prisma/client';
 import type { ImportedGameRaw } from 'my-chess-opening-core';
+
+import { PlayerColor as PrismaPlayerColor } from '@prisma/client';
+
 import type { EcoOpeningsCatalog } from '../../eco/ecoOpeningsCatalog';
-import { sha256Hex, mapSpeed, mapColor, mapPrismaSite } from '../importAllAccounts.helpers';
+import { prisma } from '../../db/prisma';
+
 import { enrichEcoFields } from '../eco/ecoEnricher';
+import { mapColor, mapPrismaSite, mapSpeed, sha256Hex } from '../importAllAccounts.helpers';
 
 /**
  * Persist one imported game:
@@ -22,11 +25,18 @@ export async function persistGame(params: {
 	const { accountConfigId, game, ecoCatalog } = params;
 
 	// SUBSECTION: Validate required owner-perspective fields (must be provided by core).
-
 	// Perspective must be applied by the importer layer (applyOwnerPerspective).
 	if (!game.myColor || !game.myUsername || !game.opponentUsername || game.myResultKey == null) {
 		throw new Error(
 			`Missing owner perspective fields for ${game.site}:${game.externalId}. Did you forget applyOwnerPerspective()?`,
+		);
+	}
+
+	// The persistence layer expects exactly 2 players (white/black).
+	// If this ever fails, it's a core importer normalization bug.
+	if (!Array.isArray(game.players) || game.players.length !== 2) {
+		throw new Error(
+			`Invalid players array for ${game.site}:${game.externalId}. Expected 2 players.`,
 		);
 	}
 
@@ -38,21 +48,13 @@ export async function persistGame(params: {
 	const pgnHash = sha256Hex(game.pgn);
 
 	// SUBSECTION: ECO enrichment (best-effort, must never fail the import).
-
 	const { ecoDetermined, ecoOpeningName, ecoOpeningLinePgn, ecoOpeningMatchPly } =
 		enrichEcoFields({
 			game,
 			ecoCatalog,
 		});
 
-	if (!Array.isArray(game.players) || game.players.length !== 2) {
-		throw new Error(
-			`Invalid players array for ${game.site}:${game.externalId}. Expected 2 players.`,
-		);
-	}
-
 	// SUBSECTION: Transactional insert (game + players + moves).
-
 	try {
 		await prisma.$transaction(async (tx) => {
 			const created = await tx.game.create({
