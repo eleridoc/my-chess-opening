@@ -2,7 +2,6 @@ import { prisma } from '../db/prisma';
 import {
 	ImportStatus,
 	ExternalSite as PrismaExternalSite,
-	GameSpeed as PrismaGameSpeed,
 	PlayerColor as PrismaPlayerColor,
 	Prisma,
 } from '@prisma/client';
@@ -41,6 +40,8 @@ import {
 	mapPrismaSite,
 	mapRunStatus,
 } from './importAllAccounts.helpers';
+
+import { createAccountProgressCommitter, type ImportRunCounters } from './progress/progressCommit';
 
 /**
  * How often we persist progress + emit UI progress updates during per-account processing.
@@ -477,16 +478,6 @@ async function persistGame(params: {
 // SECTION: Import batch runner (entrypoint)
 // -----------------------------------------------------------------------------
 
-/**
- * A "payload" is an ImportEvent without base fields.
- *
- * IMPORTANT:
- * `ImportEvent` is a discriminated union. Using `Omit<ImportEvent, ...>` directly would
- * collapse the union and drop fields that are not common to all variants (e.g. `accountId`).
- *
- * The conditional type below distributes over the union, keeping the per-variant fields intact.
- */
-
 export async function importAllAccounts(
 	params?: ImportAllAccountsParams,
 ): Promise<ImportBatchSummary> {
@@ -632,16 +623,25 @@ export async function importAllAccounts(
 				gamesFound,
 			});
 
-			// Initial progress snapshot (0/X).
-			emit({
-				type: 'accountProgress',
+			const progress = createAccountProgressCommitter({
+				commitEvery: PROGRESS_COMMIT_EVERY,
+				runId: run.id,
 				accountId: account.id,
-				processed: 0,
 				gamesFound,
-				inserted: 0,
-				skipped: 0,
-				failed: 0,
+				emit,
+				updateRunCounters: async ({ runId, inserted, skipped, failed }) => {
+					await prisma.importRun.update({
+						where: { id: runId },
+						data: {
+							gamesInserted: inserted,
+							gamesSkipped: skipped,
+							gamesFailed: failed,
+						},
+					});
+				},
 			});
+
+			progress.emitInitial();
 
 			// SUBSECTION: Persist games (DB writes) + emit progress/errors
 			for (const g of games) {
@@ -681,47 +681,17 @@ export async function importAllAccounts(
 					});
 				}
 
-				const processed = gamesInserted + gamesSkipped + gamesFailed;
+				const counters: ImportRunCounters = {
+					inserted: gamesInserted,
+					skipped: gamesSkipped,
+					failed: gamesFailed,
+				};
 
-				// Throttle DB writes + UI updates.
-				if (processed > 0 && processed % PROGRESS_COMMIT_EVERY === 0) {
-					await prisma.importRun.update({
-						where: { id: run.id },
-						data: {
-							gamesInserted,
-							gamesSkipped,
-							gamesFailed,
-						},
-					});
-
-					emit({
-						type: 'accountProgress',
-						accountId: account.id,
-						processed,
-						gamesFound,
-						inserted: gamesInserted,
-						skipped: gamesSkipped,
-						failed: gamesFailed,
-					});
-				}
+				await progress.maybeCommit(counters);
 			}
 
 			// Final counters.
-			await prisma.importRun.update({
-				where: { id: run.id },
-				data: {
-					gamesInserted,
-					gamesSkipped,
-					gamesFailed,
-				},
-			});
-
-			// Final progress snapshot (X/X).
-			emit({
-				type: 'accountProgress',
-				accountId: account.id,
-				processed: gamesInserted + gamesSkipped + gamesFailed,
-				gamesFound,
+			await progress.commitFinal({
 				inserted: gamesInserted,
 				skipped: gamesSkipped,
 				failed: gamesFailed,
