@@ -23,7 +23,7 @@
  * - For dates, we pass through ISO strings and let UI format later using a dedicated layer.
  */
 
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 
 import { ExplorerSession } from 'my-chess-opening-core/explorer';
 
@@ -40,28 +40,13 @@ import type {
 	ExplorerGameSnapshot,
 } from 'my-chess-opening-core/explorer';
 
-import {
-	parsePgnTags,
-	mapPgnTagsToExplorerHeaders,
-	type PgnTags,
-} from 'my-chess-opening-core/explorer';
-
-import type { ExplorerGameHeaders } from 'my-chess-opening-core/explorer';
-
-import type {
-	GameInfoHeaderVm,
-	GameInfoPlayerVm,
-	PlayerSide,
-} from '../view-models/game-info-header.vm';
+import { parsePgnTags, type PgnTags } from 'my-chess-opening-core/explorer';
 
 import type { BoardOrientation } from '../board/board-adapter';
-
-import * as gameInfoBuilders from './explorer-game-info.builders';
 
 import {
 	applyDbLoadOrientationRule,
 	clearTransientUiState,
-	getPerspectiveColor,
 	refreshFromCore,
 	setImportError,
 	type CoreSyncSignals,
@@ -69,6 +54,11 @@ import {
 	type PromotionPending,
 	type TransientSignals,
 } from './explorer-facade.internal';
+
+import {
+	createExplorerFacadeSelectors,
+	type ExplorerFacadeSelectorDeps,
+} from './explorer-facade.selectors';
 
 @Injectable({ providedIn: 'root' })
 export class ExplorerFacade {
@@ -199,6 +189,40 @@ export class ExplorerFacade {
 		promotionPending: this._promotionPending,
 	};
 
+	private readonly _selectors = createExplorerFacadeSelectors({
+		session: this.session,
+
+		rev: this._rev,
+
+		mode: this._mode,
+		source: this._source,
+		fen: this._fen,
+		ply: this._ply,
+		currentNodeId: this._currentNodeId,
+
+		moveListRows: this._moveListRows,
+		variationsByNodeId: this._variationsByNodeId,
+
+		moves: this._moves,
+
+		canPrev: this._canPrev,
+		canNext: this._canNext,
+
+		normalizedFen: this._normalizedFen,
+		positionKey: this._positionKey,
+		dbGameSnapshot: this._dbGameSnapshot,
+
+		pendingDbGameId: this._pendingDbGameId,
+		boardOrientation: this._boardOrientation,
+		ephemeralPgnTags: this._ephemeralPgnTags,
+
+		lastError: this._lastError,
+		importFenError: this._importFenError,
+		importPgnError: this._importPgnError,
+		promotionPending: this._promotionPending,
+		lastMoveSquares: this._lastMoveSquares,
+	} satisfies ExplorerFacadeSelectorDeps);
+
 	// ---------------------------------------------------------------------------
 	// Public readonly signals (what the UI should consume)
 	// ---------------------------------------------------------------------------
@@ -222,30 +246,19 @@ export class ExplorerFacade {
 	readonly canNext = this._canNext.asReadonly();
 
 	/** Convenience signals for UI buttons. */
-	readonly canStart = computed(() => this._canPrev());
-	readonly canEnd = computed(() => this._canNext());
+	readonly canStart = this._selectors.canStart;
+	readonly canEnd = this._selectors.canEnd;
 
 	/** Ephemeral import is only allowed from CASE1_FREE. */
-	readonly importRequiresReset = computed(() => this.mode() !== 'CASE1_FREE');
+	readonly importRequiresReset = this._selectors.importRequiresReset;
 
 	/**
 	 * Variation cycling availability depends on the current cursor context inside the core.
 	 * We re-evaluate after each refresh using the `_rev` tick dependency.
 	 */
-	readonly canPrevVariation = computed(() => {
-		this._rev();
-		return this.session.canGoPrevVariation();
-	});
-
-	readonly canNextVariation = computed(() => {
-		this._rev();
-		return this.session.canGoNextVariation();
-	});
-
-	readonly variationInfo = computed(() => {
-		this._rev();
-		return this.session.getVariationInfoAtCurrentPly();
-	});
+	readonly canPrevVariation = this._selectors.canPrevVariation;
+	readonly canNextVariation = this._selectors.canNextVariation;
+	readonly variationInfo = this._selectors.variationInfo;
 
 	readonly lastError = this._lastError.asReadonly();
 	readonly importFenError = this._importFenError.asReadonly();
@@ -264,16 +277,7 @@ export class ExplorerFacade {
 	 * - Ephemeral PGN tags (when source.kind === 'PGN')
 	 * - Otherwise null
 	 */
-	readonly gameHeaders = computed<ExplorerGameHeaders | null>(() => {
-		const db = this._dbGameSnapshot();
-		if (db?.headers) return db.headers;
-
-		const src = this._source();
-		const tags = this._ephemeralPgnTags();
-		if (src.kind === 'PGN' && tags) return mapPgnTagsToExplorerHeaders(tags);
-
-		return null;
-	});
+	readonly gameHeaders = this._selectors.gameHeaders;
 
 	/**
 	 * Single header VM used by the whole game-info-panel and its sub-components.
@@ -283,103 +287,13 @@ export class ExplorerFacade {
 	 * - Do not pre-format "line1/line2" strings here.
 	 * - Player-card decides top/bottom from `boardOrientation`.
 	 */
-	readonly gameInfoHeaderVm = computed<GameInfoHeaderVm>(() => {
-		// Recompute when cursor-dependent selectors change (navigation, variations, etc.).
-		this._rev();
-
-		const headers = this.gameHeaders();
-		const myColor = getPerspectiveColor(this._dbGameSnapshot());
-		const boardOrientation = this.boardOrientation();
-
-		// Cursor-dependent core selectors.
-		const captured = this.session.getCapturedPiecesAtCursor();
-		const material = this.session.getMaterialAtCursor();
-
-		const timeControlVm = gameInfoBuilders.buildTimeControlVm(headers);
-		const playedAtIso = (headers?.playedAtIso ?? '').trim() || undefined;
-
-		const meta = {
-			...(timeControlVm ? { timeControl: timeControlVm } : {}),
-			ratedKey: gameInfoBuilders.toRatedKey(headers?.rated),
-			speedKey: gameInfoBuilders.toSpeedKey(headers?.speed),
-			...(playedAtIso ? { playedAtIso } : {}),
-		};
-
-		const players: Record<PlayerSide, GameInfoPlayerVm> = {
-			white: gameInfoBuilders.buildGameInfoPlayerVm('white', headers, myColor),
-			black: gameInfoBuilders.buildGameInfoPlayerVm('black', headers, myColor),
-		};
-
-		const site = gameInfoBuilders.buildSiteVm(headers);
-		const result = gameInfoBuilders.buildResultVm(
-			(headers?.result ?? '').trim() || undefined,
-			myColor,
-		);
-		const opening = gameInfoBuilders.buildOpeningVm(headers);
-
-		const vm: GameInfoHeaderVm = {
-			boardOrientation,
-			...(myColor ? { myColor } : {}),
-			meta,
-			players,
-			...(site ? { site } : {}),
-			result,
-			...(opening ? { opening } : {}),
-			captured,
-			material,
-		};
-
-		return vm;
-	});
+	readonly gameInfoHeaderVm = this._selectors.gameInfoHeaderVm;
 
 	/**
 	 * Stable snapshot mainly for debug/templates.
 	 * Avoid using this for core UI logic (prefer individual signals).
 	 */
-	readonly snapshot = computed(() => ({
-		mode: this._mode(),
-		source: this._source(),
-		fen: this._fen(),
-		ply: this._ply(),
-
-		currentNodeId: this._currentNodeId(),
-		moveListRows: this._moveListRows(),
-		variationsByNodeId: this._variationsByNodeId(),
-
-		// legacy
-		moves: this._moves(),
-
-		canPrev: this._canPrev(),
-		canNext: this._canNext(),
-
-		variationInfo: this.variationInfo(),
-		canPrevVariation: this.canPrevVariation(),
-		canNextVariation: this.canNextVariation(),
-
-		lastError: this._lastError(),
-		promotionPending: this._promotionPending(),
-		lastMoveSquares: this._lastMoveSquares(),
-
-		normalizedFen: this._normalizedFen(),
-		positionKey: this._positionKey(),
-		dbGameSnapshot: this._dbGameSnapshot(),
-		pendingDbGameId: this._pendingDbGameId(),
-		boardOrientation: this._boardOrientation(),
-
-		// UI helpers / derived state (useful for diagnostics)
-		canStart: this.canStart(),
-		canEnd: this.canEnd(),
-		importRequiresReset: this.importRequiresReset(),
-
-		importFenError: this._importFenError(),
-		importPgnError: this._importPgnError(),
-		ephemeralPgnTags: this._ephemeralPgnTags(),
-
-		gameHeaders: this.gameHeaders(),
-		gameInfoHeaderVm: this.gameInfoHeaderVm(),
-
-		rev: this._rev(),
-	}));
+	readonly snapshot = this._selectors.snapshot;
 
 	constructor() {
 		refreshFromCore(this.session, this._coreSync);
