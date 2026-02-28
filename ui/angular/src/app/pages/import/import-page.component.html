@@ -98,65 +98,13 @@
 			</mat-expansion-panel>
 
 			@if (importState.batchId(); as bid) {
-				<div class="import__batch">
-					<div class="import__batch-line">
-						<span class="import__batch-key">Batch</span>
-						<span class="import__batch-value mono">{{ bid }}</span>
-					</div>
-
-					@if (importState.startedAtIso()) {
-						<div class="import__batch-line">
-							<span class="import__batch-key">Started</span>
-							<span class="import__batch-value">{{
-								importState.startedAtIso() | appIsoDateTime
-							}}</span>
-						</div>
-					}
-
-					@if (importState.finishedAtIso()) {
-						<div class="import__batch-line">
-							<span class="import__batch-key">Finished</span>
-							<span class="import__batch-value">{{
-								importState.finishedAtIso() | appIsoDateTime
-							}}</span>
-						</div>
-					}
-
-					@if (importState.maxGamesPerAccount() != null) {
-						<div class="import__batch-line">
-							<span class="import__batch-key">Limit</span>
-							<span class="import__batch-value">
-								{{ importState.maxGamesPerAccount() }} games/account
-							</span>
-						</div>
-					}
-
-					@if (importState.totals(); as t) {
-						<div class="import__totals" aria-label="Import batch summary">
-							<div class="import__totals-title">Batch summary</div>
-							<div class="import__totals-grid">
-								<div class="import__totals-item">
-									<div class="import__totals-k">Found</div>
-									<div class="import__totals-v">{{ t.totalGamesFound }}</div>
-								</div>
-								<div class="import__totals-item">
-									<div class="import__totals-k">Inserted</div>
-									<div class="import__totals-v">{{ t.totalInserted }}</div>
-								</div>
-								<div class="import__totals-item">
-									<div class="import__totals-k">Skipped</div>
-									<div class="import__totals-v">{{ t.totalSkipped }}</div>
-								</div>
-								<div class="import__totals-item">
-									<div class="import__totals-k">Failed</div>
-									<div class="import__totals-v" [class.import__totals-v--bad]="t.totalFailed > 0">
-										{{ t.totalFailed }}
-									</div>
-								</div>
-							</div>
-						</div>
-					}
-				</div>
+				<app-import-batch-summary
+					[batchId]="bid"
+					[startedAtIso]="importState.startedAtIso()"
+					[finishedAtIso]="importState.finishedAtIso()"
+					[maxGamesPerAccount]="importState.maxGamesPerAccount()"
+					[totals]="importState.totals()"
+				/>
 			}
 		</div>
 	</div>

@@ -22,6 +22,8 @@ import { SectionLoaderComponent } from '../../shared/loading/section-loader/sect
 
 import type { ImportAccountRowBaseVm, ImportAccountRowVm } from './models/import-account-row.vm';
 
+import { ImportBatchSummaryComponent } from './components/batch-summary/batch-summary.component';
+
 const BASE_COLUMNS = ['site', 'username', 'lastSyncAt', 'actions'] as const;
 const IMPORT_COLUMNS = [
 	'site',
@@ -47,6 +49,7 @@ const IMPORT_COLUMNS = [
 		MatProgressBarModule,
 		MatProgressSpinnerModule,
 		MatExpansionModule,
+		ImportBatchSummaryComponent,
 		SectionLoaderComponent,
 		IsoDateTimePipe,
 	],

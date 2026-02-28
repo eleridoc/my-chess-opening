@@ -1,0 +1,60 @@
+//
+// Batch details + totals (within controls card)
+// Note: class names are kept as-is to preserve the existing DOM contract.
+//
+
+.import__batch {
+	margin-top: 12px;
+	padding-top: 12px;
+	border-top: 1px solid var(--app-sep);
+	display: grid;
+	gap: 6px;
+}
+
+.import__batch-line {
+	display: grid;
+	grid-template-columns: 90px 1fr;
+	gap: 10px;
+	align-items: center;
+}
+
+.import__batch-key {
+	opacity: 0.7;
+}
+
+.import__batch-value {
+	opacity: 0.95;
+}
+
+.import__totals {
+	margin-top: 10px;
+	padding: 12px;
+	border-radius: var(--app-main-radius);
+	background: var(--app-card);
+	border: 1px solid var(--app-border);
+}
+
+.import__totals-title {
+	font-weight: 600;
+	margin-bottom: 10px;
+}
+
+.import__totals-grid {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 10px;
+}
+
+.import__totals-k {
+	opacity: 0.7;
+	font-size: 12px;
+}
+
+.import__totals-v {
+	font-weight: 700;
+	font-size: 16px;
+}
+
+.import__totals-v--bad {
+	color: var(--mat-sys-error);
+}
