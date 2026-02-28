@@ -32,7 +32,7 @@ import { ExplorerGameInfoPanelComponent } from '../../explorer/components/explor
 import { PlayerInfoCardComponent } from '../../explorer/components/player-info-card/player-info-card.component';
 import { ExplorerDebugTabComponent } from '../../explorer/components/explorer-debug-tab/explorer-debug-tab.component';
 
-import { ExplorerDbService } from '../../services/explorer-db.service';
+import { ExplorerDbService } from '../../services/explorer/explorer-db.service';
 import { NotificationService } from '../../shared/notifications/notification.service';
 import {
 	ConfirmDialogComponent,
