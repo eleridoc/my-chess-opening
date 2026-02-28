@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { CanMatchFn, Router, UrlTree } from '@angular/router';
 
-import { AccountsStateService } from '../services/accounts-state.service';
+import { AccountsStateService } from '../services/accounts/accounts-state.service';
 
 /**
  * hasAccountsGuard

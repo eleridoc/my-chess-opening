@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
-import { AccountsStateService } from './services/accounts-state.service';
+import { AccountsStateService } from './services/accounts/accounts-state.service';
 import { ImportStateService } from './services/import/import-state.service';
 
 @Component({

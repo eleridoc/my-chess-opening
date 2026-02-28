@@ -1,7 +1,7 @@
 import { Component, computed, inject, isDevMode } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
-import { AccountsStateService } from '../services/accounts-state.service';
+import { AccountsStateService } from '../services/accounts/accounts-state.service';
 import { ImportStateService } from '../services/import/import-state.service';
 import { ThemeService } from '../services/theme.service';
 

@@ -8,8 +8,8 @@ import { ConfirmDialogComponent } from '../../shared/dialogs/confirm-dialog/conf
 import type { ConfirmDialogData } from '../../shared/dialogs/confirm-dialog/confirm-dialog.component';
 import { NotificationService } from '../../shared/notifications/notification.service';
 
-import { AccountsStateService } from '../../services/accounts-state.service';
-import { ChessAccountsService } from '../../services/chess-accounts.service';
+import { AccountsStateService } from '../../services/accounts/accounts-state.service';
+import { ChessAccountsService } from '../../services/accounts/chess-accounts.service';
 
 import { AccountsTableComponent } from './components/accounts-table/accounts-table.component';
 import { AddAccountFormComponent } from './components/add-account-form/add-account-form.component';

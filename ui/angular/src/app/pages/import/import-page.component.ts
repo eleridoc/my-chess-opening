@@ -10,8 +10,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 
 import type { ExternalSite } from 'my-chess-opening-core';
 
-import { AccountsStateService } from '../../services/accounts-state.service';
-import { ChessAccountsService } from '../../services/chess-accounts.service';
+import { AccountsStateService } from '../../services/accounts/accounts-state.service';
+import { ChessAccountsService } from '../../services/accounts/chess-accounts.service';
 import { ImportStateService } from '../../services/import/import-state.service';
 import { SectionLoaderComponent } from '../../shared/loading/section-loader/section-loader.component';
 import { NotificationService } from '../../shared/notifications/notification.service';

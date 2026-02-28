@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 
-import { AccountsStateService } from '../../services/accounts-state.service';
+import { AccountsStateService } from '../../services/accounts/accounts-state.service';
 
 /**
  * HomeRedirectPageComponent
