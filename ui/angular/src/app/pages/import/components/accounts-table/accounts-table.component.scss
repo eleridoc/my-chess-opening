@@ -1,0 +1,95 @@
+:host {
+	display: block;
+}
+
+//
+// Table cells
+//
+
+.import__username {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.import__pill {
+	margin-left: 8px;
+}
+
+.import__progress-cell {
+	min-width: 140px;
+}
+
+.import__progress-top {
+	display: flex;
+	justify-content: flex-start;
+	margin-bottom: 6px;
+}
+
+.import__results-cell {
+	min-width: 220px;
+}
+
+.import__results-line {
+	margin-bottom: 6px;
+	opacity: 0.9;
+}
+
+/**
+ * Error list is intentionally small and scrollable
+ * to avoid inflating the table row height too much.
+ */
+.import__errors {
+	max-height: 72px;
+	overflow: auto;
+
+	padding: 8px 10px;
+	border-radius: var(--app-radius-lg);
+	background: var(--app-hover);
+	border: 1px solid var(--app-border);
+}
+
+.import__error-line {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+	font-size: 12px;
+	line-height: 1.2;
+
+	& + & {
+		margin-top: 6px;
+	}
+}
+
+.import__error-id {
+	flex: 0 0 auto;
+	opacity: 0.95;
+}
+
+.import__error-msg {
+	flex: 1 1 auto;
+	opacity: 0.75;
+
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+//
+// Visual helpers
+//
+
+.import__muted,
+.import__dim {
+	opacity: 0.65;
+}
+
+.import__row--disabled {
+	opacity: 0.85;
+}
+
+.import__row-fetching {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
