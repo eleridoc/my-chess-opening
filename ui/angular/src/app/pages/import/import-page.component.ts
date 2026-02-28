@@ -12,7 +12,7 @@ import type { ExternalSite } from 'my-chess-opening-core';
 
 import { AccountsStateService } from '../../services/accounts-state.service';
 import { ChessAccountsService } from '../../services/chess-accounts.service';
-import { ImportStateService } from '../../services/import-state.service';
+import { ImportStateService } from '../../services/import/import-state.service';
 import { SectionLoaderComponent } from '../../shared/loading/section-loader/section-loader.component';
 import { NotificationService } from '../../shared/notifications/notification.service';
 

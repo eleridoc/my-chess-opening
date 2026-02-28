@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 
-import type { ImportBatchTotalsVm } from '../../../../services/import-state.service';
+import type { ImportBatchTotalsVm } from '../../../../services/import/import-state.service';
 import { IsoDateTimePipe } from '../../../../shared/dates/pipes';
 
 @Component({

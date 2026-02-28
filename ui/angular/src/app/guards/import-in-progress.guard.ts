@@ -1,6 +1,6 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router, UrlTree } from '@angular/router';
-import { ImportStateService } from '../services/import-state.service';
+import { ImportStateService } from '../services/import/import-state.service';
 
 /**
  * Medium blocking strategy:

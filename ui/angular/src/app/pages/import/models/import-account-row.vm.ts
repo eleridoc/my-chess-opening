@@ -1,4 +1,4 @@
-import type { ImportAccountPhaseVm } from '../../../services/import-state.service';
+import type { ImportAccountPhaseVm } from '../../../services/import/import-state.service';
 
 /**
  * Import page table view-models.

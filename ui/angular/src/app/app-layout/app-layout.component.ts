@@ -2,7 +2,7 @@ import { Component, computed, inject, isDevMode } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 import { AccountsStateService } from '../services/accounts-state.service';
-import { ImportStateService } from '../services/import-state.service';
+import { ImportStateService } from '../services/import/import-state.service';
 import { ThemeService } from '../services/theme.service';
 
 import { MatToolbarModule } from '@angular/material/toolbar';
