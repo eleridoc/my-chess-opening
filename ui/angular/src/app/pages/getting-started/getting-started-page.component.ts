@@ -6,7 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 
 import { AccountsStateService } from '../../services/accounts/accounts-state.service';
-import { GamesService } from '../../services/games.service';
+import { GamesService } from '../../services/games/games.service';
 
 /**
  * GettingStartedPageComponent

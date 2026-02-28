@@ -14,7 +14,7 @@ import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 import type { GamesListItem, PlayerColor } from 'my-chess-opening-core';
-import { GamesService } from '../../services/games.service';
+import { GamesService } from '../../services/games/games.service';
 import { NotificationService } from '../../shared/notifications/notification.service';
 import { ExternalLinkService } from '../../shared/system/external-link.service';
 import { ratedLabel, timeLabel, openingLabel, myResultLabel } from '../../shared/games/game-format';

@@ -22,7 +22,7 @@ import type {
 	LogListItem,
 	LogEntryDetails,
 } from 'my-chess-opening-core';
-import { LogsService } from '../../services/logs.service';
+import { LogsService } from '../../services/logs/logs.service';
 import { NotificationService } from '../../shared/notifications/notification.service';
 
 import { IsoDateTimePipe } from '../../shared/dates/pipes';
