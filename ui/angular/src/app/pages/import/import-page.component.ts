@@ -3,27 +3,27 @@ import { Component, OnInit, computed, effect, inject, signal } from '@angular/co
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { MatButtonModule } from '@angular/material/button';
+import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatExpansionModule } from '@angular/material/expansion';
 
 import type { ExternalSite } from 'my-chess-opening-core';
 
 import { AccountsStateService } from '../../services/accounts-state.service';
 import { ChessAccountsService } from '../../services/chess-accounts.service';
-import { ImportStateService, type ImportAccountPhaseVm } from '../../services/import-state.service';
+import { ImportStateService } from '../../services/import-state.service';
+import { SectionLoaderComponent } from '../../shared/loading/section-loader/section-loader.component';
 import { NotificationService } from '../../shared/notifications/notification.service';
 
-import { SectionLoaderComponent } from '../../shared/loading/section-loader/section-loader.component';
-
+import { ImportAccountsTableComponent } from './components/accounts-table/accounts-table.component';
+import { ImportBatchSummaryComponent } from './components/batch-summary/batch-summary.component';
 import type { ImportAccountRowBaseVm, ImportAccountRowVm } from './models/import-account-row.vm';
 
-import { ImportBatchSummaryComponent } from './components/batch-summary/batch-summary.component';
-import { ImportAccountsTableComponent } from './components/accounts-table/accounts-table.component';
+const IMPORT_RULES_EXPANDED_STORAGE_KEY = 'mco.import.rulesExpanded';
 
 const BASE_COLUMNS = ['site', 'username', 'lastSyncAt', 'actions'] as const;
+
 const IMPORT_COLUMNS = [
 	'site',
 	'username',
@@ -34,6 +34,19 @@ const IMPORT_COLUMNS = [
 	'status',
 	'actions',
 ] as const;
+
+/**
+ * Raw row shape returned by ChessAccountsService.list().
+ * Kept local to avoid leaking UI-only concerns into service types.
+ */
+type AccountsListRow = {
+	id: string;
+	site: ExternalSite;
+	username: string;
+	isEnabled: boolean;
+	lastSyncAt: string | null;
+	gamesTotal: number;
+};
 
 @Component({
 	standalone: true,
@@ -60,15 +73,10 @@ export class ImportPageComponent implements OnInit {
 
 	private readonly route = inject(ActivatedRoute);
 	private readonly router = inject(Router);
+
 	private readonly accountsState = inject(AccountsStateService);
 	private readonly accounts = inject(ChessAccountsService);
 	private readonly notify = inject(NotificationService);
-
-	private readonly IMPORT_RULES_EXPANDED_KEY = 'mco.import.rulesExpanded';
-	/** Whether the "What gets imported" panel is expanded (persisted in localStorage). */
-	readonly importRulesExpanded = signal<boolean>(
-		this.readBool(this.IMPORT_RULES_EXPANDED_KEY, true),
-	);
 
 	/**
 	 * Public (used by template):
@@ -91,6 +99,14 @@ export class ImportPageComponent implements OnInit {
 	readonly rows = signal<ImportAccountRowBaseVm[]>([]);
 
 	/**
+	 * Whether the "What gets imported" panel is expanded.
+	 * The value is persisted to localStorage (best-effort).
+	 */
+	readonly importRulesExpanded = signal<boolean>(
+		this.readBool(IMPORT_RULES_EXPANDED_STORAGE_KEY, true),
+	);
+
+	/**
 	 * Page-level guards to ensure we handle "batch finished" only once per batchId.
 	 * Signals/effects can re-run for unrelated changes, so we keep explicit tracking here.
 	 */
@@ -105,13 +121,15 @@ export class ImportPageComponent implements OnInit {
 	 * UI choice:
 	 * Keep last batch details visible after completion until the next run starts.
 	 */
-	readonly showImportInfo = computed(() => this.importState.batchId() != null);
+	readonly showImportInfo = computed<boolean>(() => this.importState.batchId() != null);
 
-	readonly displayedColumns = computed(() => {
+	readonly displayedColumns = computed<readonly string[]>(() => {
 		return this.showImportInfo() ? [...IMPORT_COLUMNS] : [...BASE_COLUMNS];
 	});
 
-	readonly actionsDisabled = computed(() => this.loading() || this.importState.isImporting());
+	readonly actionsDisabled = computed<boolean>(
+		() => this.loading() || this.importState.isImporting(),
+	);
 
 	readonly tableRows = computed<ImportAccountRowVm[]>(() => {
 		const baseRows = this.rows();
@@ -140,14 +158,14 @@ export class ImportPageComponent implements OnInit {
 
 				isWaiting,
 
-				phase: st ? st.phase : null,
-				gamesFound: st ? st.gamesFound : null,
-				processed: st ? st.processed : null,
-				inserted: st ? st.inserted : null,
-				skipped: st ? st.skipped : null,
-				failed: st ? st.failed : null,
-				status: st ? st.status : null,
-				errors: st ? st.errors : [],
+				phase: st?.phase ?? null,
+				gamesFound: st?.gamesFound ?? null,
+				processed: st?.processed ?? null,
+				inserted: st?.inserted ?? null,
+				skipped: st?.skipped ?? null,
+				failed: st?.failed ?? null,
+				status: st?.status ?? null,
+				errors: st?.errors ?? [],
 			};
 		});
 	});
@@ -173,7 +191,7 @@ export class ImportPageComponent implements OnInit {
 		});
 
 		/**
-		 * When a batch finishes, refresh account list so lastSyncAt updates.
+		 * When a batch finishes, refresh the account list so lastSyncAt updates.
 		 */
 		effect(() => {
 			const batchId = this.importState.batchId();
@@ -193,7 +211,10 @@ export class ImportPageComponent implements OnInit {
 	// -------------------------------------------------------------------------
 
 	async ngOnInit(): Promise<void> {
-		// Ensure IPC subscription exists even if user lands here first.
+		/**
+		 * Ensure the IPC subscription exists even if the user lands on this page first.
+		 * This call is expected to be idempotent.
+		 */
 		this.importState.ensureInitialized();
 
 		// Feature detection: import is available only in the Electron desktop app.
@@ -223,12 +244,6 @@ export class ImportPageComponent implements OnInit {
 
 		await this.importAll();
 	}
-
-	// -------------------------------------------------------------------------
-	// Template helpers
-	// -------------------------------------------------------------------------
-
-	readonly trackById = (_: number, r: ImportAccountRowVm): string => r.id;
 
 	// -------------------------------------------------------------------------
 	// Actions
@@ -299,7 +314,7 @@ export class ImportPageComponent implements OnInit {
 
 	setImportRulesExpanded(expanded: boolean): void {
 		this.importRulesExpanded.set(expanded);
-		this.writeBool(this.IMPORT_RULES_EXPANDED_KEY, expanded);
+		this.writeBool(IMPORT_RULES_EXPANDED_STORAGE_KEY, expanded);
 	}
 
 	// -------------------------------------------------------------------------
@@ -355,14 +370,7 @@ export class ImportPageComponent implements OnInit {
 		return error instanceof Error ? error.message : fallback;
 	}
 
-	private mapRow = (r: {
-		id: string;
-		site: ExternalSite;
-		username: string;
-		isEnabled: boolean;
-		lastSyncAt: string | null;
-		gamesTotal: number;
-	}): ImportAccountRowBaseVm => ({
+	private readonly mapRow = (r: AccountsListRow): ImportAccountRowBaseVm => ({
 		id: r.id,
 		site: r.site as unknown as ImportAccountRowBaseVm['site'],
 		username: r.username,

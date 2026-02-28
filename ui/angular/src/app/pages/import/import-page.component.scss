@@ -7,19 +7,23 @@
   - Ensure internal scrolling happens inside the table card (avoid page scroll).
 */
 
-//
-// Controls (top card)
-//
+/* ==========================================================================
+   Controls (top card)
+   ========================================================================== */
 
 .import__controls-row {
 	display: flex;
-	gap: 10px;
 	align-items: center;
+	gap: 10px;
 	flex-wrap: wrap;
 }
 
 /**
  * Small inline "RUNNING" indicator displayed next to the buttons.
+ *
+ * Note:
+ * - Uses `gap` for spacing so we don't need per-element margins.
+ * - Kept inline (no modal) because this page is the import console.
  */
 .import__running {
 	display: inline-flex;
@@ -31,31 +35,40 @@
 	opacity: 0.85;
 }
 
-//
-// Layout (page -> list card -> table card)
-//
+/* ==========================================================================
+   Layout (page -> list card -> table card)
+   ========================================================================== */
 
 .import__list {
+	/**
+	 * Critical:
+	 * - `min-height: 0` allows flex children to shrink so internal scrolling can work.
+	 * - Without it, the page can become the scroll container (double scroll).
+	 */
 	flex: 1 1 auto;
-	min-height: 0; // Critical: allows children to shrink so internal scrolling can work.
+	min-height: 0;
 
 	display: flex;
 	flex-direction: column;
 }
 
 .import__list-content {
+	/**
+	 * Same reasoning as `.import__list`:
+	 * nested flex containers must allow shrinking to preserve internal scroll regions.
+	 */
 	flex: 1 1 auto;
-	min-height: 0; // Critical: same reason as above (nested flex container).
+	min-height: 0;
 
 	display: flex;
 	flex-direction: column;
 }
 
-/**
- * The table card should fill the remaining height and scroll internally.
- * The squared top corners match the "stacked cards" style (controls card above).
- */
 .import__table-card {
+	/**
+	 * The table card should fill the remaining height and scroll internally.
+	 * Squared top corners match the "stacked cards" style (controls card above).
+	 */
 	flex: 1 1 auto;
 	min-height: 0;
 
@@ -63,9 +76,9 @@
 	border-top-right-radius: 0;
 }
 
-//
-// States (desktop-only, error, empty)
-//
+/* ==========================================================================
+   States (desktop-only, error, empty)
+   ========================================================================== */
 
 .import__state {
 	padding: 14px;
@@ -95,4 +108,72 @@
 	gap: 10px;
 	flex-wrap: wrap;
 	margin-top: 6px;
+}
+
+/* ==========================================================================
+   Import rules panel
+   - "What gets imported" explanation (MatExpansionPanel)
+   ========================================================================== */
+
+.import__rules {
+	margin-top: 12px;
+
+	/* Keep the panel visually aligned with the app "flat card" look */
+	border-radius: var(--app-main-radius);
+	border: 1px solid var(--app-border);
+	background: var(--app-card);
+
+	/* Prevent weird overflow clipping when the panel animates */
+	overflow: hidden;
+}
+
+/* Header: make it compact and visually consistent with the rest of the UI */
+.import__rules :is(.mat-expansion-panel-header) {
+	min-height: 42px;
+	padding: 0 12px;
+}
+
+/* Remove Material's default extra padding in the body */
+.import__rules :is(.mat-expansion-panel-body) {
+	padding: 12px;
+}
+
+/* Title line: icon + text */
+.import__rules-title {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.import__rules-icon {
+	opacity: 0.85;
+}
+
+/* Body text */
+.import__rules-body {
+	display: grid;
+	gap: 10px;
+
+	/* Slightly soften long text blocks */
+	opacity: 0.92;
+
+	p {
+		margin: 0;
+	}
+}
+
+.import__rules-list {
+	margin: 0;
+	padding-left: 18px; /* classic readable list indent */
+	display: grid;
+	gap: 6px;
+
+	li {
+		margin: 0;
+	}
+}
+
+/* Reuse the existing muted helper used elsewhere on the page */
+.import__muted {
+	opacity: 0.75;
 }

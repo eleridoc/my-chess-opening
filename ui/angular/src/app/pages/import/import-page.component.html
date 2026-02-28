@@ -4,6 +4,7 @@
 		Import your games account-by-account with live progress and per-account results.
 	</p>
 
+	<!-- Controls card: actions + rules + current batch summary -->
 	<div class="app-card-flat import__controls">
 		<div class="app-card-flat-top">Import</div>
 
@@ -20,7 +21,6 @@
 							? 'Import already running'
 							: 'Start import for all enabled accounts'
 					"
-					[attr.aria-disabled]="actionsDisabled() ? 'true' : null"
 				>
 					<mat-icon aria-hidden="true">download</mat-icon>
 					<span>{{ importState.isImporting() ? 'Importing…' : 'Import all accounts' }}</span>
@@ -32,7 +32,6 @@
 					class="mat-stroked-button-d-5"
 					(click)="refresh()"
 					[disabled]="loading() || importState.isImporting()"
-					[attr.aria-disabled]="loading() || importState.isImporting() ? 'true' : null"
 				>
 					<mat-icon aria-hidden="true">refresh</mat-icon>
 					Refresh accounts
@@ -41,15 +40,14 @@
 				@if (importState.isImporting()) {
 					<!--
 						Inline status indicator:
-						- We keep it lightweight (no modal) because the page itself is the "import console".
-						- Navigation is guarded by importInProgressGuard to keep the UX focused.
+						- The page itself is the "import console", so we avoid any modal UI here.
+						- Navigation is guarded by `importInProgressGuard` to keep the user focused on the batch.
 					-->
 					<span class="import__running">
 						<span class="app-pill">RUNNING</span>
 
-						<!-- Spinner: visible for the whole batch duration -->
+						<!-- Spinner: visible for the whole batch duration. -->
 						<mat-progress-spinner
-							class="import__running-spinner"
 							diameter="14"
 							mode="indeterminate"
 							aria-label="Import in progress"
@@ -60,6 +58,7 @@
 				}
 			</div>
 
+			<!-- Import scope/rules (kept visible but collapsible for quick access). -->
 			<mat-expansion-panel
 				class="import__rules"
 				[expanded]="importRulesExpanded()"
@@ -97,6 +96,7 @@
 				</div>
 			</mat-expansion-panel>
 
+			<!-- Batch summary: rendered only when we have a batch id (running or completed batch). -->
 			@if (importState.batchId(); as bid) {
 				<app-import-batch-summary
 					[batchId]="bid"
@@ -109,6 +109,7 @@
 		</div>
 	</div>
 
+	<!-- List card: accounts state + table -->
 	<div class="app-card-flat import__list">
 		<div class="app-card-flat-content-fit import__list-content">
 			<app-section-loader
@@ -118,6 +119,7 @@
 				[blocking]="true"
 				label="Loading accounts…"
 			>
+				<!-- Browser mode: import is available in the Electron desktop app only. -->
 				@if (!isDesktopApp()) {
 					<div class="import__state import__state--info">
 						<div class="import__empty-title">Desktop app only</div>
@@ -126,6 +128,7 @@
 						</div>
 					</div>
 				} @else if (error()) {
+					<!-- Errors from loading accounts/import state (best-effort message). -->
 					<div class="import__state import__state--error">{{ error() }}</div>
 				} @else if (tableRows().length === 0) {
 					<!-- Empty state: keep it actionable with direct navigation CTAs. -->
