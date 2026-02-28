@@ -20,49 +20,7 @@ import { NotificationService } from '../../shared/notifications/notification.ser
 import { IsoDateTimePipe } from '../../shared/dates/pipes';
 import { SectionLoaderComponent } from '../../shared/loading/section-loader/section-loader.component';
 
-/**
- * Import page view-models.
- * Keep them local to the page to avoid leaking UI-only concerns to services.
- */
-type AccountRow = {
-	id: string;
-	site: 'LICHESS' | 'CHESSCOM';
-	username: string;
-	isEnabled: boolean;
-	lastSyncAt: string | null;
-
-	/**
-	 * Total games stored locally for this account.
-	 * Note: not currently used by the template, but kept for future UX (e.g. "Imported: N").
-	 */
-	gamesTotal: number;
-};
-
-type ImportErrorVm = {
-	externalId: string | null;
-	message: string;
-};
-
-type TableRowVm = AccountRow & {
-	siteLabel: string;
-
-	/**
-	 * Tooltip for the per-account import action (null means "no special reason").
-	 * Only used when the account is not enabled.
-	 */
-	disabledReason: string | null;
-
-	// Live import state (streamed by Electron -> ImportStateService)
-	isWaiting: boolean;
-	gamesFound: number | null;
-	processed: number | null;
-	inserted: number | null;
-	skipped: number | null;
-	failed: number | null;
-	status: string | null; // RUNNING / SUCCESS / FAILED / PARTIAL etc.
-	errors: ImportErrorVm[];
-	phase: ImportAccountPhaseVm | null;
-};
+import type { ImportAccountRowBaseVm, ImportAccountRowVm } from './models/import-account-row.vm';
 
 const BASE_COLUMNS = ['site', 'username', 'lastSyncAt', 'actions'] as const;
 const IMPORT_COLUMNS = [
@@ -130,7 +88,7 @@ export class ImportPageComponent implements OnInit {
 
 	readonly loading = signal(false);
 	readonly error = signal<string | null>(null);
-	readonly rows = signal<AccountRow[]>([]);
+	readonly rows = signal<ImportAccountRowBaseVm[]>([]);
 
 	/**
 	 * Page-level guards to ensure we handle "batch finished" only once per batchId.
@@ -155,7 +113,7 @@ export class ImportPageComponent implements OnInit {
 
 	readonly actionsDisabled = computed(() => this.loading() || this.importState.isImporting());
 
-	readonly tableRows = computed<TableRowVm[]>(() => {
+	readonly tableRows = computed<ImportAccountRowVm[]>(() => {
 		const baseRows = this.rows();
 		const states = this.importState.accounts();
 		const isImporting = this.importState.isImporting();
@@ -270,7 +228,7 @@ export class ImportPageComponent implements OnInit {
 	// Template helpers
 	// -------------------------------------------------------------------------
 
-	readonly trackById = (_: number, r: TableRowVm): string => r.id;
+	readonly trackById = (_: number, r: ImportAccountRowVm): string => r.id;
 
 	// -------------------------------------------------------------------------
 	// Actions
@@ -404,16 +362,16 @@ export class ImportPageComponent implements OnInit {
 		isEnabled: boolean;
 		lastSyncAt: string | null;
 		gamesTotal: number;
-	}): AccountRow => ({
+	}): ImportAccountRowBaseVm => ({
 		id: r.id,
-		site: r.site as unknown as AccountRow['site'],
+		site: r.site as unknown as ImportAccountRowBaseVm['site'],
 		username: r.username,
 		isEnabled: r.isEnabled,
 		lastSyncAt: r.lastSyncAt,
 		gamesTotal: r.gamesTotal,
 	});
 
-	private siteLabel(site: AccountRow['site']): string {
+	private siteLabel(site: ImportAccountRowBaseVm['site']): string {
 		return site === 'LICHESS' ? 'Lichess' : 'Chess.com';
 	}
 }
