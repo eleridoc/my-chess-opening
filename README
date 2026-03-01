@@ -51,3 +51,8 @@ npm run prisma:migrate -- --name x_x_x
 npm run prisma:generate
 
 MCO_ECO_DEBUG=1 npm run build:all:run:electron
+
+
+## License
+
+This project is licensed under the GNU General Public License v3.0 (GPL-3.0-only). See the LICENSE file for details.

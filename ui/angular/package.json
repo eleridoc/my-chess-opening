@@ -1,6 +1,7 @@
 {
 	"name": "my-chess-opening-ui-angular",
 	"version": "0.1.0",
+	"license": "GPL-3.0-only",
 	"scripts": {
 		"ng": "ng",
 		"start": "ng serve --prebundle=false --poll=1000",

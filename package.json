@@ -1,6 +1,7 @@
 {
 	"name": "my-chess-opening",
 	"version": "0.1.0",
+	"license": "GPL-3.0-only",
 	"private": true,
 	"workspaces": [
 		"core",
@@ -25,7 +26,6 @@
 	},
 	"keywords": [],
 	"author": "",
-	"license": "ISC",
 	"description": "",
 	"dependencies": {
 		"@types/node": "^24.10.1",
