@@ -156,6 +156,11 @@ npx ng g c dashboard-page --path src/app/pages/dashboard --flat --standalone --s
     npm run prisma:generate
     ```
 
+## Community
+
+- Questions and help: use GitHub Discussions (Q&A).
+- Bugs and feature requests: use GitHub Issues (templates available).
+
 ## License
 
 This project is licensed under the GNU General Public License v3.0 (**GPL-3.0-only**). See the `LICENSE` file for details.
