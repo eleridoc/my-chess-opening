@@ -1,4 +1,4 @@
-# My Chess Opening [![CI](https://github.com/eleridoc/my-chess-opening/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/eleridoc/my-chess-opening/actions/workflows/ci.yml)
+# My Chess Opening [![CI](https://github.com/eleridoc/my-chess-opening/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/eleridoc/my-chess-opening/actions/workflows/ci.yml) [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/eleridoc/my-chess-opening)](https://github.com/eleridoc/my-chess-opening/releases) [![Discussions](https://img.shields.io/github/discussions/eleridoc/my-chess-opening)](https://github.com/eleridoc/my-chess-opening/discussions)
 
 My Chess Opening is a desktop application to import, store, and explore your chess games with a clean UI and useful metadata (accounts, imports, openings/ECO, logs, etc.).
 
