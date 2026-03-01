@@ -1,4 +1,4 @@
-# My Chess Opening
+# My Chess Opening [![CI](https://github.com/eleridoc/my-chess-opening/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/eleridoc/my-chess-opening/actions/workflows/ci.yml)
 
 My Chess Opening is a desktop application to import, store, and explore your chess games with a clean UI and useful metadata (accounts, imports, openings/ECO, logs, etc.).
 
