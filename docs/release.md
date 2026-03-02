@@ -97,13 +97,33 @@ git add package.json core/package.json electron/package.json ui/angular/package.
 git commit -m "chore(release): bump version to 1.6.14"
 ```
 
-### 3) Tag the release
+### 3) Tag the release (recommended: annotated tags)
+
+Use an **annotated tag** for releases:
 
 ```bash
-git tag v1.6.14
+git tag -a v1.6.14 -m "v1.6.14"
 ```
 
+> Note: `git tag v1.6.14` creates a lightweight tag. Lightweight tags may not be pushed by
+> `git push --follow-tags`. Prefer annotated tags for releases.
+
 ### 4) Push commit + tag
+
+Recommended (explicit):
+
+```bash
+git push
+git push origin v1.6.14
+```
+
+Alternative (push all tags):
+
+```bash
+git push --tags
+```
+
+Alternative (works best with annotated tags):
 
 ```bash
 git push --follow-tags

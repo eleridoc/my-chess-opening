@@ -19,7 +19,7 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 
 - (placeholder)
 
-## [1.6.14] - 2026-03-01
+## [1.6.15] - 2026-03-02
 
 ### Added
 
@@ -29,15 +29,26 @@ and this project follows **Semantic Versioning** (https://semver.org/).
     - `CODE_OF_CONDUCT.md`
     - `CONTRIBUTING.md`
     - `SECURITY.md`
+    - `CONTRIBUTING.md`
+    - `SUPPORT.md`
     - Issue templates (bug report / feature request)
     - Pull request template
-- GitHub Discussions support routing via `SUPPORT.md`.
+- GitHub Discussions categories and initial repo hygiene (labels/topics/description).
 - CI workflow (GitHub Actions) to build the whole repository on `main` and PRs.
 - CI badge in `README.md`.
+- Release documentation:
+    - `docs/release.md` (SemVer policy + release process)
+    - `CHANGELOG.md` (Keep a Changelog format)
+- Version sync helper script: `tools/sync-versions.mjs` + `npm run sync:version`.
 
 ### Changed
 
-- (none)
+- Services folder structure in the Angular UI is now domain-based:
+    - `ui/angular/src/app/services/accounts/`
+    - `ui/angular/src/app/services/import/`
+    - `ui/angular/src/app/services/games/`
+    - `ui/angular/src/app/services/logs/`
+    - `ui/angular/src/app/services/explorer/`
 
 ### Fixed
 
