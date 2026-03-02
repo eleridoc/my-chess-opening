@@ -19,6 +19,23 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 
 - (placeholder)
 
+## [1.6.16] - 2026-03-02
+
+### Added
+
+- Discord community entrypoints:
+    - Repo docs now include a Discord invite link (EN-first, FR welcome).
+    - UI Help menu includes a Discord entry and the About page exposes community/project links.
+- CI: GitHub Release → Discord notification workflow (EN-first + FR line).
+
+### Changed
+
+- (none)
+
+### Fixed
+
+- (none)
+
 ## [1.6.15] - 2026-03-02
 
 ### Added
