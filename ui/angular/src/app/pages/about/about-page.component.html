@@ -1,1 +1,77 @@
-<p>about-page works!</p>
+<div class="page">
+	<header class="header">
+		<h1 class="title">About</h1>
+		<p class="subtitle">
+			My Chess Opening is an open-source desktop app to import, store, and explore your chess games.
+		</p>
+	</header>
+
+	<section class="content">
+		<div class="about-grid">
+			<!-- Community -->
+			<div class="app-card-flat">
+				<div class="app-card-flat-content about-card about-card--center">
+					<div class="about-logo" aria-hidden="true">
+						<img class="about-logo__img" src="/app-logo-128.png" alt="My Chess Opening" />
+					</div>
+
+					<h2 class="about-card-title">Community</h2>
+					<p class="about-text">
+						Join the Discord server to ask questions, share feedback, and follow releases (EN-first,
+						FR welcome).
+					</p>
+
+					<div class="about-actions">
+						<button
+							mat-flat-button
+							color="primary"
+							type="button"
+							class="mat-flat-button-d-5"
+							(click)="openDiscord()"
+						>
+							<mat-icon aria-hidden="true">forum</mat-icon>
+							Join Discord
+						</button>
+					</div>
+				</div>
+			</div>
+
+			<!-- Project -->
+			<div class="app-card-flat">
+				<div class="app-card-flat-content about-card">
+					<h2 class="about-card-title">Project</h2>
+
+					<ul class="about-links">
+						<li>
+							<a [href]="links.githubRepo" (click)="openExternal(links.githubRepo, $event)">
+								GitHub repository
+							</a>
+						</li>
+						<li>
+							<a [href]="links.githubReleases" (click)="openExternal(links.githubReleases, $event)">
+								Releases
+							</a>
+						</li>
+						<li>
+							<a
+								[href]="links.githubDiscussions"
+								(click)="openExternal(links.githubDiscussions, $event)"
+							>
+								Discussions (Q&amp;A / ideas)
+							</a>
+						</li>
+						<li>
+							<a [href]="links.githubIssues" (click)="openExternal(links.githubIssues, $event)">
+								Issues (bugs / requests)
+							</a>
+						</li>
+					</ul>
+
+					<p class="about-hint">
+						Tip: when reporting a bug, include your app version, OS, and steps to reproduce.
+					</p>
+				</div>
+			</div>
+		</div>
+	</section>
+</div>

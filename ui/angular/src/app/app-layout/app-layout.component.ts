@@ -12,6 +12,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 
 import { GlobalLoaderComponent } from '../shared/loading/global-loader/global-loader.component';
+import { ExternalLinkService } from '../shared/system/external-link.service';
+import { COMMUNITY_LINKS } from '../shared/system/community-links';
 
 type TopNavItem = {
 	label: string;
@@ -41,6 +43,8 @@ export class AppLayoutComponent {
 	readonly accountsState = inject(AccountsStateService);
 	readonly importState = inject(ImportStateService);
 	readonly theme = inject(ThemeService);
+
+	private readonly externalLink = inject(ExternalLinkService);
 
 	/**
 	 * Build-time flag.
@@ -81,6 +85,11 @@ export class AppLayoutComponent {
 			...devItems,
 		];
 	});
+
+	onDiscordClick(): void {
+		// Open in the system browser (never inside Electron).
+		this.externalLink.open(COMMUNITY_LINKS.discordInvite);
+	}
 
 	/**
 	 * Import CTA:
