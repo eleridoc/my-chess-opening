@@ -68,6 +68,12 @@ npm run prisma:generate
 
 MCO_ECO_DEBUG=1 npm run build:all:run:electron
 
+## Community & support
+
+- Discord (EN-first, FR welcome): https://discord.gg/WemAGmXQZR
+- GitHub Discussions: Q&A / Ideas
+- GitHub Issues: bug reports / feature requests
+
 ## License
 
 This project is licensed under the GNU General Public License v3.0 (GPL-3.0-only). See the LICENSE file for details.

@@ -158,8 +158,11 @@ npx ng g c dashboard-page --path src/app/pages/dashboard --flat --standalone --s
 
 ## Community
 
-- Questions and help: use GitHub Discussions (Q&A).
-- Bugs and feature requests: use GitHub Issues (templates available).
+- Discord (EN-first, FR welcome): https://discord.gg/WemAGmXQZR
+- Questions / help (structured): GitHub Discussions (Q&A).
+- Bug reports: GitHub Issues (Bug report template).
+- Feature requests: GitHub Issues (Feature request template) or GitHub Discussions (Ideas).
+- Please read the Code of Conduct before contributing: CODE_OF_CONDUCT.md
 
 ## License
 

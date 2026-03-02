@@ -2,10 +2,13 @@
 
 ## Where to ask questions
 
-- **Questions / help**: use **GitHub Discussions** (category: **Q&A**) once enabled.
+- **Quick questions / community chat**: join **Discord** (EN-first, FR welcome).
+- **Questions / help (structured)**: use **GitHub Discussions** (category: **Q&A**) once enabled.
 - **Bug reports**: open a GitHub Issue and use the **Bug report** template.
 - **Feature requests**: open a GitHub Issue and use the **Feature request** template
   (or start a discussion in **Ideas** if you want to brainstorm first).
+
+Discord invite: https://discord.gg/WemAGmXQZR
 
 ## Before posting
 
