@@ -1,39 +1,40 @@
 {
-	"name": "my-chess-opening",
-	"version": "1.6.14",
-	"license": "GPL-3.0-only",
-	"private": true,
-	"workspaces": [
-		"core",
-		"electron",
-		"ui/*"
-	],
-	"scripts": {
-		"build": "npm run build:all",
-		"build:all": "npm run build:core && npm run build:electron && npm run build:ui:angular",
-		"build:core": "npm -w core run build",
-		"build:electron": "npm -w electron run build",
-		"build:ui:angular": "npm -w ui/angular run build",
-		"build:all:run:electron": "npm run build:all && npm -w electron start",
-		"build:watch:ui:angular": "npm -w ui/angular start",
-		"format": "prettier --write \"**/*.{ts,js,tsx,jsx,html,scss,json,md}\"",
-		"prisma:reset": "npm -w electron run prisma:reset",
-		"prisma:migrate": "npm -w electron run prisma:migrate --",
-		"prisma:migrate:open": "npm run prisma:migrate -- && npm run prisma:generate && npm run prisma:studio",
-		"prisma:generate": "npm -w electron run prisma:generate",
-		"prisma:studio": "npm -w electron run prisma:studio",
-		"eco:update": "tsx tools/eco/update-lichess-chess-openings.ts"
-	},
-	"keywords": [],
-	"author": "",
-	"description": "",
-	"dependencies": {
-		"@types/node": "^24.10.1",
-		"typescript": "^5.9.3"
-	},
-	"devDependencies": {
-		"baseline-browser-mapping": "^2.9.19",
-		"prettier": "^3.7.3",
-		"tsx": "^4.21.0"
-	}
+  "name": "my-chess-opening",
+  "version": "1.6.14",
+  "license": "GPL-3.0-only",
+  "private": true,
+  "workspaces": [
+    "core",
+    "electron",
+    "ui/*"
+  ],
+  "scripts": {
+    "build": "npm run build:all",
+    "build:all": "npm run build:core && npm run build:electron && npm run build:ui:angular",
+    "build:core": "npm -w core run build",
+    "build:electron": "npm -w electron run build",
+    "build:ui:angular": "npm -w ui/angular run build",
+    "build:all:run:electron": "npm run build:all && npm -w electron start",
+    "build:watch:ui:angular": "npm -w ui/angular start",
+    "format": "prettier --write \"**/*.{ts,js,tsx,jsx,html,scss,json,md}\"",
+    "prisma:reset": "npm -w electron run prisma:reset",
+    "prisma:migrate": "npm -w electron run prisma:migrate --",
+    "prisma:migrate:open": "npm run prisma:migrate -- && npm run prisma:generate && npm run prisma:studio",
+    "prisma:generate": "npm -w electron run prisma:generate",
+    "prisma:studio": "npm -w electron run prisma:studio",
+    "eco:update": "tsx tools/eco/update-lichess-chess-openings.ts",
+    "sync:version": "node tools/sync-versions.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "description": "",
+  "dependencies": {
+    "@types/node": "^24.10.1",
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "baseline-browser-mapping": "^2.9.19",
+    "prettier": "^3.7.3",
+    "tsx": "^4.21.0"
+  }
 }

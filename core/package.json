@@ -1,28 +1,28 @@
 {
-	"name": "my-chess-opening-core",
-	"version": "0.1.0",
-	"license": "GPL-3.0-only",
-	"private": true,
-	"main": "dist/index.js",
-	"types": "./dist/index.d.ts",
-	"scripts": {
-		"build:cjs": "tsc -p tsconfig.json",
-		"build:esm:explorer": "tsc -p tsconfig.explorer.esm.json",
-		"build": "npm run build:cjs && npm run build:esm:explorer",
-		"clean": "rm -rf dist dist-esm"
-	},
-	"dependencies": {
-		"chess.js": "^1.4.0"
-	},
-	"exports": {
-		".": {
-			"types": "./dist/index.d.ts",
-			"require": "./dist/index.js",
-			"default": "./dist/index.js"
-		},
-		"./explorer": {
-			"types": "./dist-esm/explorer/index.d.ts",
-			"default": "./dist-esm/explorer/index.js"
-		}
-	}
+  "name": "my-chess-opening-core",
+  "version": "1.6.14",
+  "license": "GPL-3.0-only",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build:cjs": "tsc -p tsconfig.json",
+    "build:esm:explorer": "tsc -p tsconfig.explorer.esm.json",
+    "build": "npm run build:cjs && npm run build:esm:explorer",
+    "clean": "rm -rf dist dist-esm"
+  },
+  "dependencies": {
+    "chess.js": "^1.4.0"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./explorer": {
+      "types": "./dist-esm/explorer/index.d.ts",
+      "default": "./dist-esm/explorer/index.js"
+    }
+  }
 }

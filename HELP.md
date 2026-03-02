@@ -1,41 +1,56 @@
-
 # Build everything (ordered)
+
 npm run build:all
 
 # Run Angular dev server
+
 npm run build:watch:ui:angular
 
 # Run Electron (after building everything)
+
 npm run build:all:run:electron
 
 # Run Electron (after building everything) and limit import to 10 games for dev
+
 MCO_IMPORT_DEV_MAX_GAMES_PER_ACCOUNT=10 npm run build:all:run:electron
 
 # Regenerate lichess-chess-openings.json for ECO
+
 npm run eco:update
 
 # Create a migration, then generate Prisma Client, then open Prisma Studio
+
 npm run prisma:migrate:open -- --name xxx_xxx_xxx
 
 # Create a migration only
+
 npm run prisma:migrate -- --name xxx_xxx_xxx
 
 # Reset and migrate DB (electron workspace)
+
 npm run prisma:reset
 
 # Generate Prisma client
+
 npm run prisma:generate
 
 # Prisma Studio
+
 npm run prisma:studio
 
--------------------------------------------------------------
+---
+
+# Change version
+
+npm run sync:version -- 1.6.14
 
 # Generate app logo
+
 chmod +x tools/generate-icons.sh
 ./tools/generate-icons.sh ui/angular/public/app-logo.png
 
 # Full Reset DB
+
 cd ~/dev/my-chess-opening/electron
 rm -rf prisma/migrations
 rm -f dev.db
@@ -45,13 +60,13 @@ npx prisma generate
 npx prisma studio
 
 # Add page exemple
+
 npx ng g c dashboard-page --path src/app/pages/dashboard --flat --standalone --skip-tests --type=component
 
 npm run prisma:migrate -- --name x_x_x
 npm run prisma:generate
 
 MCO_ECO_DEBUG=1 npm run build:all:run:electron
-
 
 ## License
 
