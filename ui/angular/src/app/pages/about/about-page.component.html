@@ -1,111 +1,145 @@
 <div class="page">
 	<header class="header">
-		<h1 class="title">About</h1>
-		<p class="subtitle">
-			My Chess Opening is an open-source desktop app to import, store, and explore your chess games.
-		</p>
+		<div class="header-title">
+			<h1 class="title">About</h1>
+			<p class="subtitle">
+				My Chess Opening is an open-source desktop app to import, store, and explore your chess
+				games.
+			</p>
+		</div>
 	</header>
 
 	<section class="content">
 		<div class="about-grid">
 			<!-- Community -->
-			<div class="app-card-flat">
-				<div class="app-card-flat-content about-card about-card--center">
-					<div class="about-logo" aria-hidden="true">
-						<img class="about-logo__img" src="/app-logo-128.png" alt="My Chess Opening" />
+			<div class="app-card-flat about-cell about-cell--community">
+				<div class="app-card-flat-content about-card">
+					<div class="about-community">
+						<div class="about-community__logo" aria-hidden="true">
+							<img class="about-logo__img" src="/app-logo-128.png" alt="My Chess Opening" />
+						</div>
+
+						<div class="about-community__content">
+							<h2 class="about-card-title">Community</h2>
+
+							<p class="about-text">
+								Join the Discord server to ask questions, share feedback, and follow releases
+								(EN-first, FR welcome).
+							</p>
+
+							<div class="about-actions about-actions--left">
+								<button mat-flat-button color="primary" type="button" (click)="openDiscord()">
+									<mat-icon aria-hidden="true">forum</mat-icon>
+									Join Discord
+								</button>
+							</div>
+						</div>
 					</div>
 
-					<h2 class="about-card-title">Community</h2>
-					<p class="about-text">
-						Join the Discord server to ask questions, share feedback, and follow releases (EN-first,
-						FR welcome).
+					<p class="about-hint">
+						Tip: if you report a bug, include your app version, OS, and steps to reproduce.
 					</p>
-
-					<div class="about-actions">
-						<button
-							mat-flat-button
-							color="primary"
-							type="button"
-							class="mat-flat-button-d-5"
-							(click)="openDiscord()"
-						>
-							<mat-icon aria-hidden="true">forum</mat-icon>
-							Join Discord
-						</button>
-					</div>
 				</div>
 			</div>
 
 			<!-- Project -->
-			<div class="app-card-flat">
+			<div class="app-card-flat about-cell about-cell--project">
 				<div class="app-card-flat-content about-card">
-					<h2 class="about-card-title">Project</h2>
+					<div class="about-card-header">
+						<h2 class="about-card-title">Project</h2>
+						<span class="about-version-pill" aria-label="Application version">
+							v{{ appVersion }}
+						</span>
+					</div>
 
 					<p class="about-meta">
 						<span class="about-meta__label">Version</span>
 						<span class="about-meta__value">{{ appVersion }}</span>
 					</p>
 
-					<ul class="about-links">
-						<li>
-							<a [href]="links.githubRepo" (click)="openExternal(links.githubRepo, $event)">
-								GitHub repository
-							</a>
-						</li>
-						<li>
-							<a [href]="links.githubReleases" (click)="openExternal(links.githubReleases, $event)">
-								Releases
-							</a>
-						</li>
-						<li>
-							<a
-								[href]="links.githubDiscussions"
-								(click)="openExternal(links.githubDiscussions, $event)"
-							>
-								Discussions (Q&amp;A / ideas)
-							</a>
-						</li>
-						<li>
-							<a [href]="links.githubIssues" (click)="openExternal(links.githubIssues, $event)">
-								Issues (bugs / requests)
-							</a>
-						</li>
-					</ul>
+					<div class="about-actions-grid">
+						<button
+							mat-stroked-button
+							type="button"
+							(click)="openExternal(links.githubRepo, $event)"
+						>
+							<mat-icon aria-hidden="true">code</mat-icon>
+							GitHub repository
+						</button>
+
+						<button
+							mat-stroked-button
+							type="button"
+							(click)="openExternal(links.githubReleases, $event)"
+						>
+							<mat-icon aria-hidden="true">new_releases</mat-icon>
+							Releases
+						</button>
+
+						<button
+							mat-stroked-button
+							type="button"
+							(click)="openExternal(links.githubDiscussions, $event)"
+						>
+							<mat-icon aria-hidden="true">question_answer</mat-icon>
+							Discussions
+						</button>
+
+						<button
+							mat-stroked-button
+							type="button"
+							(click)="openExternal(links.githubIssues, $event)"
+						>
+							<mat-icon aria-hidden="true">bug_report</mat-icon>
+							Issues
+						</button>
+					</div>
 
 					<p class="about-hint">
-						Tip: when reporting a bug, include your app version, OS, and steps to reproduce.
+						Use GitHub Issues for confirmed bugs and feature requests. Use Discussions for Q&amp;A /
+						ideas.
 					</p>
 				</div>
 			</div>
 
 			<!-- Libraries -->
-			<div class="app-card-flat">
+			<div class="app-card-flat about-cell about-cell--libraries">
 				<div class="app-card-flat-content about-card">
-					<h2 class="about-card-title">Main libraries</h2>
+					<div class="about-card-header">
+						<h2 class="about-card-title">Main libraries</h2>
+						<span class="about-muted">Curated list</span>
+					</div>
+
 					<p class="about-text">
-						A curated list of the main open-source libraries used by this project.
+						A short selection of the main open-source libraries used by this project.
 					</p>
 
-					<h3 class="about-subtitle">Chess</h3>
-					<ul class="about-libraries">
-						<li class="about-library" *ngFor="let lib of chessLibraries">
-							<a [href]="lib.url" (click)="openExternal(lib.url, $event)">{{ lib.name }}</a>
-							<span class="about-library__desc">{{ lib.description }}</span>
-						</li>
-					</ul>
+					<div class="about-libs-grid">
+						<div class="about-libs-section">
+							<h3 class="about-subtitle">Chess</h3>
+							<ul class="about-libraries">
+								<li class="about-library" *ngFor="let lib of chessLibraries">
+									<a [href]="lib.url" (click)="openExternal(lib.url, $event)">{{ lib.name }}</a>
+									<span class="about-library__desc">{{ lib.description }}</span>
+								</li>
+							</ul>
+						</div>
 
-					<h3 class="about-subtitle">Project stack</h3>
-					<ul class="about-libraries">
-						<li class="about-library" *ngFor="let lib of stackLibraries">
-							<a [href]="lib.url" (click)="openExternal(lib.url, $event)">{{ lib.name }}</a>
-							<span class="about-library__desc">{{ lib.description }}</span>
-						</li>
-					</ul>
+						<div class="about-libs-section">
+							<h3 class="about-subtitle">Project stack</h3>
+							<ul class="about-libraries">
+								<li class="about-library" *ngFor="let lib of stackLibraries">
+									<a [href]="lib.url" (click)="openExternal(lib.url, $event)">{{ lib.name }}</a>
+									<span class="about-library__desc">{{ lib.description }}</span>
+								</li>
+							</ul>
+						</div>
+					</div>
 				</div>
 			</div>
 
 			<!-- Creator -->
-			<div class="app-card-flat">
+			<div class="app-card-flat about-cell about-cell--creator">
 				<div class="app-card-flat-content about-card">
 					<h2 class="about-card-title">Creator</h2>
 
@@ -123,16 +157,16 @@
 						</p>
 					</blockquote>
 
-					<ul class="about-links">
-						<li>
-							<a
-								[href]="creator.githubProfile"
-								(click)="openExternal(creator.githubProfile, $event)"
-							>
-								GitHub profile
-							</a>
-						</li>
-					</ul>
+					<div class="about-actions about-actions--left">
+						<button
+							mat-stroked-button
+							type="button"
+							(click)="openExternal(creator.githubProfile, $event)"
+						>
+							<mat-icon aria-hidden="true">person</mat-icon>
+							GitHub profile
+						</button>
+					</div>
 
 					<p class="about-hint">
 						EN-first community, FR welcome. If you want to help, start with small improvements and
