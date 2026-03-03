@@ -8,6 +8,7 @@ import { ExternalLinkService } from '../../shared/system/external-link.service';
 import { COMMUNITY_LINKS } from '../../shared/system/community-links';
 import { ABOUT_LIBRARIES_CHESS, ABOUT_LIBRARIES_STACK } from '../../shared/system/about-libraries';
 import { APP_VERSION } from '../../shared/system/app-version';
+import { CREATOR_LINKS } from '../../shared/system/creator-links';
 
 @Component({
 	standalone: true,
@@ -23,6 +24,7 @@ export class AboutPageComponent {
 	readonly appVersion = APP_VERSION;
 	readonly chessLibraries = ABOUT_LIBRARIES_CHESS;
 	readonly stackLibraries = ABOUT_LIBRARIES_STACK;
+	readonly creator = CREATOR_LINKS;
 
 	openDiscord(): void {
 		this.externalLink.open(this.links.discordInvite);
