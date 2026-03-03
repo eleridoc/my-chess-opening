@@ -5,6 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 
 import { ExternalLinkService } from '../../shared/system/external-link.service';
 import { COMMUNITY_LINKS } from '../../shared/system/community-links';
+import { APP_VERSION } from '../../shared/system/app-version';
 
 @Component({
 	standalone: true,
@@ -17,6 +18,7 @@ export class AboutPageComponent {
 	private readonly externalLink = inject(ExternalLinkService);
 
 	readonly links = COMMUNITY_LINKS;
+	readonly appVersion = APP_VERSION;
 
 	openDiscord(): void {
 		this.externalLink.open(this.links.discordInvite);

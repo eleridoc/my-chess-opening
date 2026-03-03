@@ -41,6 +41,11 @@
 				<div class="app-card-flat-content about-card">
 					<h2 class="about-card-title">Project</h2>
 
+					<p class="about-meta">
+						<span class="about-meta__label">Version</span>
+						<span class="about-meta__value">{{ appVersion }}</span>
+					</p>
+
 					<ul class="about-links">
 						<li>
 							<a [href]="links.githubRepo" (click)="openExternal(links.githubRepo, $event)">

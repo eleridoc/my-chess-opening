@@ -10,10 +10,13 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
 
 import { GlobalLoaderComponent } from '../shared/loading/global-loader/global-loader.component';
 import { ExternalLinkService } from '../shared/system/external-link.service';
 import { COMMUNITY_LINKS } from '../shared/system/community-links';
+
+import { APP_VERSION } from '../shared/system/app-version';
 
 type TopNavItem = {
 	label: string;
@@ -32,6 +35,7 @@ type TopNavItem = {
 		MatButtonModule,
 		MatIconModule,
 		MatMenuModule,
+		MatDividerModule,
 		GlobalLoaderComponent,
 	],
 	templateUrl: './app-layout.component.html',
@@ -45,6 +49,8 @@ export class AppLayoutComponent {
 	readonly theme = inject(ThemeService);
 
 	private readonly externalLink = inject(ExternalLinkService);
+
+	readonly appVersion = APP_VERSION;
 
 	/**
 	 * Build-time flag.

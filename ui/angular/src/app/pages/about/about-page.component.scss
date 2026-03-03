@@ -84,3 +84,21 @@
 	opacity: 0.8;
 	font-size: 13px;
 }
+
+.about-meta {
+	margin: 0;
+	display: flex;
+	gap: 10px;
+	align-items: baseline;
+	opacity: 0.9;
+}
+
+.about-meta__label {
+	opacity: 0.8;
+	font-size: 13px;
+}
+
+.about-meta__value {
+	font-weight: 600;
+	font-size: 13px;
+}
