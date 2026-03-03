@@ -77,6 +77,32 @@
 					</p>
 				</div>
 			</div>
+
+			<!-- Libraries -->
+			<div class="app-card-flat">
+				<div class="app-card-flat-content about-card">
+					<h2 class="about-card-title">Main libraries</h2>
+					<p class="about-text">
+						A curated list of the main open-source libraries used by this project.
+					</p>
+
+					<h3 class="about-subtitle">Chess</h3>
+					<ul class="about-libraries">
+						<li class="about-library" *ngFor="let lib of chessLibraries">
+							<a [href]="lib.url" (click)="openExternal(lib.url, $event)">{{ lib.name }}</a>
+							<span class="about-library__desc">{{ lib.description }}</span>
+						</li>
+					</ul>
+
+					<h3 class="about-subtitle">Project stack</h3>
+					<ul class="about-libraries">
+						<li class="about-library" *ngFor="let lib of stackLibraries">
+							<a [href]="lib.url" (click)="openExternal(lib.url, $event)">{{ lib.name }}</a>
+							<span class="about-library__desc">{{ lib.description }}</span>
+						</li>
+					</ul>
+				</div>
+			</div>
 		</div>
 	</section>
 </div>

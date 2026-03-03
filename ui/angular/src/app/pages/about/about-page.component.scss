@@ -102,3 +102,27 @@
 	font-weight: 600;
 	font-size: 13px;
 }
+
+.about-subtitle {
+	margin: 8px 0 0;
+	font-size: 13px;
+	opacity: 0.85;
+	font-weight: 600;
+}
+
+.about-libraries {
+	margin: 0;
+	padding-left: 18px;
+	display: grid;
+	gap: 10px;
+}
+
+.about-library {
+	display: grid;
+	gap: 2px;
+}
+
+.about-library__desc {
+	opacity: 0.8;
+	font-size: 13px;
+}
