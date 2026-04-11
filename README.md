@@ -156,6 +156,29 @@ npx ng g c dashboard-page --path src/app/pages/dashboard --flat --standalone --s
     npm run prisma:generate
     ```
 
+### Lichess API: empty export when using `rated` / `perfType` with `since`
+
+In some cases, Lichess game export may return an **empty response** when `since` is combined with
+`rated=true` and/or `perfType=...`, even though games exist after the `since` timestamp.
+
+Symptoms:
+
+- A request with `since` returns games
+- Adding `rated=true` and/or `perfType=bullet,blitz,rapid` returns an empty body
+
+Example:
+
+- Works:
+    - `https://lichess.org/api/games/user/<username>?max=300&moves=true&clocks=true&opening=true&pgnInJson=false&since=<since_ms>`
+
+- May return empty:
+    - `https://lichess.org/api/games/user/<username>?max=300&moves=true&clocks=true&opening=true&pgnInJson=false&rated=true&since=<since_ms>`
+    - `https://lichess.org/api/games/user/<username>?max=300&moves=true&clocks=true&opening=true&pgnInJson=false&perfType=bullet,blitz,rapid&since=<since_ms>`
+
+Workaround (for debugging / manual checks):
+
+- Remove `rated` and `perfType` from the request, then filter results client-side (rated + speed). Will be done later.
+
 ## Community
 
 - Discord (EN-first, FR welcome): https://discord.gg/WemAGmXQZR

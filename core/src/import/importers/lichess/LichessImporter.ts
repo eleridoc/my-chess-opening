@@ -42,6 +42,8 @@ export class LichessImporter implements GameImporter {
 		if (since) url.searchParams.set('since', String(toUnixMs(since)));
 		if (typeof untilMs === 'number') url.searchParams.set('until', String(untilMs));
 
+		console.log('lichess url: ' + url);
+
 		return url;
 	}
 
