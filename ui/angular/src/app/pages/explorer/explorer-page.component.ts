@@ -38,6 +38,7 @@ import {
 	ConfirmDialogComponent,
 	type ConfirmDialogData,
 } from '../../shared/dialogs/confirm-dialog/confirm-dialog.component';
+import { ExplorerNavigationShortcutsDirective } from './explorer-navigation-shortcuts.directive';
 
 type ResetReason = 'DB_LOAD' | 'PGN_IMPORT' | 'FEN_IMPORT';
 
@@ -53,6 +54,7 @@ type ResetReason = 'DB_LOAD' | 'PGN_IMPORT' | 'FEN_IMPORT';
 		ExplorerGameInfoPanelComponent,
 		PlayerInfoCardComponent,
 		ExplorerDebugTabComponent,
+		ExplorerNavigationShortcutsDirective,
 		MatTabsModule,
 		MatIconModule,
 		MatDialogModule,

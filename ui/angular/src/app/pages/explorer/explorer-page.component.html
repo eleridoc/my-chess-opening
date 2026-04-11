@@ -107,6 +107,11 @@
 			<div
 				#boardArea
 				class="explorer-board-area"
+				appExplorerNavigationShortcuts
+				[appExplorerNavigationShortcutsCanPrev]="facade.canPrev()"
+				[appExplorerNavigationShortcutsCanNext]="facade.canNext()"
+				(explorerShortcutPrev)="onPrev()"
+				(explorerShortcutNext)="onNext()"
 				[style.width.px]="boardSizePx()"
 				[style.height.px]="boardSizePx()"
 			>
