@@ -182,6 +182,14 @@ export class ExplorerPageComponent implements AfterViewInit {
 		this.facade.goEnd();
 	}
 
+	onPrevVariation(): void {
+		this.facade.goPrevVariation();
+	}
+
+	onNextVariation(): void {
+		this.facade.goNextVariation();
+	}
+
 	onPrevVariationAtPly(ply: number): void {
 		// Only reposition if we are not already at that ply.
 		if (this.facade.ply() !== ply) this.facade.goToPly(ply);
@@ -220,6 +228,11 @@ export class ExplorerPageComponent implements AfterViewInit {
 
 	/** Disable board input while a promotion choice is pending. */
 	readonly inputEnabled = computed(() => this.facade.promotionPending() === null);
+
+	readonly canPrevVariationShortcut = () => this.facade.canPrevVariation();
+	readonly canNextVariationShortcut = () => this.facade.canNextVariation();
+	readonly canStartShortcut = () => this.facade.canStart();
+	readonly canEndShortcut = () => this.facade.canEnd();
 
 	readonly getLegalDestinationsFrom = (from: string) => this.facade.getLegalDestinationsFrom(from);
 

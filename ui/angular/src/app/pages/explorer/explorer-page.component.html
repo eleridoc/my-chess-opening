@@ -110,8 +110,16 @@
 				appExplorerNavigationShortcuts
 				[appExplorerNavigationShortcutsCanPrev]="facade.canPrev()"
 				[appExplorerNavigationShortcutsCanNext]="facade.canNext()"
+				[appExplorerNavigationShortcutsCanPrevVariation]="canPrevVariationShortcut"
+				[appExplorerNavigationShortcutsCanNextVariation]="canNextVariationShortcut"
+				[appExplorerNavigationShortcutsCanStart]="canStartShortcut"
+				[appExplorerNavigationShortcutsCanEnd]="canEndShortcut"
 				(explorerShortcutPrev)="onPrev()"
 				(explorerShortcutNext)="onNext()"
+				(explorerShortcutPrevVariation)="onPrevVariation()"
+				(explorerShortcutNextVariation)="onNextVariation()"
+				(explorerShortcutStart)="onStart()"
+				(explorerShortcutEnd)="onEnd()"
 				[style.width.px]="boardSizePx()"
 				[style.height.px]="boardSizePx()"
 			>
