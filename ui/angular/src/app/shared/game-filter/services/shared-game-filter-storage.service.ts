@@ -7,6 +7,8 @@ import {
 	type SharedGameFilterContextConfig,
 } from 'my-chess-opening-core';
 
+import { SharedGameFilterContextService } from './shared-game-filter-context.service';
+
 interface SharedGameFilterStorageEntry {
 	version: number;
 	filter: unknown;
@@ -29,6 +31,8 @@ const SHARED_GAME_FILTER_STORAGE_VERSION = 1;
 	providedIn: 'root',
 })
 export class SharedGameFilterStorageService {
+	constructor(private readonly sharedGameFilterContextService: SharedGameFilterContextService) {}
+
 	/**
 	 * Load the stored filter for a context.
 	 *
@@ -39,7 +43,8 @@ export class SharedGameFilterStorageService {
 		context: SharedGameFilterContext,
 		config?: SharedGameFilterContextConfig | null,
 	): SharedGameFilter {
-		const contextDefaults = getDefaultSharedGameFilterForContext(config);
+		const resolvedConfig = this.resolveContextConfig(context, config);
+		const contextDefaults = getDefaultSharedGameFilterForContext(resolvedConfig);
 		const storage = this.getStorage();
 
 		if (storage === null) {
@@ -71,7 +76,7 @@ export class SharedGameFilterStorageService {
 			return contextDefaults;
 		}
 
-		return stripHiddenSharedGameFilterFields(parsedValue.filter, config);
+		return stripHiddenSharedGameFilterFields(parsedValue.filter, resolvedConfig);
 	}
 
 	/**
@@ -85,7 +90,8 @@ export class SharedGameFilterStorageService {
 		value: unknown,
 		config?: SharedGameFilterContextConfig | null,
 	): SharedGameFilter {
-		const normalizedFilter = stripHiddenSharedGameFilterFields(value, config);
+		const resolvedConfig = this.resolveContextConfig(context, config);
+		const normalizedFilter = stripHiddenSharedGameFilterFields(value, resolvedConfig);
 		const storage = this.getStorage();
 
 		if (storage === null) {
@@ -118,8 +124,9 @@ export class SharedGameFilterStorageService {
 		context: SharedGameFilterContext,
 		config?: SharedGameFilterContextConfig | null,
 	): SharedGameFilter {
+		const resolvedConfig = this.resolveContextConfig(context, config);
 		this.clearStoredSharedGameFilter(context);
-		return getDefaultSharedGameFilterForContext(config);
+		return getDefaultSharedGameFilterForContext(resolvedConfig);
 	}
 
 	/**
@@ -158,6 +165,16 @@ export class SharedGameFilterStorageService {
 		} catch {
 			return false;
 		}
+	}
+
+	private resolveContextConfig(
+		context: SharedGameFilterContext,
+		config?: SharedGameFilterContextConfig | null,
+	): SharedGameFilterContextConfig {
+		return this.sharedGameFilterContextService.getMergedSharedGameFilterContextConfig(
+			context,
+			config,
+		);
 	}
 
 	private buildStorageKey(context: SharedGameFilterContext): string {
