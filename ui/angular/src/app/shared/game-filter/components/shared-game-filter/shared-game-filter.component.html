@@ -12,9 +12,77 @@
 		</div>
 
 		<div class="shared-game-filter__fields">
-			<p class="shared-game-filter__placeholder">
-				Shared game filter fields will be added in the next V1.7.x tasks.
-			</p>
+			<div class="shared-game-filter__section">
+				<div class="shared-game-filter__section-title">Main filters</div>
+
+				<div class="shared-game-filter__grid">
+					<mat-form-field appearance="outline" *ngIf="isFieldVisible('periodPreset')">
+						<mat-select formControlName="periodPreset" placeholder="Period">
+							<mat-option *ngFor="let option of periodPresetOptions" [value]="option">
+								{{ getPeriodPresetLabel(option) }}
+							</mat-option>
+						</mat-select>
+					</mat-form-field>
+
+					<mat-form-field appearance="outline" *ngIf="isFieldVisible('playedColor')">
+						<mat-select formControlName="playedColor" placeholder="Played color">
+							<mat-option *ngFor="let option of playedColorOptions" [value]="option">
+								{{ getPlayedColorLabel(option) }}
+							</mat-option>
+						</mat-select>
+					</mat-form-field>
+
+					<mat-form-field appearance="outline" *ngIf="isFieldVisible('playerResult')">
+						<mat-select formControlName="playerResult" placeholder="Result">
+							<mat-option *ngFor="let option of playerResultOptions" [value]="option">
+								{{ getPlayerResultLabel(option) }}
+							</mat-option>
+						</mat-select>
+					</mat-form-field>
+
+					<mat-form-field appearance="outline" *ngIf="isFieldVisible('ratedMode')">
+						<mat-select formControlName="ratedMode" placeholder="Rated mode">
+							<mat-option *ngFor="let option of ratedModeOptions" [value]="option">
+								{{ getRatedModeLabel(option) }}
+							</mat-option>
+						</mat-select>
+					</mat-form-field>
+
+					<mat-form-field appearance="outline" *ngIf="isFieldVisible('gameSpeeds')">
+						<mat-select formControlName="gameSpeeds" placeholder="Game speeds" multiple>
+							<mat-option *ngFor="let option of gameSpeedOptions" [value]="option">
+								{{ getGameSpeedLabel(option) }}
+							</mat-option>
+						</mat-select>
+					</mat-form-field>
+
+					<mat-form-field appearance="outline" *ngIf="isFieldVisible('platforms')">
+						<mat-select formControlName="platforms" placeholder="Platforms" multiple>
+							<mat-option *ngFor="let option of platformOptions" [value]="option">
+								{{ getPlatformLabel(option) }}
+							</mat-option>
+						</mat-select>
+					</mat-form-field>
+				</div>
+
+				<div
+					class="shared-game-filter__grid shared-game-filter__grid--dates"
+					*ngIf="showCustomPlayedDateFields()"
+				>
+					<mat-form-field appearance="outline" *ngIf="isFieldVisible('datePlayedFrom')">
+						<input
+							matInput
+							type="date"
+							formControlName="datePlayedFrom"
+							placeholder="Played from"
+						/>
+					</mat-form-field>
+
+					<mat-form-field appearance="outline" *ngIf="isFieldVisible('datePlayedTo')">
+						<input matInput type="date" formControlName="datePlayedTo" placeholder="Played to" />
+					</mat-form-field>
+				</div>
+			</div>
 		</div>
 
 		<div class="shared-game-filter__actions" *ngIf="showActions">

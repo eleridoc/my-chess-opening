@@ -13,8 +13,17 @@ import {
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 
 import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 
 import {
+	SHARED_GAME_FILTER_GAME_SPEEDS,
+	SHARED_GAME_FILTER_PERIOD_PRESETS,
+	SHARED_GAME_FILTER_PLATFORMS,
+	SHARED_GAME_FILTER_PLAYED_COLORS,
+	SHARED_GAME_FILTER_PLAYER_RESULTS,
+	SHARED_GAME_FILTER_RATED_MODES,
 	countActiveSharedGameFilterFields,
 	getDefaultSharedGameFilterForContext,
 	getVisibleSharedGameFilterFields,
@@ -38,17 +47,22 @@ import { SharedGameFilterStorageService } from '../../services/shared-game-filte
 /**
  * Shared reusable game filter shell.
  *
- * V1.7.6 scope:
- * - create the reusable component contract
- * - wire the form state to the context configuration and storage services
- * - expose Apply / Reset actions
- * - keep the template intentionally minimal until field blocks are introduced
- *   in the next V1.7.x tasks
+ * V1.7.7 scope:
+ * - add the main field block
+ * - keep the component reusable and context-driven
+ * - keep storage/apply/reset behavior unchanged
  */
 @Component({
 	selector: 'app-shared-game-filter',
 	standalone: true,
-	imports: [CommonModule, ReactiveFormsModule, MatButtonModule],
+	imports: [
+		CommonModule,
+		ReactiveFormsModule,
+		MatButtonModule,
+		MatFormFieldModule,
+		MatInputModule,
+		MatSelectModule,
+	],
 	templateUrl: './shared-game-filter.component.html',
 	styleUrl: './shared-game-filter.component.scss',
 })
@@ -57,6 +71,13 @@ export class SharedGameFilterComponent implements OnInit, OnChanges {
 	private readonly sharedGameFilterContextService = inject(SharedGameFilterContextService);
 
 	private hasInitialized = false;
+
+	readonly periodPresetOptions = SHARED_GAME_FILTER_PERIOD_PRESETS;
+	readonly playedColorOptions = SHARED_GAME_FILTER_PLAYED_COLORS;
+	readonly playerResultOptions = SHARED_GAME_FILTER_PLAYER_RESULTS;
+	readonly ratedModeOptions = SHARED_GAME_FILTER_RATED_MODES;
+	readonly gameSpeedOptions = SHARED_GAME_FILTER_GAME_SPEEDS;
+	readonly platformOptions = SHARED_GAME_FILTER_PLATFORMS;
 
 	/** Usage context driving storage key and base configuration. */
 	@Input() context: SharedGameFilterContext = 'default';
@@ -201,6 +222,97 @@ export class SharedGameFilterComponent implements OnInit, OnChanges {
 
 		this.writeSharedGameFilterToForm(resetFilter);
 		this.resetRequested.emit(resetFilter);
+	}
+
+	getPeriodPresetLabel(value: SharedGameFilterPeriodPreset): string {
+		switch (value) {
+			case 'all':
+				return 'All';
+			case 'today':
+				return 'Today';
+			case 'last7Days':
+				return 'Last 7 days';
+			case 'last30Days':
+				return 'Last 30 days';
+			case 'thisMonth':
+				return 'This month';
+			case 'last3Months':
+				return 'Last 3 months';
+			case 'last6Months':
+				return 'Last 6 months';
+			case 'thisYear':
+				return 'This year';
+			case 'custom':
+				return 'Custom';
+		}
+	}
+
+	getPlayedColorLabel(value: SharedGameFilterPlayedColor): string {
+		switch (value) {
+			case 'both':
+				return 'Both colors';
+			case 'white':
+				return 'White';
+			case 'black':
+				return 'Black';
+		}
+	}
+
+	getPlayerResultLabel(value: SharedGameFilterPlayerResult): string {
+		switch (value) {
+			case 'all':
+				return 'All results';
+			case 'win':
+				return 'Win';
+			case 'loss':
+				return 'Loss';
+			case 'draw':
+				return 'Draw';
+		}
+	}
+
+	getRatedModeLabel(value: SharedGameFilterRatedMode): string {
+		switch (value) {
+			case 'ratedOnly':
+				return 'Rated only';
+			case 'casualOnly':
+				return 'Casual only';
+			case 'both':
+				return 'Rated and casual';
+		}
+	}
+
+	getGameSpeedLabel(value: SharedGameFilterGameSpeed): string {
+		switch (value) {
+			case 'bullet':
+				return 'Bullet';
+			case 'blitz':
+				return 'Blitz';
+			case 'rapid':
+				return 'Rapid';
+		}
+	}
+
+	getPlatformLabel(value: SharedGameFilterPlatform): string {
+		switch (value) {
+			case 'lichess':
+				return 'Lichess';
+			case 'chessCom':
+				return 'Chess.com';
+			case 'other':
+				return 'Other';
+		}
+	}
+
+	isFieldVisible(fieldKey: SharedGameFilterFieldKey): boolean {
+		return this.visibleFields().includes(fieldKey);
+	}
+
+	showCustomPlayedDateFields(): boolean {
+		return (
+			this.usesCustomPlayedDates() &&
+			(this.isFieldVisible('datePlayedFrom') || this.isFieldVisible('datePlayedTo'))
+		);
 	}
 
 	private hydrateFormFromInputs(): void {
