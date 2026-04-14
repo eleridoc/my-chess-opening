@@ -11,6 +11,13 @@
 			</div>
 		</div>
 
+		<div
+			class="shared-game-filter__validation-banner"
+			*ngIf="form.invalid && (form.touched || submitAttempted())"
+		>
+			Please fix the validation errors before applying the filter.
+		</div>
+
 		<div class="shared-game-filter__fields">
 			<div class="shared-game-filter__section" *ngIf="hasAnyVisibleFields(mainFieldKeys)">
 				<div class="shared-game-filter__section-title">Main filters</div>
@@ -82,6 +89,13 @@
 						<input matInput type="date" formControlName="datePlayedTo" placeholder="Played to" />
 					</mat-form-field>
 				</div>
+
+				<div
+					class="shared-game-filter__validation-message"
+					*ngIf="shouldShowValidationError('playedDateRange')"
+				>
+					Played date range is invalid. "Played from" must be before or equal to "Played to".
+				</div>
 			</div>
 
 			<div class="shared-game-filter__section" *ngIf="hasAnyVisibleFields(complementaryFieldKeys)">
@@ -137,6 +151,13 @@
 							/>
 						</mat-form-field>
 					</div>
+
+					<div
+						class="shared-game-filter__validation-message"
+						*ngIf="shouldShowValidationError('playerRatingRange')"
+					>
+						Player rating range is invalid. Minimum must be lower than or equal to maximum.
+					</div>
 				</div>
 
 				<div class="shared-game-filter__subsection">
@@ -161,6 +182,13 @@
 							/>
 						</mat-form-field>
 					</div>
+
+					<div
+						class="shared-game-filter__validation-message"
+						*ngIf="shouldShowValidationError('opponentRatingRange')"
+					>
+						Opponent rating range is invalid. Minimum must be lower than or equal to maximum.
+					</div>
 				</div>
 
 				<div class="shared-game-filter__subsection">
@@ -184,6 +212,13 @@
 								placeholder="Rating diff max"
 							/>
 						</mat-form-field>
+					</div>
+
+					<div
+						class="shared-game-filter__validation-message"
+						*ngIf="shouldShowValidationError('ratingDiffRange')"
+					>
+						Rating difference range is invalid. Minimum must be lower than or equal to maximum.
 					</div>
 				</div>
 			</div>

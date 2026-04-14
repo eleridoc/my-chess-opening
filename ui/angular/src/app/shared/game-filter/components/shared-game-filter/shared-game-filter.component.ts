@@ -10,7 +10,14 @@ import {
 	inject,
 	signal,
 } from '@angular/core';
-import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import {
+	AbstractControl,
+	FormControl,
+	FormGroup,
+	ReactiveFormsModule,
+	ValidationErrors,
+	ValidatorFn,
+} from '@angular/forms';
 
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -45,12 +52,71 @@ import { SharedGameFilterContextService } from '../../services/shared-game-filte
 import { SharedGameFilterStorageService } from '../../services/shared-game-filter-storage.service';
 
 /**
+ * Build a validator for a numeric min/max pair.
+ *
+ * The validator stays permissive when one side is missing. It only reports an
+ * error when both values are present and min is greater than max.
+ */
+function createSharedGameFilterMinMaxValidator(
+	minControlName: keyof SharedGameFilter,
+	maxControlName: keyof SharedGameFilter,
+	errorKey: string,
+): ValidatorFn {
+	return (control: AbstractControl): ValidationErrors | null => {
+		const minValue = control.get(minControlName)?.value;
+		const maxValue = control.get(maxControlName)?.value;
+
+		if (minValue === null || maxValue === null) {
+			return null;
+		}
+
+		if (typeof minValue !== 'number' || typeof maxValue !== 'number') {
+			return null;
+		}
+
+		return minValue <= maxValue ? null : { [errorKey]: true };
+	};
+}
+
+/**
+ * Validate the custom played date range.
+ *
+ * Rules:
+ * - only applies when periodPreset is "custom"
+ * - allows incomplete input
+ * - reports an error only when both dates are present and from > to
+ */
+function createSharedGameFilterPlayedDateRangeValidator(): ValidatorFn {
+	return (control: AbstractControl): ValidationErrors | null => {
+		const periodPreset = control.get('periodPreset')?.value;
+		const datePlayedFrom = control.get('datePlayedFrom')?.value;
+		const datePlayedTo = control.get('datePlayedTo')?.value;
+
+		if (periodPreset !== 'custom') {
+			return null;
+		}
+
+		if (
+			typeof datePlayedFrom !== 'string' ||
+			datePlayedFrom === '' ||
+			typeof datePlayedTo !== 'string' ||
+			datePlayedTo === ''
+		) {
+			return null;
+		}
+
+		return datePlayedFrom <= datePlayedTo ? null : { playedDateRange: true };
+	};
+}
+
+/**
  * Shared reusable game filter shell.
  *
- * V1.7.8 scope:
- * - add the complementary field block
- * - keep the component reusable and context-driven
- * - keep storage/apply/reset behavior unchanged
+ * V1.7.9 scope:
+ * - add form-level validations
+ * - block Apply when invalid
+ * - expose validation feedback in the UI
+ * - keep storage/apply/reset behavior unchanged for valid values
  */
 @Component({
 	selector: 'app-shared-game-filter',
@@ -146,49 +212,68 @@ export class SharedGameFilterComponent implements OnInit, OnChanges {
 	readonly visibleFields = signal<SharedGameFilterFieldKey[]>([]);
 	readonly activeFieldCount = signal(0);
 	readonly usesCustomPlayedDates = signal(false);
+	readonly submitAttempted = signal(false);
 
 	private readonly resolvedContextConfig = signal<SharedGameFilterContextConfig>({});
 
-	readonly form = new FormGroup({
-		periodPreset: new FormControl<SharedGameFilterPeriodPreset>('all', {
-			nonNullable: true,
-		}),
-		datePlayedFrom: new FormControl<string | null>(null),
-		datePlayedTo: new FormControl<string | null>(null),
-		playedColor: new FormControl<SharedGameFilterPlayedColor>('both', {
-			nonNullable: true,
-		}),
-		playerResult: new FormControl<SharedGameFilterPlayerResult>('all', {
-			nonNullable: true,
-		}),
-		gameSpeeds: new FormControl<SharedGameFilterGameSpeed[]>(['rapid'], {
-			nonNullable: true,
-		}),
-		ratedMode: new FormControl<SharedGameFilterRatedMode>('ratedOnly', {
-			nonNullable: true,
-		}),
-		platforms: new FormControl<SharedGameFilterPlatform[]>([], {
-			nonNullable: true,
-		}),
-		ecoCodeExact: new FormControl<string>('', {
-			nonNullable: true,
-		}),
-		openingNameContains: new FormControl<string>('', {
-			nonNullable: true,
-		}),
-		gameIdExact: new FormControl<string>('', {
-			nonNullable: true,
-		}),
-		playerRatingMin: new FormControl<number | null>(null),
-		playerRatingMax: new FormControl<number | null>(null),
-		opponentRatingMin: new FormControl<number | null>(null),
-		opponentRatingMax: new FormControl<number | null>(null),
-		ratingDiffMin: new FormControl<number | null>(null),
-		ratingDiffMax: new FormControl<number | null>(null),
-		playerTextSearch: new FormControl<string>('', {
-			nonNullable: true,
-		}),
-	});
+	readonly form = new FormGroup(
+		{
+			periodPreset: new FormControl<SharedGameFilterPeriodPreset>('all', {
+				nonNullable: true,
+			}),
+			datePlayedFrom: new FormControl<string | null>(null),
+			datePlayedTo: new FormControl<string | null>(null),
+			playedColor: new FormControl<SharedGameFilterPlayedColor>('both', {
+				nonNullable: true,
+			}),
+			playerResult: new FormControl<SharedGameFilterPlayerResult>('all', {
+				nonNullable: true,
+			}),
+			gameSpeeds: new FormControl<SharedGameFilterGameSpeed[]>(['rapid'], {
+				nonNullable: true,
+			}),
+			ratedMode: new FormControl<SharedGameFilterRatedMode>('ratedOnly', {
+				nonNullable: true,
+			}),
+			platforms: new FormControl<SharedGameFilterPlatform[]>([], {
+				nonNullable: true,
+			}),
+			ecoCodeExact: new FormControl<string>('', {
+				nonNullable: true,
+			}),
+			openingNameContains: new FormControl<string>('', {
+				nonNullable: true,
+			}),
+			gameIdExact: new FormControl<string>('', {
+				nonNullable: true,
+			}),
+			playerRatingMin: new FormControl<number | null>(null),
+			playerRatingMax: new FormControl<number | null>(null),
+			opponentRatingMin: new FormControl<number | null>(null),
+			opponentRatingMax: new FormControl<number | null>(null),
+			ratingDiffMin: new FormControl<number | null>(null),
+			ratingDiffMax: new FormControl<number | null>(null),
+			playerTextSearch: new FormControl<string>('', {
+				nonNullable: true,
+			}),
+		},
+		{
+			validators: [
+				createSharedGameFilterPlayedDateRangeValidator(),
+				createSharedGameFilterMinMaxValidator(
+					'playerRatingMin',
+					'playerRatingMax',
+					'playerRatingRange',
+				),
+				createSharedGameFilterMinMaxValidator(
+					'opponentRatingMin',
+					'opponentRatingMax',
+					'opponentRatingRange',
+				),
+				createSharedGameFilterMinMaxValidator('ratingDiffMin', 'ratingDiffMax', 'ratingDiffRange'),
+			],
+		},
+	);
 
 	constructor() {
 		this.form.valueChanges.subscribe(() => {
@@ -226,6 +311,15 @@ export class SharedGameFilterComponent implements OnInit, OnChanges {
 			return;
 		}
 
+		this.submitAttempted.set(true);
+		this.form.markAllAsTouched();
+		this.form.updateValueAndValidity({ emitEvent: false });
+
+		if (this.form.invalid) {
+			this.refreshDerivedState();
+			return;
+		}
+
 		const resolvedConfig = this.resolvedContextConfig();
 		const rawValue = this.form.getRawValue();
 
@@ -234,6 +328,7 @@ export class SharedGameFilterComponent implements OnInit, OnChanges {
 			: stripHiddenSharedGameFilterFields(rawValue, resolvedConfig);
 
 		this.writeSharedGameFilterToForm(appliedFilter);
+		this.submitAttempted.set(false);
 		this.applyRequested.emit(appliedFilter);
 	}
 
@@ -244,7 +339,10 @@ export class SharedGameFilterComponent implements OnInit, OnChanges {
 			? this.sharedGameFilterStorage.resetSharedGameFilter(this.context, resolvedConfig)
 			: getDefaultSharedGameFilterForContext(resolvedConfig);
 
+		this.submitAttempted.set(false);
 		this.writeSharedGameFilterToForm(resetFilter);
+		this.form.markAsPristine();
+		this.form.markAsUntouched();
 		this.resetRequested.emit(resetFilter);
 	}
 
@@ -344,6 +442,10 @@ export class SharedGameFilterComponent implements OnInit, OnChanges {
 		);
 	}
 
+	shouldShowValidationError(errorKey: string): boolean {
+		return !!this.form.errors?.[errorKey] && (this.form.touched || this.submitAttempted());
+	}
+
 	private hydrateFormFromInputs(): void {
 		const resolvedConfig =
 			this.sharedGameFilterContextService.getMergedSharedGameFilterContextConfig(
@@ -356,6 +458,7 @@ export class SharedGameFilterComponent implements OnInit, OnChanges {
 
 		const initialFilter = this.resolveInitialSharedGameFilter(resolvedConfig);
 		this.writeSharedGameFilterToForm(initialFilter);
+		this.submitAttempted.set(false);
 	}
 
 	private resolveInitialSharedGameFilter(
@@ -402,6 +505,7 @@ export class SharedGameFilterComponent implements OnInit, OnChanges {
 			{ emitEvent: false },
 		);
 
+		this.form.updateValueAndValidity({ emitEvent: false });
 		this.refreshDerivedState();
 		this.updateFormDisabledState();
 	}
