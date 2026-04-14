@@ -3,6 +3,7 @@
 
 export * from './ipc';
 export * from './explorer';
+export * from './filters';
 
 export { ImportOrchestrator } from './import/ImportOrchestrator';
 export { LichessImporter } from './import/importers/lichess/LichessImporter';
