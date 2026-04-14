@@ -1,0 +1,42 @@
+<h2 mat-dialog-title class="shared-game-filter-dialog__title">
+	{{ title }}
+</h2>
+
+<mat-dialog-content class="shared-game-filter-dialog__content">
+	<app-shared-game-filter
+		[context]="data.context"
+		[contextConfig]="data.contextConfig ?? null"
+		[initialValue]="data.initialValue ?? null"
+		[disabled]="data.disabled ?? false"
+		[persistInStorage]="data.persistInStorage ?? true"
+		[showActions]="false"
+		(applyRequested)="onFilterApplied($event)"
+	/>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end" class="shared-game-filter-dialog__actions">
+	<button mat-button type="button" (click)="onCancel()">
+		{{ cancelButtonLabel }}
+	</button>
+
+	<button
+		mat-stroked-button
+		class="mat-stroked-button-d-5"
+		type="button"
+		(click)="onReset()"
+		[disabled]="data.disabled ?? false"
+	>
+		{{ resetButtonLabel }}
+	</button>
+
+	<button
+		mat-flat-button
+		class="mat-flat-button-d-5"
+		color="primary"
+		type="button"
+		(click)="onApply()"
+		[disabled]="applyDisabled"
+	>
+		{{ applyButtonLabel }}
+	</button>
+</mat-dialog-actions>

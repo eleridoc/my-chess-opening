@@ -1,0 +1,22 @@
+:host {
+	display: block;
+}
+
+.shared-game-filter-dialog__title {
+	margin: 0;
+	padding-bottom: 8px;
+}
+
+.shared-game-filter-dialog__content {
+	display: block;
+	min-width: min(920px, 88vw);
+	max-width: 96vw;
+	max-height: 75vh;
+	padding-top: 4px;
+	overflow: auto;
+}
+
+.shared-game-filter-dialog__actions {
+	gap: 12px;
+	padding-top: 12px;
+}
