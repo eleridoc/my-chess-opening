@@ -19,6 +19,26 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 
 - (placeholder)
 
+## [1.6.17] - 2026-04-14
+
+### Added
+
+- feat(ui): show app version in about and help menu
+- feat(ui): add main libraries section to about
+- feat(ui): add creator section to about
+- docs: document known Lichess export issue with rated/perfType filters
+- feat(explorer): add move navigation shortcuts (wheel + arrow keys)
+
+### Changed
+
+- docs: refresh release badge
+- chore(tools): sync version across packages + lockfile + ui constant
+
+### Fixed
+
+- chore(ui): polish about page layout
+- chore(ui): clean up dashboard replace content by coming soon
+
 ## [1.6.16] - 2026-03-02
 
 ### Added
