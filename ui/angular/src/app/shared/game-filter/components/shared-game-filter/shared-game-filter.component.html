@@ -1,0 +1,42 @@
+<div class="shared-game-filter app-density--5" [class.shared-game-filter--disabled]="disabled">
+	<form class="shared-game-filter__form" [formGroup]="form" (ngSubmit)="onApply()">
+		<div class="shared-game-filter__summary">
+			<div class="shared-game-filter__summary-line">
+				<strong>{{ activeFieldCount() }}</strong>
+				active filter{{ activeFieldCount() === 1 ? '' : 's' }}
+			</div>
+
+			<div class="shared-game-filter__summary-line" *ngIf="usesCustomPlayedDates()">
+				Custom played date range enabled.
+			</div>
+		</div>
+
+		<div class="shared-game-filter__fields">
+			<p class="shared-game-filter__placeholder">
+				Shared game filter fields will be added in the next V1.7.x tasks.
+			</p>
+		</div>
+
+		<div class="shared-game-filter__actions" *ngIf="showActions">
+			<button
+				mat-stroked-button
+				class="mat-stroked-button-d-5"
+				type="button"
+				(click)="onReset()"
+				[disabled]="disabled"
+			>
+				{{ resetButtonLabel }}
+			</button>
+
+			<button
+				mat-flat-button
+				class="mat-flat-button-d-5"
+				color="primary"
+				type="submit"
+				[disabled]="disabled"
+			>
+				{{ applyButtonLabel }}
+			</button>
+		</div>
+	</form>
+</div>
