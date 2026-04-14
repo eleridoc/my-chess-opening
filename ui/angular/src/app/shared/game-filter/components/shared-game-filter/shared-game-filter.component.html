@@ -12,7 +12,7 @@
 		</div>
 
 		<div class="shared-game-filter__fields">
-			<div class="shared-game-filter__section">
+			<div class="shared-game-filter__section" *ngIf="hasAnyVisibleFields(mainFieldKeys)">
 				<div class="shared-game-filter__section-title">Main filters</div>
 
 				<div class="shared-game-filter__grid">
@@ -81,6 +81,110 @@
 					<mat-form-field appearance="outline" *ngIf="isFieldVisible('datePlayedTo')">
 						<input matInput type="date" formControlName="datePlayedTo" placeholder="Played to" />
 					</mat-form-field>
+				</div>
+			</div>
+
+			<div class="shared-game-filter__section" *ngIf="hasAnyVisibleFields(complementaryFieldKeys)">
+				<div class="shared-game-filter__section-title">Additional filters</div>
+
+				<div class="shared-game-filter__grid">
+					<mat-form-field appearance="outline" *ngIf="isFieldVisible('ecoCodeExact')">
+						<input matInput type="text" formControlName="ecoCodeExact" placeholder="ECO code" />
+					</mat-form-field>
+
+					<mat-form-field appearance="outline" *ngIf="isFieldVisible('openingNameContains')">
+						<input
+							matInput
+							type="text"
+							formControlName="openingNameContains"
+							placeholder="Opening name"
+						/>
+					</mat-form-field>
+
+					<mat-form-field appearance="outline" *ngIf="isFieldVisible('gameIdExact')">
+						<input matInput type="text" formControlName="gameIdExact" placeholder="Game id" />
+					</mat-form-field>
+
+					<mat-form-field appearance="outline" *ngIf="isFieldVisible('playerTextSearch')">
+						<input
+							matInput
+							type="text"
+							formControlName="playerTextSearch"
+							placeholder="Player search"
+						/>
+					</mat-form-field>
+				</div>
+
+				<div class="shared-game-filter__subsection">
+					<div class="shared-game-filter__subsection-title">Player rating</div>
+
+					<div class="shared-game-filter__grid shared-game-filter__grid--numbers">
+						<mat-form-field appearance="outline" *ngIf="isFieldVisible('playerRatingMin')">
+							<input
+								matInput
+								type="number"
+								formControlName="playerRatingMin"
+								placeholder="Player rating min"
+							/>
+						</mat-form-field>
+
+						<mat-form-field appearance="outline" *ngIf="isFieldVisible('playerRatingMax')">
+							<input
+								matInput
+								type="number"
+								formControlName="playerRatingMax"
+								placeholder="Player rating max"
+							/>
+						</mat-form-field>
+					</div>
+				</div>
+
+				<div class="shared-game-filter__subsection">
+					<div class="shared-game-filter__subsection-title">Opponent rating</div>
+
+					<div class="shared-game-filter__grid shared-game-filter__grid--numbers">
+						<mat-form-field appearance="outline" *ngIf="isFieldVisible('opponentRatingMin')">
+							<input
+								matInput
+								type="number"
+								formControlName="opponentRatingMin"
+								placeholder="Opponent rating min"
+							/>
+						</mat-form-field>
+
+						<mat-form-field appearance="outline" *ngIf="isFieldVisible('opponentRatingMax')">
+							<input
+								matInput
+								type="number"
+								formControlName="opponentRatingMax"
+								placeholder="Opponent rating max"
+							/>
+						</mat-form-field>
+					</div>
+				</div>
+
+				<div class="shared-game-filter__subsection">
+					<div class="shared-game-filter__subsection-title">Rating difference</div>
+
+					<div class="shared-game-filter__grid shared-game-filter__grid--numbers">
+						<mat-form-field appearance="outline" *ngIf="isFieldVisible('ratingDiffMin')">
+							<input
+								matInput
+								type="number"
+								formControlName="ratingDiffMin"
+								placeholder="Rating diff min"
+							/>
+						</mat-form-field>
+
+						<mat-form-field appearance="outline" *ngIf="isFieldVisible('ratingDiffMax')">
+							<input
+								matInput
+								type="number"
+								formControlName="ratingDiffMax"
+								placeholder="Rating diff max"
+							/>
+						</mat-form-field>
+					</div>
 				</div>
 			</div>
 		</div>

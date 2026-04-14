@@ -57,6 +57,19 @@
 	opacity: 0.82;
 }
 
+.shared-game-filter__subsection {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.shared-game-filter__subsection-title {
+	font-size: 12px;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	opacity: 0.76;
+}
+
 .shared-game-filter__grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -64,6 +77,10 @@
 }
 
 .shared-game-filter__grid--dates {
+	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.shared-game-filter__grid--numbers {
 	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 

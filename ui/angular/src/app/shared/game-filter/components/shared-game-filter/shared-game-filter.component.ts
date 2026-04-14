@@ -47,8 +47,8 @@ import { SharedGameFilterStorageService } from '../../services/shared-game-filte
 /**
  * Shared reusable game filter shell.
  *
- * V1.7.7 scope:
- * - add the main field block
+ * V1.7.8 scope:
+ * - add the complementary field block
  * - keep the component reusable and context-driven
  * - keep storage/apply/reset behavior unchanged
  */
@@ -78,6 +78,30 @@ export class SharedGameFilterComponent implements OnInit, OnChanges {
 	readonly ratedModeOptions = SHARED_GAME_FILTER_RATED_MODES;
 	readonly gameSpeedOptions = SHARED_GAME_FILTER_GAME_SPEEDS;
 	readonly platformOptions = SHARED_GAME_FILTER_PLATFORMS;
+
+	readonly mainFieldKeys: ReadonlyArray<SharedGameFilterFieldKey> = [
+		'periodPreset',
+		'datePlayedFrom',
+		'datePlayedTo',
+		'playedColor',
+		'playerResult',
+		'gameSpeeds',
+		'ratedMode',
+		'platforms',
+	];
+
+	readonly complementaryFieldKeys: ReadonlyArray<SharedGameFilterFieldKey> = [
+		'ecoCodeExact',
+		'openingNameContains',
+		'gameIdExact',
+		'playerTextSearch',
+		'playerRatingMin',
+		'playerRatingMax',
+		'opponentRatingMin',
+		'opponentRatingMax',
+		'ratingDiffMin',
+		'ratingDiffMax',
+	];
 
 	/** Usage context driving storage key and base configuration. */
 	@Input() context: SharedGameFilterContext = 'default';
@@ -306,6 +330,11 @@ export class SharedGameFilterComponent implements OnInit, OnChanges {
 
 	isFieldVisible(fieldKey: SharedGameFilterFieldKey): boolean {
 		return this.visibleFields().includes(fieldKey);
+	}
+
+	hasAnyVisibleFields(fieldKeys: ReadonlyArray<SharedGameFilterFieldKey>): boolean {
+		const visibleFields = this.visibleFields();
+		return fieldKeys.some((fieldKey) => visibleFields.includes(fieldKey));
 	}
 
 	showCustomPlayedDateFields(): boolean {
