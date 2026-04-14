@@ -128,3 +128,14 @@ export interface SharedGameFilterContextConfig {
 	visibleFields?: SharedGameFilterVisibleFields;
 	defaultValueOverrides?: SharedGameFilterDefaultOverrides;
 }
+
+/**
+ * Resolved played date range derived from the shared game filter period fields.
+ *
+ * Values use the local calendar date format YYYY-MM-DD.
+ * The ISO 8601 conversion for DB queries will be handled later by mapping helpers.
+ */
+export interface SharedGameFilterPlayedDateRange {
+	from: string | null;
+	to: string | null;
+}
