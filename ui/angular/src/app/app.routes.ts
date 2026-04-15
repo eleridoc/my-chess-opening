@@ -54,6 +54,11 @@ export const routes: Routes = [
 				loadComponent: () => import('./pages/qa/qa-page.component').then((m) => m.QaPageComponent),
 				canMatch: [devModeGuard],
 			},
+			{
+				path: 'export',
+				loadComponent: () =>
+					import('./pages/export/export-page.component').then((m) => m.ExportPageComponent),
+			},
 		],
 	},
 	{

@@ -8,12 +8,12 @@
    ========================================================================== */
 
 .mat-stroked-button-d-5 {
-	height: 36px;
+	height: 36px !important;
 	//align-self: stretch;
-	display: inline-flex;
-	align-items: center;
-	gap: 8px;
-	padding: 0 14px;
+	display: inline-flex !important;
+	align-items: center !important;
+	gap: 8px !important;
+	padding: 0 14px !important;
 	border-radius: var(--app-main-radius) !important;
 }
 

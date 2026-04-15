@@ -1,0 +1,70 @@
+<div class="export-page app-density--5">
+	<header class="export-page__header">
+		<div>
+			<h1 class="export-page__title">Export</h1>
+			<p class="export-page__subtitle">
+				First integration test for the shared game filter. This page does not call the backend yet.
+			</p>
+		</div>
+
+		<div class="export-page__header-actions">
+			<button
+				mat-stroked-button
+				class="mat-stroked-button-d-5"
+				type="button"
+				(click)="onReloadStoredFilter()"
+			>
+				Reload stored filter
+			</button>
+
+			<button
+				mat-flat-button
+				class="mat-flat-button-d-5"
+				color="primary"
+				type="button"
+				(click)="onOpenPopupTest()"
+			>
+				Open popup test
+			</button>
+		</div>
+	</header>
+
+	<div class="export-page__layout">
+		<section class="export-page__panel">
+			<div class="app-card-flat">
+				<div class="app-card-flat-top">Filter</div>
+				<div class="app-card-flat-fit-content">
+					<app-shared-game-filter
+						[context]="'export'"
+						[contextConfig]="exportFilterContextConfig"
+						[persistInStorage]="true"
+						[showActions]="true"
+						[applyButtonLabel]="'Apply filters'"
+						[resetButtonLabel]="'Reset filters'"
+						(applyRequested)="onInlineApply($event)"
+						(resetRequested)="onInlineReset($event)"
+					/>
+				</div>
+			</div>
+		</section>
+
+		<aside class="export-page__panel export-page__panel--debug">
+			<div class="export-page__panel-header">
+				<h2 class="export-page__panel-title">Debug preview</h2>
+				<p class="export-page__panel-subtitle">
+					{{ lastActionLabel() }}
+				</p>
+			</div>
+
+			<div class="export-page__debug-block">
+				<h3 class="export-page__debug-title">Normalized visible filter</h3>
+				<pre class="export-page__debug-pre">{{ appliedFilterJson() }}</pre>
+			</div>
+
+			<div class="export-page__debug-block">
+				<h3 class="export-page__debug-title">Mapped query payload</h3>
+				<pre class="export-page__debug-pre">{{ mappedQueryJson() }}</pre>
+			</div>
+		</aside>
+	</div>
+</div>

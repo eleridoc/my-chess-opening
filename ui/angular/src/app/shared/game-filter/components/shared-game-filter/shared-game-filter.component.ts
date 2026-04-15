@@ -46,7 +46,7 @@ import {
 	type SharedGameFilterPlayedColor,
 	type SharedGameFilterPlayerResult,
 	type SharedGameFilterRatedMode,
-} from 'my-chess-opening-core';
+} from 'my-chess-opening-core/filters';
 
 import { SharedGameFilterContextService } from '../../services/shared-game-filter-context.service';
 import { SharedGameFilterStorageService } from '../../services/shared-game-filter-storage.service';

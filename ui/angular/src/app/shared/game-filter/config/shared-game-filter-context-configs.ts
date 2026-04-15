@@ -1,4 +1,7 @@
-import type { SharedGameFilterContext, SharedGameFilterContextConfig } from 'my-chess-opening-core';
+import type {
+	SharedGameFilterContext,
+	SharedGameFilterContextConfig,
+} from 'my-chess-opening-core/filters';
 
 /**
  * Shared game filter base configuration by usage context.

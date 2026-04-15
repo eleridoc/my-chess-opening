@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 
 import { MatDialog, type MatDialogConfig, type MatDialogRef } from '@angular/material/dialog';
 
-import type { SharedGameFilter } from 'my-chess-opening-core';
+import type { SharedGameFilter } from 'my-chess-opening-core/filters';
 
 import {
 	SharedGameFilterDialogComponent,

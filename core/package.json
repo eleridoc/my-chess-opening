@@ -1,6 +1,6 @@
 {
   "name": "my-chess-opening-core",
-  "version": "1.7.11",
+  "version": "1.7.12",
   "license": "GPL-3.0-only",
   "private": true,
   "main": "dist/index.js",
@@ -8,7 +8,8 @@
   "scripts": {
     "build:cjs": "tsc -p tsconfig.json",
     "build:esm:explorer": "tsc -p tsconfig.explorer.esm.json",
-    "build": "npm run build:cjs && npm run build:esm:explorer",
+    "build:esm:filters": "tsc -p tsconfig.filters.esm.json",
+    "build": "npm run build:cjs && npm run build:esm:explorer && npm run build:esm:filters",
     "clean": "rm -rf dist dist-esm"
   },
   "dependencies": {
@@ -23,6 +24,10 @@
     "./explorer": {
       "types": "./dist-esm/explorer/index.d.ts",
       "default": "./dist-esm/explorer/index.js"
+    },
+    "./filters": {
+      "types": "./dist-esm/filters/index.d.ts",
+      "default": "./dist-esm/filters/index.js"
     }
   }
 }

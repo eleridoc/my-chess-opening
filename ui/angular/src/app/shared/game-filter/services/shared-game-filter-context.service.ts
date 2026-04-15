@@ -3,7 +3,7 @@ import type {
 	SharedGameFilter,
 	SharedGameFilterContext,
 	SharedGameFilterContextConfig,
-} from 'my-chess-opening-core';
+} from 'my-chess-opening-core/filters';
 
 import { SHARED_GAME_FILTER_CONTEXT_CONFIGS } from '../config/shared-game-filter-context-configs';
 

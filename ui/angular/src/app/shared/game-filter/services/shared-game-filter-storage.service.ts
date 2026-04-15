@@ -5,7 +5,7 @@ import {
 	type SharedGameFilter,
 	type SharedGameFilterContext,
 	type SharedGameFilterContextConfig,
-} from 'my-chess-opening-core';
+} from 'my-chess-opening-core/filters';
 
 import { SharedGameFilterContextService } from './shared-game-filter-context.service';
 

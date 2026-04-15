@@ -118,6 +118,13 @@
 			}
 
 			@if (hasAccounts()) {
+				<button mat-menu-item routerLink="/export">
+					<mat-icon aria-hidden="true">save</mat-icon>
+					<span>Export</span>
+				</button>
+			}
+
+			@if (hasAccounts()) {
 				<button mat-menu-item routerLink="/logs">
 					<mat-icon aria-hidden="true">receipt_long</mat-icon>
 					<span>Logs</span>

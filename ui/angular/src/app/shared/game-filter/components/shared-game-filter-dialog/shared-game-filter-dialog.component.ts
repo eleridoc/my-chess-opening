@@ -8,7 +8,7 @@ import type {
 	SharedGameFilter,
 	SharedGameFilterContext,
 	SharedGameFilterContextConfig,
-} from 'my-chess-opening-core';
+} from 'my-chess-opening-core/filters';
 
 import { SharedGameFilterComponent } from '../shared-game-filter/shared-game-filter.component';
 
