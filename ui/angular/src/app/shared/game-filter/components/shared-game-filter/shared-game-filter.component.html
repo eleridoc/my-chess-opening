@@ -1,5 +1,5 @@
 <div class="shared-game-filter app-density--5" [class.shared-game-filter--disabled]="disabled">
-	<form class="shared-game-filter__form" [formGroup]="form" (ngSubmit)="onApply()">
+	<form class="shared-game-filter__form" [formGroup]="form">
 		<div class="shared-game-filter__fields">
 			<div class="shared-game-filter__section">
 				<div class="shared-game-filter__summary">
@@ -13,11 +13,8 @@
 					</div>
 				</div>
 
-				<div
-					class="shared-game-filter__validation-banner"
-					*ngIf="form.invalid && (form.touched || submitAttempted())"
-				>
-					Please fix the validation errors before applying the filter.
+				<div class="shared-game-filter__validation-banner" *ngIf="form.invalid && form.touched">
+					Please fix the validation errors. Invalid changes are not applied.
 				</div>
 			</div>
 
@@ -331,16 +328,6 @@
 				[disabled]="disabled"
 			>
 				{{ resetButtonLabel }}
-			</button>
-
-			<button
-				mat-flat-button
-				class="mat-flat-button-d-5"
-				color="primary"
-				type="submit"
-				[disabled]="disabled"
-			>
-				{{ applyButtonLabel }}
 			</button>
 		</div>
 	</form>

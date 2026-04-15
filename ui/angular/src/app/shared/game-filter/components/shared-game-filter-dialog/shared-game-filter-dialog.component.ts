@@ -28,11 +28,15 @@ export interface SharedGameFilterDialogData {
 	/** Disable the embedded filter and actions. */
 	disabled?: boolean;
 
-	/** Whether Apply / Reset should persist values in localStorage. */
+	/** Whether automatic changes and Reset should persist values in localStorage. */
 	persistInStorage?: boolean;
 
-	/** Label for the dialog Apply button. */
-	applyButtonLabel?: string;
+	/**
+	 * Optional callback invoked whenever the embedded filter applies a valid change.
+	 *
+	 * Reset also triggers this callback because it changes the active filter value.
+	 */
+	onFilterChanged?: (filter: SharedGameFilter) => void;
 
 	/** Label for the dialog Reset button. */
 	resetButtonLabel?: string;
@@ -53,9 +57,10 @@ export interface SharedGameFilterDialogData {
  * The embedded filter component remains the single source of truth for:
  * - form state
  * - normalization
- * - Apply / Reset behavior
+ * - automatic apply on valid change
+ * - Reset behavior
  *
- * This wrapper only provides dialog presentation and a Cancel action.
+ * This wrapper only provides dialog presentation and a Close action.
  */
 @Component({
 	selector: 'app-shared-game-filter-dialog',
@@ -67,9 +72,7 @@ export interface SharedGameFilterDialogData {
 export class SharedGameFilterDialogComponent {
 	readonly data = inject<SharedGameFilterDialogData>(MAT_DIALOG_DATA);
 
-	private readonly ref = inject(
-		MatDialogRef<SharedGameFilterDialogComponent, SharedGameFilter | undefined>,
-	);
+	private readonly ref = inject(MatDialogRef<SharedGameFilterDialogComponent, void>);
 
 	@ViewChild(SharedGameFilterComponent)
 	private filterComponent?: SharedGameFilterComponent;
@@ -90,31 +93,15 @@ export class SharedGameFilterDialogComponent {
 		return this.data.resetButtonLabel ?? 'Reset';
 	}
 
-	get applyButtonLabel(): string {
-		return this.data.applyButtonLabel ?? 'Apply';
-	}
-
-	get applyDisabled(): boolean {
-		if (this.data.disabled) {
-			return true;
-		}
-
-		return this.filterComponent?.form.invalid ?? false;
-	}
-
 	onCancel(): void {
-		this.ref.close(undefined);
+		this.ref.close();
 	}
 
 	onReset(): void {
 		this.filterComponent?.onReset();
 	}
 
-	onApply(): void {
-		this.filterComponent?.onApply();
-	}
-
-	onFilterApplied(filter: SharedGameFilter): void {
-		this.ref.close(filter);
+	onFilterChanged(filter: SharedGameFilter): void {
+		this.data.onFilterChanged?.(filter);
 	}
 }

@@ -37,12 +37,13 @@
    - Rounded corners on the dialog surface
    - Blurred backdrop, without affecting other dialogs
    --------------------------------------------------------------------------- */
-
+.cdk-overlay-pane.app-dialog-panel .mat-mdc-dialog-container .mdc-dialog__surface,
 .cdk-overlay-pane.app-confirm-dialog-panel .mat-mdc-dialog-container .mdc-dialog__surface {
 	border-radius: var(--app-radius-dialog);
 	overflow: hidden; /* Ensure content clips to rounded corners */
+	border: 1px solid color-mix(in srgb, var(--app-primary) 25%, transparent);
 }
-
+.cdk-overlay-backdrop.app-dialog-backdrop,
 .cdk-overlay-backdrop.app-confirm-dialog-backdrop {
 	background: var(--app-overlay-backdrop);
 	backdrop-filter: blur(var(--app-blur-dialog-backdrop));

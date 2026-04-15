@@ -19,8 +19,8 @@ import { SharedGameFilterStorageService } from '../../shared/game-filter/service
  *
  * This first integration intentionally does not call the backend.
  * It is used to validate:
- * - inline mode
- * - popup mode
+ * - inline mode with automatic apply on change
+ * - popup mode with automatic apply on change
  * - storage by context
  * - normalized filter output
  * - query mapping output
@@ -60,12 +60,8 @@ export class ExportPageComponent {
 		this.refreshPreviewFromFilter(initialFilter, 'Initial export filter preview');
 	}
 
-	onInlineApply(filter: SharedGameFilter): void {
-		this.refreshPreviewFromFilter(filter, 'Applied from inline filter');
-	}
-
-	onInlineReset(filter: SharedGameFilter): void {
-		this.refreshPreviewFromFilter(filter, 'Reset to export defaults');
+	onInlineFilterChanged(filter: SharedGameFilter): void {
+		this.refreshPreviewFromFilter(filter, 'Updated from inline filter');
 	}
 
 	onReloadStoredFilter(): void {
@@ -78,24 +74,17 @@ export class ExportPageComponent {
 	}
 
 	onOpenPopupTest(): void {
-		this.sharedGameFilterDialogService
-			.openSharedGameFilterDialog({
-				title: 'Export filters',
-				context: 'export',
-				contextConfig: this.exportFilterContextConfig,
-				persistInStorage: true,
-				applyButtonLabel: 'Apply filters',
-				resetButtonLabel: 'Reset filters',
-				cancelButtonLabel: 'Close',
-			})
-			.afterClosed()
-			.subscribe((result) => {
-				if (result === undefined) {
-					return;
-				}
-
-				this.refreshPreviewFromFilter(result, 'Applied from popup filter');
-			});
+		this.sharedGameFilterDialogService.openSharedGameFilterDialog({
+			title: 'Export filters',
+			context: 'export',
+			contextConfig: this.exportFilterContextConfig,
+			persistInStorage: true,
+			resetButtonLabel: 'Reset filters',
+			cancelButtonLabel: 'Close',
+			onFilterChanged: (filter) => {
+				this.refreshPreviewFromFilter(filter, 'Updated from popup filter');
+			},
+		});
 	}
 
 	private refreshPreviewFromFilter(filter: SharedGameFilter, label: string): void {

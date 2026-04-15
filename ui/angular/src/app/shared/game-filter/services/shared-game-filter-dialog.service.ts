@@ -2,8 +2,6 @@ import { Injectable, inject } from '@angular/core';
 
 import { MatDialog, type MatDialogConfig, type MatDialogRef } from '@angular/material/dialog';
 
-import type { SharedGameFilter } from 'my-chess-opening-core/filters';
-
 import {
 	SharedGameFilterDialogComponent,
 	type SharedGameFilterDialogData,
@@ -21,18 +19,19 @@ export class SharedGameFilterDialogService {
 	openSharedGameFilterDialog(
 		data: SharedGameFilterDialogData,
 		config?: Omit<MatDialogConfig<SharedGameFilterDialogData>, 'data'>,
-	): MatDialogRef<SharedGameFilterDialogComponent, SharedGameFilter | undefined> {
-		return this.dialog.open<
+	): MatDialogRef<SharedGameFilterDialogComponent, void> {
+		return this.dialog.open<SharedGameFilterDialogComponent, SharedGameFilterDialogData, void>(
 			SharedGameFilterDialogComponent,
-			SharedGameFilterDialogData,
-			SharedGameFilter | undefined
-		>(SharedGameFilterDialogComponent, {
-			width: '960px',
-			maxWidth: '96vw',
-			autoFocus: false,
-			restoreFocus: true,
-			...config,
-			data,
-		});
+			{
+				width: '960px',
+				maxWidth: '96vw',
+				autoFocus: false,
+				restoreFocus: true,
+				panelClass: 'app-dialog-panel',
+				backdropClass: 'app-dialog-backdrop',
+				...config,
+				data,
+			},
+		);
 	}
 }

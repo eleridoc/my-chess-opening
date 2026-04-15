@@ -39,10 +39,8 @@
 						[contextConfig]="exportFilterContextConfig"
 						[persistInStorage]="true"
 						[showActions]="true"
-						[applyButtonLabel]="'Apply filters'"
 						[resetButtonLabel]="'Reset filters'"
-						(applyRequested)="onInlineApply($event)"
-						(resetRequested)="onInlineReset($event)"
+						(filterChanged)="onInlineFilterChanged($event)"
 					/>
 				</div>
 			</div>

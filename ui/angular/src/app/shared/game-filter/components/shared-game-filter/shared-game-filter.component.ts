@@ -112,11 +112,11 @@ function createSharedGameFilterPlayedDateRangeValidator(): ValidatorFn {
 /**
  * Shared reusable game filter shell.
  *
- * V1.7.9 scope:
- * - add form-level validations
- * - block Apply when invalid
- * - expose validation feedback in the UI
- * - keep storage/apply/reset behavior unchanged for valid values
+ * V1.7.13 scope:
+ * - apply valid filter changes automatically
+ * - keep reset as the only visible action
+ * - emit the canonical filter whenever a valid change is applied
+ * - keep reset as a dedicated event for consumers that need it
  */
 @Component({
 	selector: 'app-shared-game-filter',
@@ -186,25 +186,27 @@ export class SharedGameFilterComponent implements OnInit, OnChanges {
 	@Input() disabled = false;
 
 	/**
-	 * Whether Apply / Reset should use the storage service for the current context.
+	 * Whether automatic filter changes and Reset should use the storage service
+	 * for the current context.
 	 *
 	 * Notes:
-	 * - true: Apply persists to localStorage, Reset clears localStorage for the context
-	 * - false: Apply / Reset operate only in memory
+	 * - true: valid changes persist automatically to localStorage, Reset clears localStorage
+	 * - false: valid changes and Reset operate only in memory
 	 */
 	@Input() persistInStorage = true;
 
 	/** Whether the standard action row is rendered. */
 	@Input() showActions = true;
 
-	/** Apply button label. */
-	@Input() applyButtonLabel = 'Apply';
-
 	/** Reset button label. */
 	@Input() resetButtonLabel = 'Reset';
 
-	/** Emitted after Apply with the canonical filter value. */
-	@Output() applyRequested = new EventEmitter<SharedGameFilter>();
+	/**
+	 * Emitted automatically with the canonical filter value after each valid change.
+	 *
+	 * Reset also emits this event so consumers can react through a single callback.
+	 */
+	@Output() filterChanged = new EventEmitter<SharedGameFilter>();
 
 	/** Emitted after Reset with the canonical filter value. */
 	@Output() resetRequested = new EventEmitter<SharedGameFilter>();
@@ -212,9 +214,9 @@ export class SharedGameFilterComponent implements OnInit, OnChanges {
 	readonly visibleFields = signal<SharedGameFilterFieldKey[]>([]);
 	readonly activeFieldCount = signal(0);
 	readonly usesCustomPlayedDates = signal(false);
-	readonly submitAttempted = signal(false);
 
 	private readonly resolvedContextConfig = signal<SharedGameFilterContextConfig>({});
+	private lastEmittedFilterSignature = '';
 
 	readonly form = new FormGroup(
 		{
@@ -278,6 +280,7 @@ export class SharedGameFilterComponent implements OnInit, OnChanges {
 	constructor() {
 		this.form.valueChanges.subscribe(() => {
 			this.refreshDerivedState();
+			this.emitAutoAppliedFilterIfValid();
 		});
 	}
 
@@ -306,32 +309,6 @@ export class SharedGameFilterComponent implements OnInit, OnChanges {
 		}
 	}
 
-	onApply(): void {
-		if (this.disabled) {
-			return;
-		}
-
-		this.submitAttempted.set(true);
-		this.form.markAllAsTouched();
-		this.form.updateValueAndValidity({ emitEvent: false });
-
-		if (this.form.invalid) {
-			this.refreshDerivedState();
-			return;
-		}
-
-		const resolvedConfig = this.resolvedContextConfig();
-		const rawValue = this.form.getRawValue();
-
-		const appliedFilter = this.persistInStorage
-			? this.sharedGameFilterStorage.saveSharedGameFilter(this.context, rawValue, resolvedConfig)
-			: stripHiddenSharedGameFilterFields(rawValue, resolvedConfig);
-
-		this.writeSharedGameFilterToForm(appliedFilter);
-		this.submitAttempted.set(false);
-		this.applyRequested.emit(appliedFilter);
-	}
-
 	onReset(): void {
 		const resolvedConfig = this.resolvedContextConfig();
 
@@ -339,10 +316,10 @@ export class SharedGameFilterComponent implements OnInit, OnChanges {
 			? this.sharedGameFilterStorage.resetSharedGameFilter(this.context, resolvedConfig)
 			: getDefaultSharedGameFilterForContext(resolvedConfig);
 
-		this.submitAttempted.set(false);
 		this.writeSharedGameFilterToForm(resetFilter);
 		this.form.markAsPristine();
 		this.form.markAsUntouched();
+		this.filterChanged.emit(resetFilter);
 		this.resetRequested.emit(resetFilter);
 	}
 
@@ -443,7 +420,7 @@ export class SharedGameFilterComponent implements OnInit, OnChanges {
 	}
 
 	shouldShowValidationError(errorKey: string): boolean {
-		return !!this.form.errors?.[errorKey] && (this.form.touched || this.submitAttempted());
+		return !!this.form.errors?.[errorKey] && this.form.touched;
 	}
 
 	private hydrateFormFromInputs(): void {
@@ -458,7 +435,6 @@ export class SharedGameFilterComponent implements OnInit, OnChanges {
 
 		const initialFilter = this.resolveInitialSharedGameFilter(resolvedConfig);
 		this.writeSharedGameFilterToForm(initialFilter);
-		this.submitAttempted.set(false);
 	}
 
 	private resolveInitialSharedGameFilter(
@@ -480,6 +456,8 @@ export class SharedGameFilterComponent implements OnInit, OnChanges {
 			filter,
 			this.resolvedContextConfig(),
 		);
+
+		this.rememberEmittedFilterSignature(normalizedFilter);
 
 		this.form.reset(
 			{
@@ -508,6 +486,45 @@ export class SharedGameFilterComponent implements OnInit, OnChanges {
 		this.form.updateValueAndValidity({ emitEvent: false });
 		this.refreshDerivedState();
 		this.updateFormDisabledState();
+	}
+
+	private emitAutoAppliedFilterIfValid(): void {
+		if (!this.hasInitialized || this.disabled) {
+			return;
+		}
+
+		this.form.updateValueAndValidity({ emitEvent: false });
+
+		if (this.form.invalid) {
+			return;
+		}
+
+		const appliedFilter = this.buildAppliedSharedGameFilter();
+		const appliedFilterSignature = this.stringifySharedGameFilter(appliedFilter);
+
+		if (appliedFilterSignature === this.lastEmittedFilterSignature) {
+			return;
+		}
+
+		this.lastEmittedFilterSignature = appliedFilterSignature;
+		this.filterChanged.emit(appliedFilter);
+	}
+
+	private buildAppliedSharedGameFilter(): SharedGameFilter {
+		const resolvedConfig = this.resolvedContextConfig();
+		const rawValue = this.form.getRawValue();
+
+		return this.persistInStorage
+			? this.sharedGameFilterStorage.saveSharedGameFilter(this.context, rawValue, resolvedConfig)
+			: stripHiddenSharedGameFilterFields(rawValue, resolvedConfig);
+	}
+
+	private rememberEmittedFilterSignature(filter: SharedGameFilter): void {
+		this.lastEmittedFilterSignature = this.stringifySharedGameFilter(filter);
+	}
+
+	private stringifySharedGameFilter(filter: SharedGameFilter): string {
+		return JSON.stringify(filter);
 	}
 
 	private refreshDerivedState(): void {

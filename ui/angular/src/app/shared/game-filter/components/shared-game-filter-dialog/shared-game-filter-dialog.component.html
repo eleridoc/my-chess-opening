@@ -10,12 +10,12 @@
 		[disabled]="data.disabled ?? false"
 		[persistInStorage]="data.persistInStorage ?? true"
 		[showActions]="false"
-		(applyRequested)="onFilterApplied($event)"
+		(filterChanged)="onFilterChanged($event)"
 	/>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end" class="shared-game-filter-dialog__actions">
-	<button mat-button type="button" (click)="onCancel()">
+	<button mat-button class="mat-flat-button-d-5" type="button" (click)="onCancel()">
 		{{ cancelButtonLabel }}
 	</button>
 
@@ -27,16 +27,5 @@
 		[disabled]="data.disabled ?? false"
 	>
 		{{ resetButtonLabel }}
-	</button>
-
-	<button
-		mat-flat-button
-		class="mat-flat-button-d-5"
-		color="primary"
-		type="button"
-		(click)="onApply()"
-		[disabled]="applyDisabled"
-	>
-		{{ applyButtonLabel }}
 	</button>
 </mat-dialog-actions>
