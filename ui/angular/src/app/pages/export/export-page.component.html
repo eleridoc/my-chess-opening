@@ -3,8 +3,8 @@
 		<div>
 			<h1 class="export-page__title">Export</h1>
 			<p class="export-page__subtitle">
-				Adjust the filter, run a search to compute the export summary, then generate a PGN file from
-				the last searched filter.
+				Configure your filter, click Filter games to preview the matching games, then use Export PGN
+				to download the corresponding file.
 			</p>
 		</div>
 	</header>
@@ -24,7 +24,19 @@
 						(filterChanged)="onInlineFilterChanged($event)"
 					/>
 
-					<div class="export-page__actions">
+					<hr class="export-page__separator-fix" />
+
+					<div class="export-page__actions export-page__actions-filter">
+						<button
+							mat-stroked-button
+							class="mat-stroked-button-d-5"
+							type="button"
+							(click)="onClearResult()"
+							[disabled]="!canClearResult()"
+						>
+							Clear result
+						</button>
+
 						<button
 							mat-flat-button
 							class="mat-flat-button-d-5"
@@ -43,7 +55,7 @@
 		<aside class="export-page__panel export-page__panel--summary">
 			<app-section-loader
 				[loading]="isBusy()"
-				[label]="isExporting() ? 'Generating export…' : 'Searching games…'"
+				[label]="isExporting() ? 'Generating PGN file…' : 'Filtering games…'"
 				[mask]="true"
 				[blocking]="true"
 				[showDelayMs]="0"
@@ -54,16 +66,10 @@
 
 					<div class="app-card-flat-content export-page__card-content">
 						<ng-container *ngIf="summaryStats() as stats; else exportIdleState">
-							<p class="export-page__summary-text">Summary based on the last searched filter.</p>
-
-							<p class="export-page__summary-warning" *ngIf="isSummaryStale()">
-								Current filter has changed since the last search. Export will use the last searched
-								filter.
-							</p>
-
-							<p class="export-page__summary-empty" *ngIf="stats.totalGames === 0">
-								No games found for the last searched filter.
-							</p>
+							<div [class]="summaryStatusClass()">
+								<div class="export-page__status-title">{{ summaryStatusTitle() }}</div>
+								<div class="export-page__status-text">{{ summaryStatusMessage() }}</div>
+							</div>
 
 							<div class="export-page__stats-grid">
 								<div class="export-page__stat export-page__stat--highlight">
@@ -114,6 +120,16 @@
 
 							<div class="export-page__actions export-page__actions--summary">
 								<button
+									mat-stroked-button
+									class="mat-stroked-button-d-5"
+									type="button"
+									(click)="onClearResult()"
+									[disabled]="!canClearResult()"
+								>
+									Clear result
+								</button>
+
+								<button
 									mat-flat-button
 									class="mat-flat-button-d-5"
 									color="primary"
@@ -121,16 +137,16 @@
 									(click)="onExport()"
 									[disabled]="!canExport()"
 								>
-									Export PGN
+									{{ exportButtonLabel() }}
 								</button>
 							</div>
 						</ng-container>
 
 						<ng-template #exportIdleState>
 							<div class="export-page__empty-state">
-								<h2 class="export-page__empty-title">Run a search</h2>
+								<h2 class="export-page__empty-title">Run a filter</h2>
 								<p class="export-page__empty-text">
-									Use the filter on the left, then click Search to compute the export summary.
+									Use the filter on the left, then click Filter games to compute the export summary.
 								</p>
 							</div>
 						</ng-template>

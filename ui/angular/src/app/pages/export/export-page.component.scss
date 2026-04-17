@@ -54,32 +54,51 @@
 }
 
 .export-page__card-intro,
-.export-page__summary-text,
-.export-page__summary-empty,
-.export-page__summary-warning,
 .export-page__empty-text {
 	margin: 0;
 	line-height: 1.5;
-}
-
-.export-page__card-intro,
-.export-page__summary-text,
-.export-page__empty-text {
 	opacity: 0.82;
 }
 
-.export-page__summary-warning {
-	border: 1px solid color-mix(in srgb, var(--app-primary) 25%, transparent);
-	border-radius: 12px;
+.export-page__status {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	border-radius: var(--app-main-radius);
 	padding: 12px;
+	border: 1px solid var(--app-border);
+	background: rgba(255, 255, 255, 0.015);
+}
+
+.export-page__status--fresh {
+	border-color: color-mix(in srgb, var(--app-primary) 22%, transparent);
 	background: color-mix(in srgb, var(--app-primary) 8%, transparent);
 }
 
-.export-page__summary-empty {
-	border: 1px solid var(--app-border);
-	border-radius: 12px;
-	padding: 12px;
+.export-page__status--stale {
+	border-color: color-mix(in srgb, var(--app-primary) 25%, transparent);
+	background: color-mix(in srgb, var(--app-primary) 8%, transparent);
+}
+
+.export-page__status--empty {
+	border-color: var(--app-border);
 	background: rgba(255, 255, 255, 0.015);
+}
+
+.export-page__status-title {
+	font-size: 14px;
+	font-weight: 700;
+	line-height: 1.2;
+}
+
+.export-page__status-text {
+	margin: 0;
+	line-height: 1.5;
+	opacity: 0.84;
+}
+
+.export-page__actions-filter {
+	margin: 0px 15px 15px 15px;
 }
 
 .export-page__actions {
@@ -104,7 +123,7 @@
 	flex-direction: column;
 	gap: 6px;
 	border: 1px solid var(--app-border);
-	border-radius: 14px;
+	border-radius: var(--app-main-radius);
 	padding: 14px;
 	background: rgba(255, 255, 255, 0.015);
 }
@@ -137,7 +156,7 @@
 	justify-content: center;
 	text-align: center;
 	border: 1px dashed var(--app-border);
-	border-radius: 16px;
+	border-radius: var(--app-main-radius);
 	padding: 24px;
 }
 
@@ -145,6 +164,14 @@
 	margin: 0;
 	font-size: 22px;
 	line-height: 1.2;
+}
+
+.export-page__separator-fix {
+	width: 100%;
+	margin: 0;
+	border: 0;
+	border-top: 1px solid var(--app-border);
+	opacity: 0.8;
 }
 
 @media (max-width: 1180px) {

@@ -64,12 +64,22 @@
 	opacity: 0.8;
 }
 
+.shared-game-filter__summary-section {
+	display: flex;
+	flex-direction: column;
+	//gap: 12px;
+	//border: 1px solid var(--app-border);
+
+	padding: 0px 0px;
+	//background: rgba(255, 255, 255, 0.015);
+}
+
 .shared-game-filter__section {
 	display: flex;
 	flex-direction: column;
 	//gap: 12px;
 	//border: 1px solid var(--app-border);
-	border-radius: 12px;
+
 	padding: 16px 0px;
 	//background: rgba(255, 255, 255, 0.015);
 }

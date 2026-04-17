@@ -18,12 +18,13 @@ import { NotificationService } from '../../shared/notifications/notification.ser
 /**
  * Export page.
  *
- * V1.8.5 scope:
+ * V1.8.6 polish:
  * - keep the shared filter state live and persistent
  * - execute Search only on explicit user action
  * - keep a dedicated executed filter snapshot for summary/export
  * - generate and download a PGN file from the last executed filter
- * - reset only the page execution state after a successful export
+ * - allow clearing the current result without resetting the filter
+ * - make summary status clearer (up-to-date / stale / empty)
  */
 @Component({
 	selector: 'app-export-page',
@@ -72,8 +73,10 @@ export class ExportPageComponent {
 	);
 
 	readonly searchButtonLabel = computed(() =>
-		this.hasExecutedSearch() ? 'Run filter again' : 'Run filter',
+		this.hasExecutedSearch() ? 'Filter games again' : 'Filter games',
 	);
+
+	readonly canClearResult = computed(() => this.hasExecutedSearch() && !this.isBusy());
 
 	readonly canExport = computed(() => {
 		const executedFilter = this.executedFilter();
@@ -100,6 +103,70 @@ export class ExportPageComponent {
 		);
 	});
 
+	readonly exportButtonLabel = computed(() => {
+		const totalGames = this.summaryStats()?.totalGames ?? 0;
+
+		if (totalGames <= 0) {
+			return 'Export PGN';
+		}
+
+		return totalGames === 1 ? 'Export PGN (1 game)' : `Export PGN (${totalGames} games)`;
+	});
+
+	readonly summaryStatusTitle = computed(() => {
+		const summaryStats = this.summaryStats();
+
+		if (summaryStats === null) {
+			return '';
+		}
+
+		if (summaryStats.totalGames === 0) {
+			return 'No games found';
+		}
+
+		if (this.isSummaryStale()) {
+			return 'Summary is out of date';
+		}
+
+		return 'Summary is up to date';
+	});
+
+	readonly summaryStatusMessage = computed(() => {
+		const summaryStats = this.summaryStats();
+
+		if (summaryStats === null) {
+			return '';
+		}
+
+		if (summaryStats.totalGames === 0) {
+			return 'The last searched filter did not match any games. Adjust the filter and run it again.';
+		}
+
+		if (this.isSummaryStale()) {
+			return 'Current filter has changed since the last search. Export PGN will still use the last searched filter.';
+		}
+
+		return 'The current visible filter matches the summary below. Export PGN will use this same searched filter.';
+	});
+
+	readonly summaryStatusClass = computed(() => {
+		const summaryStats = this.summaryStats();
+
+		if (summaryStats === null) {
+			return '';
+		}
+
+		if (summaryStats.totalGames === 0) {
+			return 'export-page__status export-page__status--empty';
+		}
+
+		if (this.isSummaryStale()) {
+			return 'export-page__status export-page__status--stale';
+		}
+
+		return 'export-page__status export-page__status--fresh';
+	});
+
 	onInlineFilterChanged(filter: SharedGameFilter): void {
 		this.currentFilter.set(filter);
 	}
@@ -121,7 +188,7 @@ export class ExportPageComponent {
 		} catch (error) {
 			console.error('[ExportPage] Failed to compute export summary:', error);
 
-			this.notify.error('Failed to search export games.', {
+			this.notify.error('Failed to filter export games.', {
 				actionLabel: 'Retry',
 				onAction: () => void this.onSearch(),
 			});
@@ -170,6 +237,14 @@ export class ExportPageComponent {
 		} finally {
 			this.isExporting.set(false);
 		}
+	}
+
+	onClearResult(): void {
+		if (!this.canClearResult()) {
+			return;
+		}
+
+		this.resetExecutionState();
 	}
 
 	private resetExecutionState(): void {
