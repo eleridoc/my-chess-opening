@@ -72,7 +72,7 @@ export class ExportPageComponent {
 	);
 
 	readonly searchButtonLabel = computed(() =>
-		this.hasExecutedSearch() ? 'Search again' : 'Search',
+		this.hasExecutedSearch() ? 'Run filter again' : 'Run filter',
 	);
 
 	readonly canExport = computed(() => {

@@ -15,10 +15,6 @@
 				<div class="app-card-flat-top">Filter</div>
 
 				<div class="app-card-flat-fit-content export-page__card-content">
-					<p class="export-page__card-intro">
-						The filter keeps its own persistent state. Search uses the current visible filter.
-					</p>
-
 					<app-shared-game-filter
 						[context]="'export'"
 						[persistInStorage]="true"
@@ -56,7 +52,7 @@
 				<div class="app-card-flat">
 					<div class="app-card-flat-top">Summary</div>
 
-					<div class="app-card-flat-fit-content export-page__card-content">
+					<div class="app-card-flat-content export-page__card-content">
 						<ng-container *ngIf="summaryStats() as stats; else exportIdleState">
 							<p class="export-page__summary-text">Summary based on the last searched filter.</p>
 

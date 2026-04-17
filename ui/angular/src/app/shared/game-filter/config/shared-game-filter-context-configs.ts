@@ -10,16 +10,19 @@ import { SHARED_GAME_FILTER_FIELD_KEYS } from 'my-chess-opening-core/filters';
  *
  * Notes:
  * - "default" keeps the core global defaults
- * - "games" and "export" start broader by default:
+ * - "games" starts broader by default:
  *   - no game speed restriction
  *   - rated and casual included
+ * - "export" hides fields not used by the export feature
  * - "my-next-moves" keeps the focused global defaults for now
  *
  * V1.8 export rules:
+ * - hide rated mode
  * - hide opponent rating fields
  * - hide rating difference fields
  */
 const EXPORT_HIDDEN_FIELDS = new Set<SharedGameFilterFieldKey>([
+	'ratedMode',
 	'opponentRatingMin',
 	'opponentRatingMax',
 	'ratingDiffMin',
@@ -44,7 +47,6 @@ export const SHARED_GAME_FILTER_CONTEXT_CONFIGS: Record<
 	export: {
 		defaultValueOverrides: {
 			gameSpeeds: [],
-			ratedMode: 'both',
 		},
 		visibleFields: EXPORT_VISIBLE_FIELDS,
 	},

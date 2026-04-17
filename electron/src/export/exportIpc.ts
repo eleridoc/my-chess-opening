@@ -24,7 +24,8 @@ import { buildSharedGameFilterQueryPayload } from 'my-chess-opening-core';
  * Notes:
  * - The backend must not trust the renderer to hide fields correctly.
  * - Hidden fields are stripped again here before building the DB query.
- * - Opponent rating and rating difference are intentionally excluded for V1.8.
+ * - Rated mode, opponent rating, and rating difference are intentionally
+ *   excluded for V1.8 export.
  */
 const EXPORT_SHARED_GAME_FILTER_CONTEXT_CONFIG: SharedGameFilterContextConfig = {
 	visibleFields: [
@@ -34,7 +35,6 @@ const EXPORT_SHARED_GAME_FILTER_CONTEXT_CONFIG: SharedGameFilterContextConfig = 
 		'playedColor',
 		'playerResult',
 		'gameSpeeds',
-		'ratedMode',
 		'platforms',
 		'ecoCodeExact',
 		'openingNameContains',
