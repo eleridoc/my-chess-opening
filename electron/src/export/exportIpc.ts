@@ -2,6 +2,7 @@ import { ipcMain } from 'electron';
 import type {
 	ExternalSite as PrismaExternalSite,
 	GameSpeed as PrismaGameSpeed,
+	PlayerColor as PrismaPlayerColor,
 } from '@prisma/client';
 import { prisma } from '../db/prisma';
 
@@ -48,9 +49,10 @@ const EXPORT_SHARED_GAME_FILTER_CONTEXT_CONFIG: SharedGameFilterContextConfig = 
 /**
  * Register IPC handlers for the Export screen.
  *
- * V1.8.3 scope:
+ * V1.8 scope:
  * - summary endpoint
  * - PGN file generation endpoint
+ * - optional unified player name replacement in exported PGNs
  */
 export function registerExportIpc(): void {
 	ipcMain.handle(
@@ -111,17 +113,31 @@ export function registerExportIpc(): void {
 			);
 
 			const where = buildExportWhere(payload.query);
+			const unifiedPlayerName = normalizeUnifiedPlayerName(input?.unifiedPlayerName);
 
 			const games = await prisma.game.findMany({
 				where,
 				orderBy: [{ playedAt: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
 				select: {
 					pgn: true,
+					myColor: true,
 				},
 			});
 
 			const normalizedGames = games
-				.map((game) => normalizeStoredPgnForExport(game.pgn))
+				.map((game) => {
+					const normalizedPgn = normalizeStoredPgnForExport(game.pgn);
+
+					if (normalizedPgn.length === 0) {
+						return '';
+					}
+
+					return applyUnifiedPlayerNameToPgn(
+						normalizedPgn,
+						game.myColor,
+						unifiedPlayerName,
+					);
+				})
 				.filter((pgn) => pgn.length > 0);
 
 			const content = buildMultiPgnExportContent(normalizedGames);
@@ -290,6 +306,86 @@ function normalizeStoredPgnForExport(rawPgn: string): string {
 		.map((line) => line.replace(/[ \t]+$/g, ''));
 
 	return normalizedLines.join('\n').trim();
+}
+
+/**
+ * Optionally replace the exported owner's PGN name with a unified player name.
+ *
+ * Rules:
+ * - when no unified name is provided, the PGN is returned unchanged
+ * - only the owner's White/Black tag is updated
+ * - the opponent name is never modified
+ */
+function applyUnifiedPlayerNameToPgn(
+	pgn: string,
+	myColor: PrismaPlayerColor,
+	unifiedPlayerName: string | null,
+): string {
+	if (unifiedPlayerName === null) {
+		return pgn;
+	}
+
+	const playerTagName = myColor === 'WHITE' ? 'White' : 'Black';
+
+	return upsertPgnTag(playerTagName, unifiedPlayerName, pgn);
+}
+
+/**
+ * Replace an existing PGN tag line, or insert it in the header block if missing.
+ */
+function upsertPgnTag(tagName: 'White' | 'Black', tagValue: string, pgn: string): string {
+	const escapedTagValue = escapePgnTagValue(tagValue);
+	const replacementLine = `[${tagName} "${escapedTagValue}"]`;
+	const tagPrefix = `[${tagName} "`;
+
+	const lines = pgn.split('\n');
+	const existingTagIndex = lines.findIndex((line) => line.startsWith(tagPrefix));
+
+	if (existingTagIndex >= 0) {
+		lines[existingTagIndex] = replacementLine;
+		return lines.join('\n');
+	}
+
+	let lastHeaderIndex = -1;
+
+	for (let index = 0; index < lines.length; index += 1) {
+		const line = lines[index]?.trim() ?? '';
+
+		if (line.startsWith('[') && line.endsWith(']')) {
+			lastHeaderIndex = index;
+			continue;
+		}
+
+		if (line !== '') {
+			break;
+		}
+	}
+
+	if (lastHeaderIndex >= 0) {
+		lines.splice(lastHeaderIndex + 1, 0, replacementLine);
+		return lines.join('\n');
+	}
+
+	return `${replacementLine}\n${pgn}`.trim();
+}
+
+/**
+ * Escape a PGN tag value according to PGN string rules.
+ */
+function escapePgnTagValue(value: string): string {
+	return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+}
+
+/**
+ * Normalize the optional unified player name sent by the renderer.
+ */
+function normalizeUnifiedPlayerName(value: string | null | undefined): string | null {
+	if (typeof value !== 'string') {
+		return null;
+	}
+
+	const trimmedValue = value.trim();
+	return trimmedValue === '' ? null : trimmedValue;
 }
 
 /**

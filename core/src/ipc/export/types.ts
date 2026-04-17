@@ -1,5 +1,4 @@
 import type { SharedGameFilter } from '../../filters';
-import type { GameSpeed, PlayerColor, ResultKey } from '../../import/types';
 
 /**
  * Export IPC contracts.
@@ -83,6 +82,18 @@ export interface ExportSummaryResult {
  */
 export interface ExportBuildPgnInput {
 	filter: SharedGameFilter;
+
+	/**
+	 * Optional unified player name to inject into exported PGNs.
+	 *
+	 * When provided:
+	 * - the owner's White/Black PGN tag is replaced with this value
+	 * - the opponent name is left untouched
+	 *
+	 * When empty or omitted:
+	 * - original imported PGN names are preserved
+	 */
+	unifiedPlayerName?: string | null;
 }
 
 /**

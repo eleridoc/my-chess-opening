@@ -53,11 +53,26 @@
 	gap: 16px;
 }
 
-.export-page__card-intro,
 .export-page__empty-text {
 	margin: 0;
 	line-height: 1.5;
 	opacity: 0.82;
+}
+
+.export-page__replacement-block {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.export-page__replacement-field {
+	width: 100%;
+}
+
+.export-page__replacement-help {
+	margin: 0;
+	line-height: 1.5;
+	opacity: 0.8;
 }
 
 .export-page__status {
@@ -98,7 +113,7 @@
 }
 
 .export-page__actions-filter {
-	margin: 0px 15px 15px 15px;
+	margin: 0 15px 15px 15px;
 }
 
 .export-page__actions {

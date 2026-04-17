@@ -1,7 +1,18 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	DestroyRef,
+	computed,
+	inject,
+	signal,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 
 import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 
 import type {
 	ExportBuildPgnResult,
@@ -9,6 +20,7 @@ import type {
 	SharedGameFilter,
 } from 'my-chess-opening-core';
 
+import { ExportPreferencesStorageService } from '../../services/export/export-preferences-storage.service';
 import { ExportService } from '../../services/export/export.service';
 import { SharedGameFilterComponent } from '../../shared/game-filter/components';
 import { SharedGameFilterStorageService } from '../../shared/game-filter/services/shared-game-filter-storage.service';
@@ -25,17 +37,31 @@ import { NotificationService } from '../../shared/notifications/notification.ser
  * - generate and download a PGN file from the last executed filter
  * - allow clearing the current result without resetting the filter
  * - make summary status clearer (up-to-date / stale / empty)
+ *
+ * Extra export option:
+ * - allow overriding the owner's exported PGN name with a unified player name
+ * - persist the last entered unified name in localStorage
  */
 @Component({
 	selector: 'app-export-page',
 	standalone: true,
-	imports: [CommonModule, MatButtonModule, SharedGameFilterComponent, SectionLoaderComponent],
+	imports: [
+		CommonModule,
+		ReactiveFormsModule,
+		MatButtonModule,
+		MatFormFieldModule,
+		MatInputModule,
+		SharedGameFilterComponent,
+		SectionLoaderComponent,
+	],
 	templateUrl: './export-page.component.html',
 	styleUrl: './export-page.component.scss',
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ExportPageComponent {
+	private readonly destroyRef = inject(DestroyRef);
 	private readonly sharedGameFilterStorage = inject(SharedGameFilterStorageService);
+	private readonly exportPreferencesStorage = inject(ExportPreferencesStorageService);
 	private readonly exportService = inject(ExportService);
 	private readonly notify = inject(NotificationService);
 
@@ -65,6 +91,17 @@ export class ExportPageComponent {
 
 	/** Export action loading state. */
 	readonly isExporting = signal(false);
+
+	/**
+	 * Optional unified player name applied only when exporting PGNs.
+	 *
+	 * This value does not affect the summary counts and therefore does not
+	 * require re-running Search when edited.
+	 */
+	readonly unifiedPlayerNameControl = new FormControl<string>(
+		this.exportPreferencesStorage.loadUnifiedPlayerName(),
+		{ nonNullable: true },
+	);
 
 	readonly isBusy = computed(() => this.isSearching() || this.isExporting());
 
@@ -167,6 +204,14 @@ export class ExportPageComponent {
 		return 'export-page__status export-page__status--fresh';
 	});
 
+	constructor() {
+		this.unifiedPlayerNameControl.valueChanges
+			.pipe(takeUntilDestroyed(this.destroyRef))
+			.subscribe((value) => {
+				this.exportPreferencesStorage.saveUnifiedPlayerName(value);
+			});
+	}
+
 	onInlineFilterChanged(filter: SharedGameFilter): void {
 		this.currentFilter.set(filter);
 	}
@@ -213,8 +258,11 @@ export class ExportPageComponent {
 		this.isExporting.set(true);
 
 		try {
+			const unifiedPlayerName = this.getNormalizedUnifiedPlayerName();
+
 			const result = await this.exportService.buildPgnFile({
 				filter: executedFilter,
+				unifiedPlayerName,
 			});
 
 			if (result.gamesCount <= 0) {
@@ -250,6 +298,17 @@ export class ExportPageComponent {
 	private resetExecutionState(): void {
 		this.executedFilter.set(null);
 		this.summaryStats.set(null);
+	}
+
+	private getNormalizedUnifiedPlayerName(): string {
+		const rawValue = this.unifiedPlayerNameControl.getRawValue();
+		const normalizedValue = this.exportPreferencesStorage.saveUnifiedPlayerName(rawValue);
+
+		if (normalizedValue !== rawValue) {
+			this.unifiedPlayerNameControl.setValue(normalizedValue, { emitEvent: false });
+		}
+
+		return normalizedValue;
 	}
 
 	private triggerBrowserDownload(result: ExportBuildPgnResult): void {

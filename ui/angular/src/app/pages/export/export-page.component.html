@@ -65,6 +65,26 @@
 					<div class="app-card-flat-top">Summary</div>
 
 					<div class="app-card-flat-content export-page__card-content">
+						<div class="export-page__replacement-block">
+							<mat-form-field
+								appearance="fill"
+								subscriptSizing="dynamic"
+								class="export-page__replacement-field"
+							>
+								<input
+									matInput
+									type="text"
+									[formControl]="unifiedPlayerNameControl"
+									placeholder="Unified player name for export (optional)"
+								/>
+							</mat-form-field>
+
+							<p class="export-page__replacement-help">
+								Leave this field empty to keep the original imported player names in the exported
+								PGNs.
+							</p>
+						</div>
+
 						<ng-container *ngIf="summaryStats() as stats; else exportIdleState">
 							<div [class]="summaryStatusClass()">
 								<div class="export-page__status-title">{{ summaryStatusTitle() }}</div>
