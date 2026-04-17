@@ -10,6 +10,8 @@ import type { Prisma } from '@prisma/client';
 import type {
 	ExportSummaryInput,
 	ExportSummaryResult,
+	ExportBuildPgnInput,
+	ExportBuildPgnResult,
 	SharedGameFilterContextConfig,
 	SharedGameFilterPlatform,
 	SharedGameFilterQuery,
@@ -46,9 +48,9 @@ const EXPORT_SHARED_GAME_FILTER_CONTEXT_CONFIG: SharedGameFilterContextConfig = 
 /**
  * Register IPC handlers for the Export screen.
  *
- * V1.8.2 scope:
- * - summary only
- * - no PGN file generation yet
+ * V1.8.3 scope:
+ * - summary endpoint
+ * - PGN file generation endpoint
  */
 export function registerExportIpc(): void {
 	ipcMain.handle(
@@ -99,10 +101,45 @@ export function registerExportIpc(): void {
 			};
 		},
 	);
+
+	ipcMain.handle(
+		'export:buildPgnFile',
+		async (_event, input: ExportBuildPgnInput): Promise<ExportBuildPgnResult> => {
+			const payload = buildSharedGameFilterQueryPayload(
+				input?.filter ?? {},
+				EXPORT_SHARED_GAME_FILTER_CONTEXT_CONFIG,
+			);
+
+			const where = buildExportWhere(payload.query);
+
+			const games = await prisma.game.findMany({
+				where,
+				orderBy: [{ playedAt: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
+				select: {
+					pgn: true,
+				},
+			});
+
+			const normalizedGames = games
+				.map((game) => normalizeStoredPgnForExport(game.pgn))
+				.filter((pgn) => pgn.length > 0);
+
+			const content = buildMultiPgnExportContent(normalizedGames);
+			const gamesCount = normalizedGames.length;
+
+			return {
+				appliedFilter: payload.filter,
+				fileName: buildExportPgnFileName(),
+				mimeType: 'application/x-chess-pgn',
+				content,
+				gamesCount,
+			};
+		},
+	);
 }
 
 /**
- * Build the Prisma `where` clause for export summary queries.
+ * Build the Prisma `where` clause for export summary/export queries.
  *
  * Rules:
  * - owner perspective is used where applicable:
@@ -232,6 +269,66 @@ function mergeWhere(
 	return {
 		AND: [baseWhere, additionalWhere],
 	};
+}
+
+/**
+ * Normalize one stored raw PGN for export.
+ *
+ * Goals:
+ * - keep the imported PGN content as intact as possible
+ * - normalize line endings
+ * - trim useless leading/trailing blank lines
+ * - remove trailing spaces on each line
+ *
+ * We intentionally do not fully parse/rebuild the PGN here.
+ */
+function normalizeStoredPgnForExport(rawPgn: string): string {
+	const normalizedNewlines = rawPgn.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+	const normalizedLines = normalizedNewlines
+		.split('\n')
+		.map((line) => line.replace(/[ \t]+$/g, ''));
+
+	return normalizedLines.join('\n').trim();
+}
+
+/**
+ * Build the final multi-PGN file content.
+ *
+ * Output rules:
+ * - one blank line between games
+ * - final trailing newline at end of file when content is non-empty
+ */
+function buildMultiPgnExportContent(games: ReadonlyArray<string>): string {
+	if (games.length === 0) {
+		return '';
+	}
+
+	return `${games.join('\n\n')}\n`;
+}
+
+/**
+ * Build the downloadable PGN export file name.
+ *
+ * Example:
+ * - my-chess-opening-export-2026-04-17_11-42-18.pgn
+ */
+function buildExportPgnFileName(now: Date = new Date()): string {
+	const year = now.getFullYear();
+	const month = pad2(now.getMonth() + 1);
+	const day = pad2(now.getDate());
+	const hours = pad2(now.getHours());
+	const minutes = pad2(now.getMinutes());
+	const seconds = pad2(now.getSeconds());
+
+	return `my-chess-opening-export-${year}-${month}-${day}_${hours}-${minutes}-${seconds}.pgn`;
+}
+
+/**
+ * Left-pad a small positive integer to 2 digits.
+ */
+function pad2(value: number): string {
+	return value.toString().padStart(2, '0');
 }
 
 /**
