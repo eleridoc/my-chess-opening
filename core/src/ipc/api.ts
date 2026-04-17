@@ -66,6 +66,15 @@ export type {
 	AccountsApi,
 } from './accounts/types';
 
+export type {
+	ExportSummaryInput,
+	ExportSummaryStats,
+	ExportSummaryResult,
+	ExportBuildPgnInput,
+	ExportBuildPgnResult,
+	ExportApi,
+} from './export/types';
+
 // -----------------------------------------------------------------------------
 // Compose ElectronApi from domain APIs
 // -----------------------------------------------------------------------------
@@ -75,6 +84,7 @@ import type { LogsApi } from '../logs/types';
 import type { ExplorerApi } from './explorer/types';
 import type { GamesApi } from './games/types';
 import type { AccountsApi } from './accounts/types';
+import type { ExportApi } from './export/types';
 
 /**
  * Small system-level IPC helpers that are not tied to a single domain.
@@ -123,6 +133,9 @@ export interface ElectronApi {
 
 	/** Games APIs (list, filters, etc.). */
 	games: GamesApi;
+
+	/** Export APIs (summary + PGN file generation). */
+	export: ExportApi;
 
 	/** Miscellaneous system-level helpers. */
 	system: SystemApi;

@@ -10,6 +10,10 @@ import type {
 	LogsFacetsResult,
 	GamesListInput,
 	GamesListResult,
+	ExportSummaryInput,
+	ExportSummaryResult,
+	ExportBuildPgnInput,
+	ExportBuildPgnResult,
 	AccountsListResult,
 	AccountsSetEnabledResult,
 	AccountsDeleteResult,
@@ -46,6 +50,8 @@ const CHANNELS = {
 	LOGS_FACETS: 'logs:facets',
 	EXPLORER_GET_GAME: 'explorer:getGame',
 	GAMES_LIST: 'games:list',
+	EXPORT_GET_SUMMARY: 'export:getSummary',
+	EXPORT_BUILD_PGN_FILE: 'export:buildPgnFile',
 	SYSTEM_OPEN_EXTERNAL: 'system:openExternal',
 	ACCOUNTS_LIST: 'accounts:list',
 	ACCOUNTS_SET_ENABLED: 'accounts:setEnabled',
@@ -130,6 +136,13 @@ const api: ElectronApi = {
 
 	games: {
 		list: (input?: GamesListInput) => invoke<GamesListResult>(CHANNELS.GAMES_LIST, input ?? {}),
+	},
+
+	export: {
+		getSummary: (input: ExportSummaryInput) =>
+			invoke<ExportSummaryResult>(CHANNELS.EXPORT_GET_SUMMARY, input),
+		buildPgnFile: (input: ExportBuildPgnInput) =>
+			invoke<ExportBuildPgnResult>(CHANNELS.EXPORT_BUILD_PGN_FILE, input),
 	},
 
 	system: {
