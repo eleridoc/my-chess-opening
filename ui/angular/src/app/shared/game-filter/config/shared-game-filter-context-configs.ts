@@ -1,7 +1,9 @@
 import type {
 	SharedGameFilterContext,
 	SharedGameFilterContextConfig,
+	SharedGameFilterFieldKey,
 } from 'my-chess-opening-core/filters';
+import { SHARED_GAME_FILTER_FIELD_KEYS } from 'my-chess-opening-core/filters';
 
 /**
  * Shared game filter base configuration by usage context.
@@ -13,9 +15,21 @@ import type {
  *   - rated and casual included
  * - "my-next-moves" keeps the focused global defaults for now
  *
- * Visibility is not restricted yet. This will remain easy to refine later when
- * the dedicated UI integrations are introduced.
+ * V1.8 export rules:
+ * - hide opponent rating fields
+ * - hide rating difference fields
  */
+const EXPORT_HIDDEN_FIELDS = new Set<SharedGameFilterFieldKey>([
+	'opponentRatingMin',
+	'opponentRatingMax',
+	'ratingDiffMin',
+	'ratingDiffMax',
+]);
+
+const EXPORT_VISIBLE_FIELDS = SHARED_GAME_FILTER_FIELD_KEYS.filter(
+	(fieldKey) => !EXPORT_HIDDEN_FIELDS.has(fieldKey),
+);
+
 export const SHARED_GAME_FILTER_CONTEXT_CONFIGS: Record<
 	SharedGameFilterContext,
 	SharedGameFilterContextConfig
@@ -32,6 +46,7 @@ export const SHARED_GAME_FILTER_CONTEXT_CONFIGS: Record<
 			gameSpeeds: [],
 			ratedMode: 'both',
 		},
+		visibleFields: EXPORT_VISIBLE_FIELDS,
 	},
 	'my-next-moves': {},
 };

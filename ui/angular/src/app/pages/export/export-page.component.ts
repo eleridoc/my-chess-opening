@@ -1,101 +1,199 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 
 import { MatButtonModule } from '@angular/material/button';
 
-import {
-	SHARED_GAME_FILTER_FIELD_KEYS,
-	buildSharedGameFilterQueryPayload,
-	type SharedGameFilter,
-	type SharedGameFilterContextConfig,
-} from 'my-chess-opening-core/filters';
+import type {
+	ExportBuildPgnResult,
+	ExportSummaryStats,
+	SharedGameFilter,
+} from 'my-chess-opening-core';
 
+import { ExportService } from '../../services/export/export.service';
 import { SharedGameFilterComponent } from '../../shared/game-filter/components';
-import { SharedGameFilterDialogService } from '../../shared/game-filter/services/shared-game-filter-dialog.service';
 import { SharedGameFilterStorageService } from '../../shared/game-filter/services/shared-game-filter-storage.service';
+import { SectionLoaderComponent } from '../../shared/loading/section-loader/section-loader.component';
+import { NotificationService } from '../../shared/notifications/notification.service';
 
 /**
- * Export page testbed for the shared game filter.
+ * Export page.
  *
- * This first integration intentionally does not call the backend.
- * It is used to validate:
- * - inline mode with automatic apply on change
- * - popup mode with automatic apply on change
- * - storage by context
- * - normalized filter output
- * - query mapping output
+ * V1.8.5 scope:
+ * - keep the shared filter state live and persistent
+ * - execute Search only on explicit user action
+ * - keep a dedicated executed filter snapshot for summary/export
+ * - generate and download a PGN file from the last executed filter
+ * - reset only the page execution state after a successful export
  */
 @Component({
 	selector: 'app-export-page',
 	standalone: true,
-	imports: [CommonModule, MatButtonModule, SharedGameFilterComponent],
+	imports: [CommonModule, MatButtonModule, SharedGameFilterComponent, SectionLoaderComponent],
 	templateUrl: './export-page.component.html',
 	styleUrl: './export-page.component.scss',
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ExportPageComponent {
 	private readonly sharedGameFilterStorage = inject(SharedGameFilterStorageService);
-	private readonly sharedGameFilterDialogService = inject(SharedGameFilterDialogService);
+	private readonly exportService = inject(ExportService);
+	private readonly notify = inject(NotificationService);
 
 	/**
-	 * Export should expose the whole filter surface for this first test page.
+	 * Current live filter shown in the UI.
 	 *
-	 * The base "export" context defaults are still kept through the context
-	 * service. Here we only force all fields to stay visible.
+	 * It is initialized from the persisted export context and updated by the
+	 * shared filter component whenever the user changes a valid value.
 	 */
-	readonly exportFilterContextConfig: SharedGameFilterContextConfig = {
-		visibleFields: [...SHARED_GAME_FILTER_FIELD_KEYS],
-	};
+	readonly currentFilter = signal<SharedGameFilter>(
+		this.sharedGameFilterStorage.loadSharedGameFilter('export'),
+	);
 
-	readonly lastActionLabel = signal('Initial export filter preview');
-	readonly appliedFilterJson = signal('');
-	readonly mappedQueryJson = signal('');
+	/**
+	 * Canonical filter snapshot used by the last successful Search.
+	 *
+	 * Export must always use this filter, even if the current live filter was
+	 * edited afterwards.
+	 */
+	readonly executedFilter = signal<SharedGameFilter | null>(null);
 
-	constructor() {
-		const initialFilter = this.sharedGameFilterStorage.loadSharedGameFilter(
-			'export',
-			this.exportFilterContextConfig,
+	/** Aggregated summary returned by the backend for the last executed filter. */
+	readonly summaryStats = signal<ExportSummaryStats | null>(null);
+
+	/** Search action loading state. */
+	readonly isSearching = signal(false);
+
+	/** Export action loading state. */
+	readonly isExporting = signal(false);
+
+	readonly isBusy = computed(() => this.isSearching() || this.isExporting());
+
+	readonly hasExecutedSearch = computed(
+		() => this.executedFilter() !== null && this.summaryStats() !== null,
+	);
+
+	readonly searchButtonLabel = computed(() =>
+		this.hasExecutedSearch() ? 'Search again' : 'Search',
+	);
+
+	readonly canExport = computed(() => {
+		const executedFilter = this.executedFilter();
+		const summaryStats = this.summaryStats();
+
+		return (
+			executedFilter !== null &&
+			summaryStats !== null &&
+			summaryStats.totalGames > 0 &&
+			!this.isBusy()
 		);
+	});
 
-		this.refreshPreviewFromFilter(initialFilter, 'Initial export filter preview');
-	}
+	readonly isSummaryStale = computed(() => {
+		const executedFilter = this.executedFilter();
+
+		if (executedFilter === null) {
+			return false;
+		}
+
+		return (
+			this.stringifySharedGameFilter(this.currentFilter()) !==
+			this.stringifySharedGameFilter(executedFilter)
+		);
+	});
 
 	onInlineFilterChanged(filter: SharedGameFilter): void {
-		this.refreshPreviewFromFilter(filter, 'Updated from inline filter');
+		this.currentFilter.set(filter);
 	}
 
-	onReloadStoredFilter(): void {
-		const storedFilter = this.sharedGameFilterStorage.loadSharedGameFilter(
-			'export',
-			this.exportFilterContextConfig,
-		);
+	async onSearch(): Promise<void> {
+		if (this.isBusy()) {
+			return;
+		}
 
-		this.refreshPreviewFromFilter(storedFilter, 'Reloaded from export local storage');
+		this.isSearching.set(true);
+
+		try {
+			const result = await this.exportService.getSummary({
+				filter: this.currentFilter(),
+			});
+
+			this.executedFilter.set(result.appliedFilter);
+			this.summaryStats.set(result.stats);
+		} catch (error) {
+			console.error('[ExportPage] Failed to compute export summary:', error);
+
+			this.notify.error('Failed to search export games.', {
+				actionLabel: 'Retry',
+				onAction: () => void this.onSearch(),
+			});
+		} finally {
+			this.isSearching.set(false);
+		}
 	}
 
-	onOpenPopupTest(): void {
-		this.sharedGameFilterDialogService.openSharedGameFilterDialog({
-			title: 'Export filters',
-			context: 'export',
-			contextConfig: this.exportFilterContextConfig,
-			persistInStorage: true,
-			resetButtonLabel: 'Reset filters',
-			cancelButtonLabel: 'Close',
-			onFilterChanged: (filter) => {
-				this.refreshPreviewFromFilter(filter, 'Updated from popup filter');
-			},
-		});
+	async onExport(): Promise<void> {
+		const executedFilter = this.executedFilter();
+		const summaryStats = this.summaryStats();
+
+		if (
+			executedFilter === null ||
+			summaryStats === null ||
+			summaryStats.totalGames <= 0 ||
+			this.isBusy()
+		) {
+			return;
+		}
+
+		this.isExporting.set(true);
+
+		try {
+			const result = await this.exportService.buildPgnFile({
+				filter: executedFilter,
+			});
+
+			if (result.gamesCount <= 0) {
+				this.notify.warn('No games were available to export for the last searched filter.');
+				this.resetExecutionState();
+				return;
+			}
+
+			this.triggerBrowserDownload(result);
+
+			this.notify.success(`PGN export generated successfully (${result.gamesCount} games).`);
+			this.resetExecutionState();
+		} catch (error) {
+			console.error('[ExportPage] Failed to generate PGN export:', error);
+
+			this.notify.error('Failed to generate PGN export.', {
+				actionLabel: 'Retry',
+				onAction: () => void this.onExport(),
+			});
+		} finally {
+			this.isExporting.set(false);
+		}
 	}
 
-	private refreshPreviewFromFilter(filter: SharedGameFilter, label: string): void {
-		const payload = buildSharedGameFilterQueryPayload(filter, this.exportFilterContextConfig);
-
-		this.lastActionLabel.set(label);
-		this.appliedFilterJson.set(this.stringifyJson(payload.filter));
-		this.mappedQueryJson.set(this.stringifyJson(payload.query));
+	private resetExecutionState(): void {
+		this.executedFilter.set(null);
+		this.summaryStats.set(null);
 	}
 
-	private stringifyJson(value: unknown): string {
-		return JSON.stringify(value, null, 2);
+	private triggerBrowserDownload(result: ExportBuildPgnResult): void {
+		const blob = new Blob([result.content], { type: result.mimeType });
+		const objectUrl = URL.createObjectURL(blob);
+
+		const anchor = document.createElement('a');
+		anchor.href = objectUrl;
+		anchor.download = result.fileName;
+		anchor.style.display = 'none';
+
+		document.body.appendChild(anchor);
+		anchor.click();
+		anchor.remove();
+
+		setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
+	}
+
+	private stringifySharedGameFilter(filter: SharedGameFilter): string {
+		return JSON.stringify(filter);
 	}
 }

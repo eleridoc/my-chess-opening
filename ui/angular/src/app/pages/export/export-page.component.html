@@ -3,29 +3,9 @@
 		<div>
 			<h1 class="export-page__title">Export</h1>
 			<p class="export-page__subtitle">
-				First integration test for the shared game filter. This page does not call the backend yet.
+				Adjust the filter, run a search to compute the export summary, then generate a PGN file from
+				the last searched filter.
 			</p>
-		</div>
-
-		<div class="export-page__header-actions">
-			<button
-				mat-stroked-button
-				class="mat-stroked-button-d-5"
-				type="button"
-				(click)="onReloadStoredFilter()"
-			>
-				Reload stored filter
-			</button>
-
-			<button
-				mat-flat-button
-				class="mat-flat-button-d-5"
-				color="primary"
-				type="button"
-				(click)="onOpenPopupTest()"
-			>
-				Open popup test
-			</button>
 		</div>
 	</header>
 
@@ -33,36 +13,134 @@
 		<section class="export-page__panel">
 			<div class="app-card-flat">
 				<div class="app-card-flat-top">Filter</div>
-				<div class="app-card-flat-fit-content">
+
+				<div class="app-card-flat-fit-content export-page__card-content">
+					<p class="export-page__card-intro">
+						The filter keeps its own persistent state. Search uses the current visible filter.
+					</p>
+
 					<app-shared-game-filter
 						[context]="'export'"
-						[contextConfig]="exportFilterContextConfig"
 						[persistInStorage]="true"
 						[showActions]="true"
 						[resetButtonLabel]="'Reset filters'"
+						[disabled]="isBusy()"
 						(filterChanged)="onInlineFilterChanged($event)"
 					/>
+
+					<div class="export-page__actions">
+						<button
+							mat-flat-button
+							class="mat-flat-button-d-5"
+							color="primary"
+							type="button"
+							(click)="onSearch()"
+							[disabled]="isBusy()"
+						>
+							{{ searchButtonLabel() }}
+						</button>
+					</div>
 				</div>
 			</div>
 		</section>
 
-		<aside class="export-page__panel export-page__panel--debug">
-			<div class="export-page__panel-header">
-				<h2 class="export-page__panel-title">Debug preview</h2>
-				<p class="export-page__panel-subtitle">
-					{{ lastActionLabel() }}
-				</p>
-			</div>
+		<aside class="export-page__panel export-page__panel--summary">
+			<app-section-loader
+				[loading]="isBusy()"
+				[label]="isExporting() ? 'Generating export…' : 'Searching games…'"
+				[mask]="true"
+				[blocking]="true"
+				[showDelayMs]="0"
+				[minVisibleMs]="250"
+			>
+				<div class="app-card-flat">
+					<div class="app-card-flat-top">Summary</div>
 
-			<div class="export-page__debug-block">
-				<h3 class="export-page__debug-title">Normalized visible filter</h3>
-				<pre class="export-page__debug-pre">{{ appliedFilterJson() }}</pre>
-			</div>
+					<div class="app-card-flat-fit-content export-page__card-content">
+						<ng-container *ngIf="summaryStats() as stats; else exportIdleState">
+							<p class="export-page__summary-text">Summary based on the last searched filter.</p>
 
-			<div class="export-page__debug-block">
-				<h3 class="export-page__debug-title">Mapped query payload</h3>
-				<pre class="export-page__debug-pre">{{ mappedQueryJson() }}</pre>
-			</div>
+							<p class="export-page__summary-warning" *ngIf="isSummaryStale()">
+								Current filter has changed since the last search. Export will use the last searched
+								filter.
+							</p>
+
+							<p class="export-page__summary-empty" *ngIf="stats.totalGames === 0">
+								No games found for the last searched filter.
+							</p>
+
+							<div class="export-page__stats-grid">
+								<div class="export-page__stat export-page__stat--highlight">
+									<div class="export-page__stat-label">Games</div>
+									<div class="export-page__stat-value">{{ stats.totalGames }}</div>
+								</div>
+
+								<div class="export-page__stat">
+									<div class="export-page__stat-label">Wins</div>
+									<div class="export-page__stat-value">{{ stats.wins }}</div>
+								</div>
+
+								<div class="export-page__stat">
+									<div class="export-page__stat-label">Draws</div>
+									<div class="export-page__stat-value">{{ stats.draws }}</div>
+								</div>
+
+								<div class="export-page__stat">
+									<div class="export-page__stat-label">Losses</div>
+									<div class="export-page__stat-value">{{ stats.losses }}</div>
+								</div>
+
+								<div class="export-page__stat">
+									<div class="export-page__stat-label">White</div>
+									<div class="export-page__stat-value">{{ stats.whiteGames }}</div>
+								</div>
+
+								<div class="export-page__stat">
+									<div class="export-page__stat-label">Black</div>
+									<div class="export-page__stat-value">{{ stats.blackGames }}</div>
+								</div>
+
+								<div class="export-page__stat">
+									<div class="export-page__stat-label">Bullet</div>
+									<div class="export-page__stat-value">{{ stats.bulletGames }}</div>
+								</div>
+
+								<div class="export-page__stat">
+									<div class="export-page__stat-label">Blitz</div>
+									<div class="export-page__stat-value">{{ stats.blitzGames }}</div>
+								</div>
+
+								<div class="export-page__stat">
+									<div class="export-page__stat-label">Rapid</div>
+									<div class="export-page__stat-value">{{ stats.rapidGames }}</div>
+								</div>
+							</div>
+
+							<div class="export-page__actions export-page__actions--summary">
+								<button
+									mat-flat-button
+									class="mat-flat-button-d-5"
+									color="primary"
+									type="button"
+									(click)="onExport()"
+									[disabled]="!canExport()"
+								>
+									Export PGN
+								</button>
+							</div>
+						</ng-container>
+
+						<ng-template #exportIdleState>
+							<div class="export-page__empty-state">
+								<h2 class="export-page__empty-title">Run a search</h2>
+								<p class="export-page__empty-text">
+									Use the filter on the left, then click Search to compute the export summary.
+								</p>
+							</div>
+						</ng-template>
+					</div>
+				</div>
+			</app-section-loader>
 		</aside>
 	</div>
 </div>
