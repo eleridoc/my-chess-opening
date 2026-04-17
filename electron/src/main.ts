@@ -11,6 +11,7 @@ import { registerExplorerIpc } from './explorer/explorerIpc';
 import { registerGamesIpc } from './games/gamesIpc';
 import { registerSystemIpc } from './system/systemIpc';
 import { registerImportIpc } from './import/importIpc';
+import { registerExportIpc } from './export/exportIpc';
 
 import type { ImportEvent } from 'my-chess-opening-core';
 
@@ -294,7 +295,7 @@ app.whenReady().then(async () => {
 	registerGamesIpc();
 	registerSystemIpc();
 	registerImportIpc({ emitImportEvent });
-
+	registerExportIpc();
 	createWindow();
 
 	// Ensure DB is reachable once (creates a first Prisma round-trip).
