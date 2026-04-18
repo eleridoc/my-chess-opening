@@ -1,0 +1,113 @@
+<div class="app-card-flat">
+	<div class="app-card-flat-top explorer-my-next-moves-panel__header">
+		<span>Movements played</span>
+
+		<button
+			type="button"
+			mat-stroked-button
+			class="mat-stroked-button-d-5 explorer-my-next-moves-panel__filter-button"
+			(click)="openFilterDialog()"
+			[matTooltip]="'Open my next moves filters'"
+		>
+			<mat-icon aria-hidden="true">filter_list</mat-icon>
+			{{ filterButtonLabel() }}
+		</button>
+	</div>
+
+	<div class="app-card-flat-content-fit explorer-my-next-moves-panel__content">
+		<app-section-loader [loading]="isLoading()" label="Loading move statistics…" [mask]="true">
+			<div class="explorer-my-next-moves-panel__body">
+				<ng-container *ngIf="loadError() as error; else nextMovesContent">
+					<div class="explorer-my-next-moves-panel__error">
+						{{ error }}
+					</div>
+				</ng-container>
+
+				<ng-template #nextMovesContent>
+					<ng-container *ngIf="myNextMovesResult() as result; else emptyState">
+						<div class="explorer-my-next-moves-panel__summary-card">
+							<div class="explorer-my-next-moves-panel__summary-title">
+								Current position summary
+							</div>
+
+							<div class="explorer-my-next-moves-panel__summary-grid">
+								<div class="explorer-my-next-moves-panel__summary-item">
+									<div class="explorer-my-next-moves-panel__summary-label">Games</div>
+									<div class="explorer-my-next-moves-panel__summary-value">
+										{{ result.positionSummary.gamesCount }}
+									</div>
+								</div>
+
+								<div class="explorer-my-next-moves-panel__summary-item">
+									<div class="explorer-my-next-moves-panel__summary-label">Coverage</div>
+									<div class="explorer-my-next-moves-panel__summary-value">
+										{{ result.positionSummary.gamesPercent | number: '1.0-1' }}%
+									</div>
+								</div>
+
+								<div class="explorer-my-next-moves-panel__summary-item">
+									<div class="explorer-my-next-moves-panel__summary-label">
+										White / Draw / Black
+									</div>
+									<div class="explorer-my-next-moves-panel__summary-value">
+										{{ result.positionSummary.outcomes.whiteWinsPercent | number: '1.0-1' }}% /
+										{{ result.positionSummary.outcomes.drawsPercent | number: '1.0-1' }}% /
+										{{ result.positionSummary.outcomes.blackWinsPercent | number: '1.0-1' }}%
+									</div>
+								</div>
+
+								<div class="explorer-my-next-moves-panel__summary-item">
+									<div class="explorer-my-next-moves-panel__summary-label">Counts</div>
+									<div class="explorer-my-next-moves-panel__summary-value">
+										{{ result.positionSummary.outcomes.whiteWinsCount }}
+										/
+										{{ result.positionSummary.outcomes.drawsCount }}
+										/
+										{{ result.positionSummary.outcomes.blackWinsCount }}
+									</div>
+								</div>
+
+								<div class="explorer-my-next-moves-panel__summary-item">
+									<div class="explorer-my-next-moves-panel__summary-label">Last played</div>
+									<div class="explorer-my-next-moves-panel__summary-value">
+										{{
+											result.positionSummary.lastPlayedAtIso
+												? (result.positionSummary.lastPlayedAtIso | appIsoDateTime)
+												: '—'
+										}}
+									</div>
+								</div>
+
+								<div class="explorer-my-next-moves-panel__summary-item">
+									<div class="explorer-my-next-moves-panel__summary-label">Candidate moves</div>
+									<div class="explorer-my-next-moves-panel__summary-value">
+										{{ result.moves.length }}
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div
+							class="explorer-my-next-moves-panel__placeholder"
+							*ngIf="result.moves.length === 0"
+						>
+							No next moves found for the current position and filter.
+						</div>
+
+						<div class="explorer-my-next-moves-panel__placeholder" *ngIf="result.moves.length > 0">
+							Backend data is ready for {{ result.moves.length }} candidate move{{
+								result.moves.length === 1 ? '' : 's'
+							}}. The detailed table UI will be added in the next step.
+						</div>
+					</ng-container>
+				</ng-template>
+
+				<ng-template #emptyState>
+					<div class="explorer-my-next-moves-panel__placeholder">
+						Move statistics will appear here for the current position.
+					</div>
+				</ng-template>
+			</div>
+		</app-section-loader>
+	</div>
+</div>

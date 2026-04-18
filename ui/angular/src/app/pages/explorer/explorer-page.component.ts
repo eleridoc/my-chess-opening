@@ -40,6 +40,8 @@ import {
 } from '../../shared/dialogs/confirm-dialog/confirm-dialog.component';
 import { ExplorerNavigationShortcutsDirective } from './explorer-navigation-shortcuts.directive';
 
+import { ExplorerMyNextMovesPanelComponent } from '../../explorer/components/explorer-my-next-moves-panel/explorer-my-next-moves-panel.component';
+
 type ResetReason = 'DB_LOAD' | 'PGN_IMPORT' | 'FEN_IMPORT';
 
 @Component({
@@ -59,6 +61,7 @@ type ResetReason = 'DB_LOAD' | 'PGN_IMPORT' | 'FEN_IMPORT';
 		MatIconModule,
 		MatDialogModule,
 		MatTooltipModule,
+		ExplorerMyNextMovesPanelComponent,
 	],
 	templateUrl: './explorer-page.component.html',
 	styleUrl: './explorer-page.component.scss',
