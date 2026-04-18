@@ -143,7 +143,7 @@ export function buildMyNextMovesWhere(query: SharedGameFilterQuery): Prisma.Game
 /**
  * Merge a base game `where` clause with an additional clause.
  *
- * This small helper will be reused by future my-next-moves aggregation queries.
+ * This small helper is reused by my-next-moves aggregation queries.
  */
 export function mergeGameWhere(
 	baseWhere: Prisma.GameWhereInput,
