@@ -1,7 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
+
 import type { MyNextMoveRow } from 'my-chess-opening-core';
+
+import { IsoDateTimePipe } from '../../../shared/dates/pipes';
 
 /**
  * Presentational table for Explorer "My next moves".
@@ -9,15 +15,15 @@ import type { MyNextMoveRow } from 'my-chess-opening-core';
  * Responsibilities:
  * - render the ordered candidate move rows
  * - show popularity and White / Draw / Black breakdowns
+ * - expose per-row tooltip details
  *
  * Notes:
- * - Tooltip details are intentionally deferred to the next iteration.
  * - The sticky summary row is handled later as a dedicated feature.
  */
 @Component({
 	selector: 'app-explorer-my-next-moves-table',
 	standalone: true,
-	imports: [CommonModule],
+	imports: [CommonModule, MatButtonModule, MatIconModule, MatTooltipModule, IsoDateTimePipe],
 	templateUrl: './explorer-my-next-moves-table.component.html',
 	styleUrl: './explorer-my-next-moves-table.component.scss',
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -39,5 +45,9 @@ export class ExplorerMyNextMovesTableComponent {
 		}
 
 		return Math.max(0, Math.min(100, value));
+	}
+
+	buildInfoTooltip(row: MyNextMoveRow, lastPlayedLabel: string): string {
+		return `Last played: ${lastPlayedLabel} • Counts White / Draw / Black: ${row.outcomes.whiteWinsCount} / ${row.outcomes.drawsCount} / ${row.outcomes.blackWinsCount}`;
 	}
 }

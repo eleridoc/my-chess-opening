@@ -27,6 +27,13 @@
 		>
 			White / Draw / Black
 		</div>
+
+		<div
+			class="explorer-my-next-moves-table__cell explorer-my-next-moves-table__cell--info"
+			role="columnheader"
+		>
+			Info
+		</div>
 	</div>
 
 	<div class="explorer-my-next-moves-table__body" role="rowgroup">
@@ -91,6 +98,27 @@
 						[style.width.%]="clampPercent(row.outcomes.blackWinsPercent)"
 					></div>
 				</div>
+			</div>
+
+			<div
+				class="explorer-my-next-moves-table__cell explorer-my-next-moves-table__cell--info"
+				role="cell"
+			>
+				<button
+					type="button"
+					mat-icon-button
+					class="explorer-my-next-moves-table__info-button"
+					[matTooltip]="
+						buildInfoTooltip(
+							row,
+							row.lastPlayedAtIso ? (row.lastPlayedAtIso | appIsoDateTime) : '—'
+						)
+					"
+					matTooltipPosition="above"
+					aria-label="Show move details"
+				>
+					<mat-icon aria-hidden="true">info</mat-icon>
+				</button>
 			</div>
 		</div>
 	</div>

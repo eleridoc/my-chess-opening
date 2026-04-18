@@ -35,8 +35,8 @@ import { ExplorerMyNextMovesTableComponent } from '../explorer-my-next-moves-tab
  * - render the panel header, summary card, and move table
  *
  * Notes:
- * - Tooltip details are introduced in a later iteration.
- * - The sticky bottom summary row is introduced later as well.
+ * - Per-row tooltip details are handled by the presentational table component.
+ * - The sticky bottom summary row is introduced later.
  * - Errors stay inline to avoid noisy global notifications while navigating.
  */
 @Component({
