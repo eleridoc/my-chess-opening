@@ -19,6 +19,54 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 
 - (placeholder)
 
+## [1.8(.7)] 2026-04-18
+
+### Added
+
+- Dedicated Export feature flow with:
+    - explicit game filtering action
+    - summary generation from the current export filter
+    - PGN file generation and download from the last searched filter
+- Shared IPC export domain in `core` with:
+    - export summary contracts
+    - PGN export file contracts
+- Electron export IPC handlers for:
+    - export summary computation
+    - PGN file generation
+- Angular `ExportService` for export-related IPC calls
+- Export summary panel showing:
+    - total games
+    - wins / draws / losses
+    - white / black games
+    - bullet / blitz / rapid games
+- Export page state handling for:
+    - current live filter
+    - last executed filter
+    - stale summary detection
+    - loading and reset states
+- Optional unified player name field for PGN export
+- Local storage persistence for the last unified player name used during export
+
+### Changed
+
+- Turned the Export page from a filter testbed into a real product feature
+- Updated the Export workflow so summary generation happens only through an explicit action button
+- Ensured PGN export always uses the last searched filter, even if the visible filter changes afterwards
+- Reset the Export page state after a successful export without resetting the filter itself
+- Restricted the Export filter context by removing:
+    - rated mode
+    - opponent rating range
+    - rating difference range
+- Improved Export page UX with clearer summary states, better action labels, and a dedicated clear result action
+- Allowed exported PGNs to optionally replace account-specific player names with one unified player name
+
+### Fixed
+
+- Prevented hidden Export filter fields from being applied by re-enforcing the Export context rules in the backend
+- Kept summary and export behavior consistent by using a canonical applied filter returned by the backend
+- Normalized generated PGN exports with consistent line endings, spacing cleanup, and proper game separation
+- Preserved original imported player names when no unified export name is provided
+
 ## [1.7(.13)] 2026-04-17
 
 ### Added
