@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import {
 	ChangeDetectionStrategy,
 	Component,
+	OnDestroy,
 	computed,
 	effect,
 	inject,
@@ -9,20 +10,26 @@ import {
 } from '@angular/core';
 
 import { MatButtonModule } from '@angular/material/button';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-import type { MyNextMovesResult } from 'my-chess-opening-core';
+import type { MyNextMoveRow, MyNextMovesResult } from 'my-chess-opening-core';
 import type { SharedGameFilter } from 'my-chess-opening-core/filters';
 import { countActiveSharedGameFilterFields } from 'my-chess-opening-core/filters';
 
 import { ExplorerFacade } from '../../facade/explorer.facade';
+import { ExplorerMyNextMovesTableComponent } from '../explorer-my-next-moves-table/explorer-my-next-moves-table.component';
 import { MyNextMovesService } from '../../../services/my-next-moves/my-next-moves.service';
+import { ExplorerBoardArrowsService } from '../../services/explorer-board-arrows.service';
+import type {
+	ExplorerBoardArrow,
+	ExplorerBoardArrowDisplayMode,
+} from '../../board/board-arrows.types';
 import { SharedGameFilterContextService } from '../../../shared/game-filter/services/shared-game-filter-context.service';
 import { SharedGameFilterDialogService } from '../../../shared/game-filter/services/shared-game-filter-dialog.service';
 import { SharedGameFilterStorageService } from '../../../shared/game-filter/services/shared-game-filter-storage.service';
 import { SectionLoaderComponent } from '../../../shared/loading/section-loader/section-loader.component';
-import { ExplorerMyNextMovesTableComponent } from '../explorer-my-next-moves-table/explorer-my-next-moves-table.component';
 
 /**
  * Explorer panel dedicated to the "My next moves" feature.
@@ -44,6 +51,7 @@ import { ExplorerMyNextMovesTableComponent } from '../explorer-my-next-moves-tab
 	imports: [
 		CommonModule,
 		MatButtonModule,
+		MatButtonToggleModule,
 		MatIconModule,
 		MatTooltipModule,
 		SectionLoaderComponent,
@@ -53,12 +61,13 @@ import { ExplorerMyNextMovesTableComponent } from '../explorer-my-next-moves-tab
 	styleUrl: './explorer-my-next-moves-panel.component.scss',
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ExplorerMyNextMovesPanelComponent {
+export class ExplorerMyNextMovesPanelComponent implements OnDestroy {
 	private readonly facade = inject(ExplorerFacade);
 	private readonly myNextMovesService = inject(MyNextMovesService);
 	private readonly sharedGameFilterStorage = inject(SharedGameFilterStorageService);
 	private readonly sharedGameFilterContext = inject(SharedGameFilterContextService);
 	private readonly sharedGameFilterDialog = inject(SharedGameFilterDialogService);
+	private readonly boardArrows = inject(ExplorerBoardArrowsService);
 
 	/**
 	 * Resolved once and reused for active-filter counting.
@@ -105,7 +114,11 @@ export class ExplorerMyNextMovesPanelComponent {
 		return activeCount > 0 ? `Filters (${activeCount})` : 'Filters';
 	});
 
+	readonly currentArrowMode = computed(() => this.boardArrows.getArrowMode('my-next-moves'));
+
 	constructor() {
+		this.boardArrows.setActiveSource('my-next-moves');
+
 		effect(() => {
 			const positionKey = this.facade.positionKey();
 			const normalizedFen = this.facade.normalizedFen();
@@ -113,6 +126,22 @@ export class ExplorerMyNextMovesPanelComponent {
 
 			void this.refresh(positionKey, normalizedFen, filter);
 		});
+
+		effect(() => {
+			const result = this.myNextMovesResult();
+
+			if (!result) {
+				this.boardArrows.clearSourceArrows('my-next-moves');
+				return;
+			}
+
+			this.boardArrows.setSourceArrows('my-next-moves', this.buildBoardArrows(result.moves));
+		});
+	}
+
+	ngOnDestroy(): void {
+		this.boardArrows.clearSourceArrows('my-next-moves');
+		this.boardArrows.clearActiveSource('my-next-moves');
 	}
 
 	openFilterDialog(): void {
@@ -125,6 +154,56 @@ export class ExplorerMyNextMovesPanelComponent {
 				this.myNextMovesFilter.set(filter);
 			},
 		});
+	}
+
+	getArrowMode(): ExplorerBoardArrowDisplayMode {
+		return this.boardArrows.getArrowMode('my-next-moves');
+	}
+
+	setArrowMode(mode: string): void {
+		if (mode !== 'off' && mode !== 'top3' && mode !== 'top5' && mode !== 'all') {
+			return;
+		}
+
+		this.boardArrows.setArrowMode('my-next-moves', mode);
+	}
+
+	private buildBoardArrows(rows: MyNextMoveRow[]): ExplorerBoardArrow[] {
+		const arrows: ExplorerBoardArrow[] = [];
+
+		for (let index = 0; index < rows.length; index++) {
+			const row = rows[index];
+			const parsed = this.parseArrowSquaresFromUci(row.moveUci);
+
+			if (!parsed) {
+				continue;
+			}
+
+			arrows.push({
+				source: 'my-next-moves',
+				from: parsed.from,
+				to: parsed.to,
+				uci: row.moveUci,
+				label: row.moveSan,
+				rank: index + 1,
+				weight: row.gamesPercent,
+			});
+		}
+
+		return arrows;
+	}
+
+	private parseArrowSquaresFromUci(uci: string): { from: string; to: string } | null {
+		const normalized = typeof uci === 'string' ? uci.trim().toLowerCase() : '';
+
+		if (!/^[a-h][1-8][a-h][1-8][qrbn]?$/.test(normalized)) {
+			return null;
+		}
+
+		return {
+			from: normalized.slice(0, 2),
+			to: normalized.slice(2, 4),
+		};
 	}
 
 	/**

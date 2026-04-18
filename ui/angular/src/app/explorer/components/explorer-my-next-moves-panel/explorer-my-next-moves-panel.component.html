@@ -2,16 +2,34 @@
 	<div class="app-card-flat-top explorer-my-next-moves-panel__header">
 		<span>Movements played</span>
 
-		<button
-			type="button"
-			mat-stroked-button
-			class="mat-stroked-button-d-5 explorer-my-next-moves-panel__filter-button"
-			(click)="openFilterDialog()"
-			[matTooltip]="'Open my next moves filters'"
-		>
-			<mat-icon aria-hidden="true">filter_list</mat-icon>
-			{{ filterButtonLabel() }}
-		</button>
+		<div class="explorer-my-next-moves-panel__header-actions">
+			<div class="explorer-my-next-moves-panel__arrows">
+				<span class="explorer-my-next-moves-panel__arrows-label">Arrows</span>
+
+				<mat-button-toggle-group
+					class="explorer-my-next-moves-panel__arrows-toggle"
+					[value]="getArrowMode()"
+					(change)="setArrowMode($event.value)"
+					aria-label="My next moves arrow mode"
+				>
+					<mat-button-toggle value="off">Off</mat-button-toggle>
+					<mat-button-toggle value="top3">3</mat-button-toggle>
+					<mat-button-toggle value="top5">5</mat-button-toggle>
+					<mat-button-toggle value="all">All</mat-button-toggle>
+				</mat-button-toggle-group>
+			</div>
+
+			<button
+				type="button"
+				mat-stroked-button
+				class="mat-stroked-button-d-5 explorer-my-next-moves-panel__filter-button"
+				(click)="openFilterDialog()"
+				[matTooltip]="'Open my next moves filters'"
+			>
+				<mat-icon aria-hidden="true">filter_list</mat-icon>
+				{{ filterButtonLabel() }}
+			</button>
+		</div>
 	</div>
 
 	<div class="app-card-flat-content-fit explorer-my-next-moves-panel__content">

@@ -35,6 +35,9 @@ import {
 
 import type { ExplorerMoveAttempt } from 'my-chess-opening-core/explorer';
 
+import { BoardArrowOverlayComponent } from '../board-arrow-overlay/board-arrow-overlay.component';
+import type { ExplorerBoardArrow } from '../../board/board-arrows.types';
+
 import {
 	CHESS_BOARD_ADAPTER_FACTORY,
 	type BoardMoveAttempt,
@@ -48,6 +51,7 @@ import {
 @Component({
 	selector: 'app-chess-board',
 	standalone: true,
+	imports: [BoardArrowOverlayComponent],
 	templateUrl: './chess-board.component.html',
 	styleUrl: './chess-board.component.scss',
 })
@@ -72,6 +76,9 @@ export class ChessBoardComponent implements AfterViewInit, OnDestroy, OnChanges 
 
 	/** Last move squares highlight (optional). */
 	@Input() lastMoveSquares: BoardLastMoveSquares = null;
+
+	/** Optional colored arrows displayed over the board. */
+	@Input() arrows: ExplorerBoardArrow[] = [];
 
 	/**
 	 * Optional synchronous validator.

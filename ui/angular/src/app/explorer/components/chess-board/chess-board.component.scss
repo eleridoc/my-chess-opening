@@ -17,6 +17,12 @@
 	overflow: hidden;
 }
 
+.board-stack {
+	position: relative;
+	width: 100%;
+	height: 100%;
+}
+
 .board-host {
 	/* Real size is applied via TS (inline width/height in px). */
 	width: 100%;

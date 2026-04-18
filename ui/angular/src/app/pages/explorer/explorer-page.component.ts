@@ -42,6 +42,8 @@ import { ExplorerNavigationShortcutsDirective } from './explorer-navigation-shor
 
 import { ExplorerMyNextMovesPanelComponent } from '../../explorer/components/explorer-my-next-moves-panel/explorer-my-next-moves-panel.component';
 
+import { ExplorerBoardArrowsService } from '../../explorer/services/explorer-board-arrows.service';
+
 type ResetReason = 'DB_LOAD' | 'PGN_IMPORT' | 'FEN_IMPORT';
 
 @Component({
@@ -73,6 +75,7 @@ export class ExplorerPageComponent implements AfterViewInit {
 	private readonly explorerDb = inject(ExplorerDbService);
 	private readonly dialog = inject(MatDialog);
 	private readonly notify = inject(NotificationService);
+	private readonly boardArrows = inject(ExplorerBoardArrowsService);
 
 	@ViewChild('centerCol', { read: ElementRef }) private centerCol!: ElementRef<HTMLElement>;
 	@ViewChild('topPlayerWrap', { read: ElementRef }) private topPlayerWrap!: ElementRef<HTMLElement>;
@@ -83,6 +86,8 @@ export class ExplorerPageComponent implements AfterViewInit {
 
 	readonly isDevBuild = isDevMode();
 	readonly boardSizePx = signal<number>(0);
+
+	readonly visibleBoardArrows = this.boardArrows.visibleArrows;
 
 	private centerResizeObserver?: ResizeObserver;
 

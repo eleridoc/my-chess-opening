@@ -22,6 +22,30 @@
 	flex: 0 0 auto;
 }
 
+.explorer-my-next-moves-panel__header-actions {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+}
+
+.explorer-my-next-moves-panel__arrows {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.explorer-my-next-moves-panel__arrows-label {
+	font-size: 12px;
+	opacity: 0.72;
+}
+
+.explorer-my-next-moves-panel__arrows-toggle {
+	transform: scale(0.92);
+	transform-origin: right center;
+}
+
 .explorer-my-next-moves-panel__content {
 	flex: 1 1 auto;
 	min-height: 0;
