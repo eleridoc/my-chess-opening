@@ -26,10 +26,12 @@ import type { SharedGameFilter } from '../../filters';
  */
 export interface MyNextMovesInput {
 	/**
-	 * Stable position key of the current Explorer node.
+	 * Stable Explorer-local position key of the current node.
 	 *
-	 * This is the main lookup key used by the backend to find games that reached
-	 * the current position and to aggregate candidate next moves.
+	 * Notes:
+	 * - This key is useful for UI/debug purposes.
+	 * - The backend does not use it as the primary DB lookup anchor for
+	 *   my-next-moves.
 	 */
 	positionKey: string;
 
@@ -44,13 +46,10 @@ export interface MyNextMovesInput {
 	filter: SharedGameFilter;
 
 	/**
-	 * Optional normalized FEN for diagnostics and future evolutions.
+	 * Normalized 4-field FEN of the current Explorer position.
 	 *
-	 * The backend should not rely on this value as the primary key when
-	 * `positionKey` is available, but returning / echoing it is useful for:
-	 * - logging
-	 * - debug tooling
-	 * - future integrations (opening book, arrows, engine helpers)
+	 * This value is the authoritative backend lookup anchor for my-next-moves.
+	 * The backend derives the persisted DB lookup hash from this normalized FEN.
 	 */
 	normalizedFen?: string | null;
 }

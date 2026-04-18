@@ -1,5 +1,8 @@
+import { createHash } from 'node:crypto';
 import { ipcMain } from 'electron';
 import type { Prisma } from '@prisma/client';
+
+import { normalizeFenForPositionIdentity } from 'my-chess-opening-core';
 import { prisma } from '../db/prisma';
 import { buildMyNextMovesFilterDbPayload, mergeGameWhere } from '../shared/myNextMovesFilterDb';
 
@@ -54,6 +57,10 @@ interface MoveRowAccumulator extends OutcomeCounters {
 	lastPlayedAt: Date | null;
 }
 
+function sha256Hex(input: string): string {
+	return createHash('sha256').update(input).digest('hex');
+}
+
 /**
  * Register IPC handlers for Explorer "My next moves".
  *
@@ -69,11 +76,14 @@ export function registerMyNextMovesIpc(): void {
 			const payload = buildMyNextMovesFilterDbPayload(input?.filter ?? {});
 			const positionKey = normalizeRequiredText(input?.positionKey);
 			const normalizedFen = normalizeOptionalText(input?.normalizedFen);
+			const lookupPositionHash = normalizedFen
+				? sha256Hex(normalizeFenForPositionIdentity(normalizedFen))
+				: '';
 
-			if (positionKey.length === 0) {
+			if (lookupPositionHash.length === 0) {
 				return {
 					appliedFilter: payload.filter,
-					positionKey: '',
+					positionKey,
 					normalizedFen,
 					positionSummary: buildEmptyPositionSummary(),
 					moves: [],
@@ -81,8 +91,8 @@ export function registerMyNextMovesIpc(): void {
 			}
 
 			const [positionGames, rawMoveOccurrences] = await Promise.all([
-				loadReachedPositionGames(positionKey, payload.where),
-				loadCanonicalNextMoveOccurrences(positionKey, payload.where),
+				loadReachedPositionGames(lookupPositionHash, payload.where),
+				loadCanonicalNextMoveOccurrences(lookupPositionHash, payload.where),
 			]);
 
 			const positionSummary = buildPositionSummary(positionGames);
@@ -110,13 +120,13 @@ export function registerMyNextMovesIpc(): void {
  * bottom summary row even when no next move exists.
  */
 async function loadReachedPositionGames(
-	positionKey: string,
+	positionHash: string,
 	baseWhere: Prisma.GameWhereInput,
 ): Promise<ReachedPositionGameSnapshot[]> {
 	const where = mergeGameWhere(baseWhere ?? {}, {
 		OR: [
-			{ moves: { some: { positionHashBefore: positionKey } } },
-			{ moves: { some: { positionHash: positionKey } } },
+			{ moves: { some: { positionHashBefore: positionHash } } },
+			{ moves: { some: { positionHash: positionHash } } },
 		],
 	});
 
@@ -142,12 +152,12 @@ async function loadReachedPositionGames(
  * - keeping one canonical occurrence per game preserves stable percentages
  */
 async function loadCanonicalNextMoveOccurrences(
-	positionKey: string,
+	positionHash: string,
 	baseWhere: Prisma.GameWhereInput,
 ): Promise<CanonicalNextMoveOccurrence[]> {
 	const rows = await prisma.gameMove.findMany({
 		where: {
-			positionHashBefore: positionKey,
+			positionHashBefore: positionHash,
 			game: {
 				is: baseWhere,
 			},

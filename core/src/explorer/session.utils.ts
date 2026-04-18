@@ -1,5 +1,7 @@
 import { Chess, type Square } from 'chess.js';
 
+import { normalizeFenForPositionIdentity } from './position-identity';
+
 import type {
 	ExplorerError,
 	ExplorerErrorCode,
@@ -144,13 +146,6 @@ export function computePositionIdentity(fen: string): {
 	const normalizedFen = normalizeFenForPositionIdentity(fen);
 	const positionKey = fnv1a64Hex(normalizedFen);
 	return { normalizedFen, positionKey };
-}
-
-function normalizeFenForPositionIdentity(fen: string): string {
-	const parts = (fen ?? '').trim().split(/\s+/);
-	// chess.js fen() always returns 6 fields, but keep it defensive.
-	if (parts.length >= 4) return parts.slice(0, 4).join(' ');
-	return (fen ?? '').trim();
 }
 
 /**

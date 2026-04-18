@@ -1,5 +1,6 @@
 import { Chess, type Move } from 'chess.js';
 import { createHash } from 'node:crypto';
+import { normalizeFenForPositionIdentity } from '../../explorer/position-identity';
 import type { ImportedGameMove } from '../types';
 
 function sha256Hex(input: string): string {
@@ -19,15 +20,15 @@ function toUci(m: Move): string {
 
 /**
  * Enrich moves with:
- * - positionHashBefore: sha256(full FEN BEFORE the move)
+ * - positionHashBefore: sha256(normalized 4-field FEN BEFORE the move)
  * - fen (AFTER): full FEN AFTER the move
- * - positionHash (AFTER): sha256(full FEN AFTER the move)
+ * - positionHash (AFTER): sha256(normalized 4-field FEN AFTER the move)
  * - uci: stable move identifier (e2e4, g1f3, e7e8q...)
  *
  * Why we store BEFORE + AFTER:
- * - The UI shows a position (FEN). To list "next moves played from this position",
- *   we filter moves by positionHashBefore == sha256(FEN_shown).
- * - We still keep the AFTER FEN/hash as the resulting position after the move.
+ * - The UI shows a logical position identity based on 4 FEN fields.
+ * - My-next-moves must query moves from that logical position.
+ * - We still keep the full FEN values for board restoration and debugging.
  *
  * Supports non-standard initial position if headers contain "FEN".
  */
@@ -46,7 +47,7 @@ export function enrichMovesWithFenAndHash(params: {
 	for (const mv of moves) {
 		// BEFORE (position from which this move is played)
 		const fenBefore = chess.fen();
-		const positionHashBefore = sha256Hex(fenBefore);
+		const positionHashBefore = sha256Hex(normalizeFenForPositionIdentity(fenBefore));
 
 		const san = sanitizeSan(mv.san);
 
@@ -62,7 +63,7 @@ export function enrichMovesWithFenAndHash(params: {
 
 		// AFTER (resulting position after the move)
 		const fenAfter = chess.fen();
-		const positionHashAfter = sha256Hex(fenAfter);
+		const positionHashAfter = sha256Hex(normalizeFenForPositionIdentity(fenAfter));
 
 		enriched.push({
 			...mv,
@@ -75,7 +76,8 @@ export function enrichMovesWithFenAndHash(params: {
 
 			// BEFORE (what you use to query "next moves" from a displayed position)
 			positionHashBefore,
-			fenBefore, // optional: enable if you want to store/debug the full BEFORE FEN
+			fenBefore,
+			clockMs: mv.clockMs,
 		});
 	}
 

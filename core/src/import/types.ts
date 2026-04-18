@@ -73,10 +73,10 @@ export type ImportedGameMove = {
 	 */
 	fen?: string;
 
-	/** sha256(FEN after) - used for debugging and future indexing. */
+	/** sha256(normalized 4-field FEN after). */
 	positionHash?: string;
 
-	/** sha256(FEN before). */
+	/** sha256(normalized 4-field FEN before). */
 	positionHashBefore?: string;
 
 	/** Full FEN BEFORE the move (optional). */
