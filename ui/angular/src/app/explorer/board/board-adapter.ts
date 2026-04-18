@@ -1,4 +1,5 @@
 import { InjectionToken } from '@angular/core';
+import type { ExplorerBoardArrow } from './board-arrows.types';
 
 /**
  * Board adapter contracts (UI layer)
@@ -84,6 +85,12 @@ export interface ChessBoardAdapter {
 	 * If not implemented by an adapter, the UI must not rely on it.
 	 */
 	setLastMoveSquares?(lastMove: BoardLastMoveSquares): void;
+
+	/**
+	 * Updates optional colored arrows rendered by the underlying board library.
+	 * Use an empty array to clear all arrows.
+	 */
+	setArrows?(arrows: ExplorerBoardArrow[]): void;
 
 	/**
 	 * Optional hook for board implementations that require manual refresh/resize

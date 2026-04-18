@@ -10,6 +10,7 @@
  *   - last move highlight (persistent)
  *   - legal move hinting (selection highlight, dots, capture rings, hover highlight)
  *   - promotion dialog (via cm-chessboard extension)
+ *   - colored arrows (via cm-chessboard Arrows extension)
  *
  * Architectural rule:
  * - The adapter does NOT implement chess rules.
@@ -28,8 +29,10 @@
 
 import { Chessboard, COLOR, INPUT_EVENT_TYPE } from 'cm-chessboard/src/Chessboard.js';
 import { Markers } from 'cm-chessboard/src/extensions/markers/Markers.js';
+import { Arrows, ARROW_TYPE } from 'cm-chessboard/src/extensions/arrows/Arrows.js';
 import { PromotionDialog } from 'cm-chessboard/src/extensions/promotion-dialog/PromotionDialog.js';
 
+import type { ExplorerBoardArrow } from './board-arrows.types';
 import type {
 	BoardLastMoveSquares,
 	BoardMoveAttempt,
@@ -92,6 +95,9 @@ export class CmChessboardAdapter implements ChessBoardAdapter {
 
 	/** Last move squares (persistent highlight). */
 	private lastMoveSquares: BoardLastMoveSquares = null;
+
+	/** Current board arrows controlled by the Angular feature layer. */
+	private currentArrows: ExplorerBoardArrow[] = [];
 
 	// -------------------------------------------------------------------------
 	// Temporary hint state (selection + legal destinations + hover)
@@ -174,10 +180,12 @@ export class CmChessboardAdapter implements ChessBoardAdapter {
 		if (fen === this.lastFen) return;
 
 		this.lastFen = fen;
-		void this.board.setPosition(fen, false);
 
-		// Some cm-chessboard operations may clear markers; keep it deterministic.
-		this.applyLastMoveMarkers();
+		void this.board.setPosition(fen, false).finally(() => {
+			// Some cm-chessboard operations may clear extension-rendered visuals;
+			// keep the board decorations deterministic after each position update.
+			this.refreshBoardDecorationsAsync();
+		});
 	}
 
 	setOrientation(orientation: BoardOrientation): void {
@@ -213,6 +221,12 @@ export class CmChessboardAdapter implements ChessBoardAdapter {
 	setLastMoveSquares(lastMove: BoardLastMoveSquares): void {
 		this.lastMoveSquares = lastMove;
 		this.applyLastMoveMarkers();
+	}
+
+	/** Updates optional colored arrows rendered by cm-chessboard. */
+	setArrows(arrows: ExplorerBoardArrow[]): void {
+		this.currentArrows = Array.isArray(arrows) ? arrows : [];
+		this.applyArrows();
 	}
 
 	/** Resize hook (no-op because cm-chessboard is responsive). */
@@ -251,7 +265,7 @@ export class CmChessboardAdapter implements ChessBoardAdapter {
 	 *
 	 * Guarantees:
 	 * - Keeps adapter state consistent
-	 * - Re-applies adapter-driven UI state (markers + input state)
+	 * - Re-applies adapter-driven UI state (markers + arrows + input state)
 	 */
 	private hardRecreateBoard(fenToShow: string): void {
 		// Invalidate any pending promotion callback and force-close the dialog.
@@ -272,6 +286,7 @@ export class CmChessboardAdapter implements ChessBoardAdapter {
 
 		// Re-apply adapter-driven UI state.
 		this.applyLastMoveMarkers();
+		this.applyArrows();
 		this.applyMoveInputState();
 	}
 
@@ -293,6 +308,7 @@ export class CmChessboardAdapter implements ChessBoardAdapter {
 	/**
 	 * Creates a new cm-chessboard instance.
 	 * - Markers extension with autoMarkers disabled (we draw everything ourselves)
+	 * - Arrows extension enabled
 	 * - PromotionDialog extension enabled
 	 * - Default cm-chessboard move markers disabled
 	 */
@@ -306,7 +322,11 @@ export class CmChessboardAdapter implements ChessBoardAdapter {
 			position: positionFen,
 			orientation: this.orientation === 'black' ? COLOR.black : COLOR.white,
 			responsive: true,
-			extensions: [{ class: Markers, props: { autoMarkers: false } }, { class: PromotionDialog }],
+			extensions: [
+				{ class: Markers, props: { autoMarkers: false } },
+				{ class: Arrows },
+				{ class: PromotionDialog },
+			],
 			style: {
 				// Disable built-in selection markers: we use our own markers.
 				moveFromMarker: undefined,
@@ -459,11 +479,11 @@ export class CmChessboardAdapter implements ChessBoardAdapter {
 
 	/**
 	 * Called when the gesture ends (canceled or finished).
-	 * Ensures hint markers are cleared and last-move markers remain visible.
+	 * Ensures hint markers are cleared and board decorations remain visible.
 	 */
 	private onMoveGestureEnded(): void {
 		this.clearHintMarkersAndState();
-		this.refreshLastMoveMarkersAsync();
+		this.refreshBoardDecorationsAsync();
 	}
 
 	/**
@@ -539,16 +559,18 @@ export class CmChessboardAdapter implements ChessBoardAdapter {
 
 			// Cancel -> revert to last known position.
 			if (!result || !result.piece) {
-				void this.board?.setPosition(this.lastFen, false);
-				this.refreshLastMoveMarkersAsync();
+				void this.board?.setPosition(this.lastFen, false).finally(() => {
+					this.refreshBoardDecorationsAsync();
+				});
 				return;
 			}
 
 			// result.piece is like "wq" / "bn".
 			const promo = this.normalizePromotionPiece(String(result.piece).charAt(1));
 			if (!promo) {
-				void this.board?.setPosition(this.lastFen, false);
-				this.refreshLastMoveMarkersAsync();
+				void this.board?.setPosition(this.lastFen, false).finally(() => {
+					this.refreshBoardDecorationsAsync();
+				});
 				return;
 			}
 
@@ -557,8 +579,9 @@ export class CmChessboardAdapter implements ChessBoardAdapter {
 
 			// If sync validator rejects, revert immediately.
 			if (this.validateMoveAttempt && !accepted) {
-				void this.board?.setPosition(this.lastFen, false);
-				this.refreshLastMoveMarkersAsync();
+				void this.board?.setPosition(this.lastFen, false).finally(() => {
+					this.refreshBoardDecorationsAsync();
+				});
 			}
 		});
 
@@ -608,7 +631,7 @@ export class CmChessboardAdapter implements ChessBoardAdapter {
 	}
 
 	// -------------------------------------------------------------------------
-	// Markers helpers
+	// Markers / arrows helpers
 	// -------------------------------------------------------------------------
 
 	/**
@@ -626,6 +649,34 @@ export class CmChessboardAdapter implements ChessBoardAdapter {
 
 		this.board.addMarker(LAST_MOVE_FROM, this.lastMoveSquares.from);
 		this.board.addMarker(LAST_MOVE_TO, this.lastMoveSquares.to);
+	}
+
+	/**
+	 * Applies the current feature-driven arrows using the cm-chessboard Arrows extension.
+	 *
+	 * Strategy:
+	 * - clear all existing arrows first
+	 * - re-add the current list in deterministic order
+	 *
+	 * Notes:
+	 * - The Angular layer already decides which arrows are visible (off/top3/top5/all).
+	 * - Here we only translate them to the board implementation.
+	 */
+	private applyArrows(): void {
+		if (this.destroyed || !this.canUseArrows()) return;
+
+		this.board.removeArrows();
+
+		for (const arrow of this.currentArrows) {
+			const from = arrow.from?.toLowerCase?.() ?? '';
+			const to = arrow.to?.toLowerCase?.() ?? '';
+
+			if (!/^[a-h][1-8]$/.test(from) || !/^[a-h][1-8]$/.test(to)) {
+				continue;
+			}
+
+			this.board.addArrow(this.toCmArrowType(arrow), from, to);
+		}
 	}
 
 	/**
@@ -655,11 +706,14 @@ export class CmChessboardAdapter implements ChessBoardAdapter {
 	}
 
 	/**
-	 * Some libraries may clear markers at the end of a gesture.
-	 * Re-applying on the next frame ensures last-move highlight remains visible.
+	 * Some board operations may clear markers or arrows.
+	 * Re-applying on the next frame keeps decorations deterministic.
 	 */
-	private refreshLastMoveMarkersAsync(): void {
-		requestAnimationFrame(() => this.applyLastMoveMarkers());
+	private refreshBoardDecorationsAsync(): void {
+		requestAnimationFrame(() => {
+			this.applyLastMoveMarkers();
+			this.applyArrows();
+		});
 	}
 
 	/**
@@ -673,5 +727,37 @@ export class CmChessboardAdapter implements ChessBoardAdapter {
 			typeof this.board.addMarker === 'function' &&
 			typeof this.board.removeMarkers === 'function'
 		);
+	}
+
+	/**
+	 * Returns true when the Arrows extension API is available.
+	 */
+	private canUseArrows(): boolean {
+		return (
+			!this.destroyed &&
+			!!this.board &&
+			typeof this.board.addArrow === 'function' &&
+			typeof this.board.removeArrows === 'function'
+		);
+	}
+
+	/**
+	 * Map our generic arrow source to the cm-chessboard built-in arrow styles.
+	 *
+	 * Current mapping:
+	 * - my-next-moves -> default
+	 * - opening-book  -> pointy
+	 * - stockfish     -> danger
+	 */
+	private toCmArrowType(arrow: ExplorerBoardArrow): string {
+		switch (arrow.source) {
+			case 'opening-book':
+				return ARROW_TYPE.pointy;
+			case 'stockfish':
+				return ARROW_TYPE.danger;
+			case 'my-next-moves':
+			default:
+				return ARROW_TYPE.default;
+		}
 	}
 }

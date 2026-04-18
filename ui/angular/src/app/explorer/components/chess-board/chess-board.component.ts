@@ -34,8 +34,6 @@ import {
 } from '@angular/core';
 
 import type { ExplorerMoveAttempt } from 'my-chess-opening-core/explorer';
-
-import { BoardArrowOverlayComponent } from '../board-arrow-overlay/board-arrow-overlay.component';
 import type { ExplorerBoardArrow } from '../../board/board-arrows.types';
 
 import {
@@ -51,7 +49,6 @@ import {
 @Component({
 	selector: 'app-chess-board',
 	standalone: true,
-	imports: [BoardArrowOverlayComponent],
 	templateUrl: './chess-board.component.html',
 	styleUrl: './chess-board.component.scss',
 })
@@ -160,6 +157,8 @@ export class ChessBoardComponent implements AfterViewInit, OnDestroy, OnChanges 
 		this.adapter.setLastMoveSquares?.(this.lastMoveSquares);
 		this.adapter.setMoveInputEnabled(this.inputEnabled);
 		this.adapter.setMoveInputAllowedColor(this.getSideToMoveFromFen(this.fen));
+		this.adapter.setArrows?.(this.arrows);
+
 		this.lastFenApplied = this.fen;
 
 		// Auto-size board to fit the available box (min(width, height)).
@@ -217,6 +216,10 @@ export class ChessBoardComponent implements AfterViewInit, OnDestroy, OnChanges 
 
 		if (changes['lastMoveSquares']) {
 			this.adapter.setLastMoveSquares?.(this.lastMoveSquares);
+		}
+
+		if (changes['arrows']) {
+			this.adapter.setArrows?.(this.arrows);
 		}
 	}
 

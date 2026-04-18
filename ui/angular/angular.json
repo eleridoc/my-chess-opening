@@ -38,6 +38,7 @@
 							"src/styles.scss",
 							"../../node_modules/cm-chessboard/assets/chessboard.css",
 							"../../node_modules/cm-chessboard/assets/extensions/markers/markers.css",
+							"../../node_modules/cm-chessboard/assets/extensions/arrows/arrows.css",
 							"../../node_modules/cm-chessboard/assets/extensions/promotion-dialog/promotion-dialog.css"
 						]
 					},
