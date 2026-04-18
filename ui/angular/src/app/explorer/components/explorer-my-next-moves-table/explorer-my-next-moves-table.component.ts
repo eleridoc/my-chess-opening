@@ -5,7 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-import type { MyNextMoveRow } from 'my-chess-opening-core';
+import type { MyNextMoveRow, MyNextMovesPositionSummary } from 'my-chess-opening-core';
 
 import { IsoDateTimePipe } from '../../../shared/dates/pipes';
 
@@ -16,9 +16,7 @@ import { IsoDateTimePipe } from '../../../shared/dates/pipes';
  * - render the ordered candidate move rows
  * - show popularity and White / Draw / Black breakdowns
  * - expose per-row tooltip details
- *
- * Notes:
- * - The sticky summary row is handled later as a dedicated feature.
+ * - keep the current-position summary row always visible at the bottom
  */
 @Component({
 	selector: 'app-explorer-my-next-moves-table',
@@ -30,6 +28,8 @@ import { IsoDateTimePipe } from '../../../shared/dates/pipes';
 })
 export class ExplorerMyNextMovesTableComponent {
 	@Input({ required: true }) rows: MyNextMoveRow[] = [];
+
+	@Input({ required: true }) positionSummary: MyNextMovesPositionSummary | null = null;
 
 	trackByMove(_index: number, row: MyNextMoveRow): string {
 		return `${row.moveUci}::${row.moveSan}`;
@@ -49,5 +49,9 @@ export class ExplorerMyNextMovesTableComponent {
 
 	buildInfoTooltip(row: MyNextMoveRow, lastPlayedLabel: string): string {
 		return `Last played: ${lastPlayedLabel} • Counts White / Draw / Black: ${row.outcomes.whiteWinsCount} / ${row.outcomes.drawsCount} / ${row.outcomes.blackWinsCount}`;
+	}
+
+	buildSummaryTooltip(summary: MyNextMovesPositionSummary, lastPlayedLabel: string): string {
+		return `Current position • Last played: ${lastPlayedLabel} • Counts White / Draw / Black: ${summary.outcomes.whiteWinsCount} / ${summary.outcomes.drawsCount} / ${summary.outcomes.blackWinsCount}`;
 	}
 }

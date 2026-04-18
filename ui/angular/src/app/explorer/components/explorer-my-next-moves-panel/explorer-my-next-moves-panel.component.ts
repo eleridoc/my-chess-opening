@@ -18,7 +18,6 @@ import { countActiveSharedGameFilterFields } from 'my-chess-opening-core/filters
 
 import { ExplorerFacade } from '../../facade/explorer.facade';
 import { MyNextMovesService } from '../../../services/my-next-moves/my-next-moves.service';
-import { IsoDateTimePipe } from '../../../shared/dates/pipes';
 import { SharedGameFilterContextService } from '../../../shared/game-filter/services/shared-game-filter-context.service';
 import { SharedGameFilterDialogService } from '../../../shared/game-filter/services/shared-game-filter-dialog.service';
 import { SharedGameFilterStorageService } from '../../../shared/game-filter/services/shared-game-filter-storage.service';
@@ -32,11 +31,11 @@ import { ExplorerMyNextMovesTableComponent } from '../explorer-my-next-moves-tab
  * - react to the current Explorer position
  * - react to the persisted "my-next-moves" shared filter
  * - load aggregated backend data
- * - render the panel header, summary card, and move table
+ * - render the panel header and the presentational table
  *
  * Notes:
- * - Per-row tooltip details are handled by the presentational table component.
- * - The sticky bottom summary row is introduced later.
+ * - Per-row tooltip details are handled by the table component.
+ * - The current-position summary row is also rendered by the table component.
  * - Errors stay inline to avoid noisy global notifications while navigating.
  */
 @Component({
@@ -48,7 +47,6 @@ import { ExplorerMyNextMovesTableComponent } from '../explorer-my-next-moves-tab
 		MatIconModule,
 		MatTooltipModule,
 		SectionLoaderComponent,
-		IsoDateTimePipe,
 		ExplorerMyNextMovesTableComponent,
 	],
 	templateUrl: './explorer-my-next-moves-panel.component.html',

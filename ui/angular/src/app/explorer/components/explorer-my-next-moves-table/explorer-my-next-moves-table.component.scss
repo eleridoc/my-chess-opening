@@ -16,7 +16,8 @@
 }
 
 .explorer-my-next-moves-table__head,
-.explorer-my-next-moves-table__row {
+.explorer-my-next-moves-table__row,
+.explorer-my-next-moves-table__footer {
 	display: grid;
 	grid-template-columns: 72px 86px 56px minmax(0, 1fr) 52px;
 	gap: 12px;
@@ -46,6 +47,13 @@
 	border-bottom: 0;
 }
 
+.explorer-my-next-moves-table__footer {
+	flex: 0 0 auto;
+	border-top: 1px solid var(--app-border-color, rgba(255, 255, 255, 0.08));
+	background: rgba(255, 255, 255, 0.06);
+	font-size: 13px;
+}
+
 .explorer-my-next-moves-table__cell {
 	min-width: 0;
 }
@@ -59,6 +67,10 @@
 .explorer-my-next-moves-table__move,
 .explorer-my-next-moves-table__games {
 	font-weight: 600;
+}
+
+.explorer-my-next-moves-table__move--summary {
+	font-weight: 700;
 }
 
 .explorer-my-next-moves-table__share-value {
@@ -78,6 +90,10 @@
 	height: 100%;
 	border-radius: 999px;
 	background: linear-gradient(90deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.38));
+}
+
+.explorer-my-next-moves-table__share-bar-fill--summary {
+	background: linear-gradient(90deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.58));
 }
 
 .explorer-my-next-moves-table__outcomes-values {
@@ -131,9 +147,17 @@
 	line-height: 18px;
 }
 
+.explorer-my-next-moves-table__empty {
+	padding: 18px 14px;
+	font-size: 14px;
+	font-style: italic;
+	opacity: 0.75;
+}
+
 @media (max-width: 1500px) {
 	.explorer-my-next-moves-table__head,
-	.explorer-my-next-moves-table__row {
+	.explorer-my-next-moves-table__row,
+	.explorer-my-next-moves-table__footer {
 		grid-template-columns: 64px 76px 52px minmax(0, 1fr) 46px;
 		gap: 10px;
 	}

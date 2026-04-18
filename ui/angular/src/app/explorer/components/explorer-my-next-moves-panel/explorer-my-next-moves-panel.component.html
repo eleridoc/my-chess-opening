@@ -25,78 +25,10 @@
 
 				<ng-template #nextMovesContent>
 					<ng-container *ngIf="myNextMovesResult() as result; else emptyState">
-						<div class="explorer-my-next-moves-panel__summary-card">
-							<div class="explorer-my-next-moves-panel__summary-title">
-								Current position summary
-							</div>
-
-							<div class="explorer-my-next-moves-panel__summary-grid">
-								<div class="explorer-my-next-moves-panel__summary-item">
-									<div class="explorer-my-next-moves-panel__summary-label">Games</div>
-									<div class="explorer-my-next-moves-panel__summary-value">
-										{{ result.positionSummary.gamesCount }}
-									</div>
-								</div>
-
-								<div class="explorer-my-next-moves-panel__summary-item">
-									<div class="explorer-my-next-moves-panel__summary-label">Coverage</div>
-									<div class="explorer-my-next-moves-panel__summary-value">
-										{{ result.positionSummary.gamesPercent | number: '1.0-1' }}%
-									</div>
-								</div>
-
-								<div class="explorer-my-next-moves-panel__summary-item">
-									<div class="explorer-my-next-moves-panel__summary-label">
-										White / Draw / Black
-									</div>
-									<div class="explorer-my-next-moves-panel__summary-value">
-										{{ result.positionSummary.outcomes.whiteWinsPercent | number: '1.0-1' }}% /
-										{{ result.positionSummary.outcomes.drawsPercent | number: '1.0-1' }}% /
-										{{ result.positionSummary.outcomes.blackWinsPercent | number: '1.0-1' }}%
-									</div>
-								</div>
-
-								<div class="explorer-my-next-moves-panel__summary-item">
-									<div class="explorer-my-next-moves-panel__summary-label">Counts</div>
-									<div class="explorer-my-next-moves-panel__summary-value">
-										{{ result.positionSummary.outcomes.whiteWinsCount }}
-										/
-										{{ result.positionSummary.outcomes.drawsCount }}
-										/
-										{{ result.positionSummary.outcomes.blackWinsCount }}
-									</div>
-								</div>
-
-								<div class="explorer-my-next-moves-panel__summary-item">
-									<div class="explorer-my-next-moves-panel__summary-label">Last played</div>
-									<div class="explorer-my-next-moves-panel__summary-value">
-										{{
-											result.positionSummary.lastPlayedAtIso
-												? (result.positionSummary.lastPlayedAtIso | appIsoDateTime)
-												: '—'
-										}}
-									</div>
-								</div>
-
-								<div class="explorer-my-next-moves-panel__summary-item">
-									<div class="explorer-my-next-moves-panel__summary-label">Candidate moves</div>
-									<div class="explorer-my-next-moves-panel__summary-value">
-										{{ result.moves.length }}
-									</div>
-								</div>
-							</div>
-						</div>
-
-						<div
-							class="explorer-my-next-moves-panel__placeholder"
-							*ngIf="result.moves.length === 0"
-						>
-							No next moves found for the current position and filter.
-						</div>
-
-						<div class="explorer-my-next-moves-panel__table" *ngIf="result.moves.length > 0">
+						<div class="explorer-my-next-moves-panel__table">
 							<app-explorer-my-next-moves-table
 								[rows]="result.moves"
+								[positionSummary]="result.positionSummary"
 							></app-explorer-my-next-moves-table>
 						</div>
 					</ng-container>
