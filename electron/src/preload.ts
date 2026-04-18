@@ -23,6 +23,8 @@ import type {
 	ImportEvent,
 	ImportEventListener,
 	ImportEventSubscriptionId,
+	MyNextMovesInput,
+	MyNextMovesResult,
 } from 'my-chess-opening-core';
 
 /**
@@ -52,6 +54,7 @@ const CHANNELS = {
 	GAMES_LIST: 'games:list',
 	EXPORT_GET_SUMMARY: 'export:getSummary',
 	EXPORT_BUILD_PGN_FILE: 'export:buildPgnFile',
+	MY_NEXT_MOVES_GET_MOVES: 'myNextMoves:getMoves',
 	SYSTEM_OPEN_EXTERNAL: 'system:openExternal',
 	ACCOUNTS_LIST: 'accounts:list',
 	ACCOUNTS_SET_ENABLED: 'accounts:setEnabled',
@@ -161,6 +164,10 @@ const api: ElectronApi = {
 			invoke<AccountsDeleteResult>(CHANNELS.ACCOUNTS_DELETE, { accountId }),
 		create: (site, username) =>
 			invoke<AccountsCreateResult>(CHANNELS.ACCOUNTS_CREATE, { site, username }),
+	},
+	myNextMoves: {
+		getMoves: (input: MyNextMovesInput) =>
+			invoke<MyNextMovesResult>(CHANNELS.MY_NEXT_MOVES_GET_MOVES, input),
 	},
 };
 

@@ -75,6 +75,15 @@ export type {
 	ExportApi,
 } from './export/types';
 
+export type {
+	MyNextMovesInput,
+	MyNextMovesOutcomeStats,
+	MyNextMoveRow,
+	MyNextMovesPositionSummary,
+	MyNextMovesResult,
+	MyNextMovesApi,
+} from './my-next-moves/types';
+
 // -----------------------------------------------------------------------------
 // Compose ElectronApi from domain APIs
 // -----------------------------------------------------------------------------
@@ -85,6 +94,7 @@ import type { ExplorerApi } from './explorer/types';
 import type { GamesApi } from './games/types';
 import type { AccountsApi } from './accounts/types';
 import type { ExportApi } from './export/types';
+import type { MyNextMovesApi } from './my-next-moves/types';
 
 /**
  * Small system-level IPC helpers that are not tied to a single domain.
@@ -136,6 +146,9 @@ export interface ElectronApi {
 
 	/** Export APIs (summary + PGN file generation). */
 	export: ExportApi;
+
+	/** Explorer "My next moves" APIs (position-based move statistics). */
+	myNextMoves: MyNextMovesApi;
 
 	/** Miscellaneous system-level helpers. */
 	system: SystemApi;
