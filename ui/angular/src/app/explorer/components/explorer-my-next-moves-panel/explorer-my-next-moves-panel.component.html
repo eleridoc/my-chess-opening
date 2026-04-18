@@ -94,10 +94,10 @@
 							No next moves found for the current position and filter.
 						</div>
 
-						<div class="explorer-my-next-moves-panel__placeholder" *ngIf="result.moves.length > 0">
-							Backend data is ready for {{ result.moves.length }} candidate move{{
-								result.moves.length === 1 ? '' : 's'
-							}}. The detailed table UI will be added in the next step.
+						<div class="explorer-my-next-moves-panel__table" *ngIf="result.moves.length > 0">
+							<app-explorer-my-next-moves-table
+								[rows]="result.moves"
+							></app-explorer-my-next-moves-table>
 						</div>
 					</ng-container>
 				</ng-template>

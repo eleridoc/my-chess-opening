@@ -1,0 +1,117 @@
+:host {
+	display: flex;
+	flex: 1 1 auto;
+	min-height: 0;
+}
+
+.explorer-my-next-moves-table {
+	flex: 1 1 auto;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	border: 1px solid var(--app-border-color, rgba(255, 255, 255, 0.08));
+	border-radius: 12px;
+	background: rgba(255, 255, 255, 0.02);
+	overflow: hidden;
+}
+
+.explorer-my-next-moves-table__head,
+.explorer-my-next-moves-table__row {
+	display: grid;
+	grid-template-columns: 72px 86px 56px minmax(0, 1fr);
+	gap: 12px;
+	align-items: center;
+	padding: 10px 14px;
+}
+
+.explorer-my-next-moves-table__head {
+	border-bottom: 1px solid var(--app-border-color, rgba(255, 255, 255, 0.08));
+	font-size: 12px;
+	font-weight: 600;
+	opacity: 0.78;
+}
+
+.explorer-my-next-moves-table__body {
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow: auto;
+}
+
+.explorer-my-next-moves-table__row {
+	border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+	font-size: 13px;
+}
+
+.explorer-my-next-moves-table__row:last-child {
+	border-bottom: 0;
+}
+
+.explorer-my-next-moves-table__cell {
+	min-width: 0;
+}
+
+.explorer-my-next-moves-table__move,
+.explorer-my-next-moves-table__games {
+	font-weight: 600;
+}
+
+.explorer-my-next-moves-table__share-value {
+	font-size: 12px;
+	font-weight: 600;
+	margin-bottom: 6px;
+}
+
+.explorer-my-next-moves-table__share-bar-track {
+	height: 8px;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.08);
+	overflow: hidden;
+}
+
+.explorer-my-next-moves-table__share-bar-fill {
+	height: 100%;
+	border-radius: 999px;
+	background: linear-gradient(90deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.38));
+}
+
+.explorer-my-next-moves-table__outcomes-values {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	font-size: 12px;
+	font-weight: 600;
+	margin-bottom: 6px;
+}
+
+.explorer-my-next-moves-table__outcomes-bar {
+	display: flex;
+	height: 10px;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.08);
+	overflow: hidden;
+}
+
+.explorer-my-next-moves-table__outcomes-segment {
+	height: 100%;
+}
+
+.explorer-my-next-moves-table__outcomes-segment--white {
+	background: rgba(255, 255, 255, 0.86);
+}
+
+.explorer-my-next-moves-table__outcomes-segment--draw {
+	background: rgba(186, 186, 186, 0.82);
+}
+
+.explorer-my-next-moves-table__outcomes-segment--black {
+	background: rgba(69, 102, 132, 0.96);
+}
+
+@media (max-width: 1500px) {
+	.explorer-my-next-moves-table__head,
+	.explorer-my-next-moves-table__row {
+		grid-template-columns: 64px 76px 52px minmax(0, 1fr);
+		gap: 10px;
+	}
+}

@@ -23,6 +23,7 @@ import { SharedGameFilterContextService } from '../../../shared/game-filter/serv
 import { SharedGameFilterDialogService } from '../../../shared/game-filter/services/shared-game-filter-dialog.service';
 import { SharedGameFilterStorageService } from '../../../shared/game-filter/services/shared-game-filter-storage.service';
 import { SectionLoaderComponent } from '../../../shared/loading/section-loader/section-loader.component';
+import { ExplorerMyNextMovesTableComponent } from '../explorer-my-next-moves-table/explorer-my-next-moves-table.component';
 
 /**
  * Explorer panel dedicated to the "My next moves" feature.
@@ -31,10 +32,11 @@ import { SectionLoaderComponent } from '../../../shared/loading/section-loader/s
  * - react to the current Explorer position
  * - react to the persisted "my-next-moves" shared filter
  * - load aggregated backend data
- * - render the panel header + summary state
+ * - render the panel header, summary card, and move table
  *
  * Notes:
- * - The detailed move table will be introduced in the next iteration.
+ * - Tooltip details are introduced in a later iteration.
+ * - The sticky bottom summary row is introduced later as well.
  * - Errors stay inline to avoid noisy global notifications while navigating.
  */
 @Component({
@@ -47,6 +49,7 @@ import { SectionLoaderComponent } from '../../../shared/loading/section-loader/s
 		MatTooltipModule,
 		SectionLoaderComponent,
 		IsoDateTimePipe,
+		ExplorerMyNextMovesTableComponent,
 	],
 	templateUrl: './explorer-my-next-moves-panel.component.html',
 	styleUrl: './explorer-my-next-moves-panel.component.scss',

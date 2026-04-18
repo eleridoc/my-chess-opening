@@ -1,0 +1,97 @@
+<div class="explorer-my-next-moves-table" role="table" aria-label="My next moves">
+	<div class="explorer-my-next-moves-table__head" role="row">
+		<div
+			class="explorer-my-next-moves-table__cell explorer-my-next-moves-table__cell--move"
+			role="columnheader"
+		>
+			Move
+		</div>
+
+		<div
+			class="explorer-my-next-moves-table__cell explorer-my-next-moves-table__cell--share"
+			role="columnheader"
+		>
+			Share
+		</div>
+
+		<div
+			class="explorer-my-next-moves-table__cell explorer-my-next-moves-table__cell--games"
+			role="columnheader"
+		>
+			Games
+		</div>
+
+		<div
+			class="explorer-my-next-moves-table__cell explorer-my-next-moves-table__cell--outcomes"
+			role="columnheader"
+		>
+			White / Draw / Black
+		</div>
+	</div>
+
+	<div class="explorer-my-next-moves-table__body" role="rowgroup">
+		<div
+			class="explorer-my-next-moves-table__row"
+			role="row"
+			*ngFor="let row of rows; trackBy: trackByMove"
+		>
+			<div
+				class="explorer-my-next-moves-table__cell explorer-my-next-moves-table__cell--move explorer-my-next-moves-table__move"
+				role="cell"
+			>
+				{{ row.moveSan }}
+			</div>
+
+			<div
+				class="explorer-my-next-moves-table__cell explorer-my-next-moves-table__cell--share"
+				role="cell"
+			>
+				<div class="explorer-my-next-moves-table__share-value">
+					{{ formatPercent(row.gamesPercent) }}
+				</div>
+
+				<div class="explorer-my-next-moves-table__share-bar-track" aria-hidden="true">
+					<div
+						class="explorer-my-next-moves-table__share-bar-fill"
+						[style.width.%]="clampPercent(row.gamesPercent)"
+					></div>
+				</div>
+			</div>
+
+			<div
+				class="explorer-my-next-moves-table__cell explorer-my-next-moves-table__cell--games explorer-my-next-moves-table__games"
+				role="cell"
+			>
+				{{ row.gamesCount }}
+			</div>
+
+			<div
+				class="explorer-my-next-moves-table__cell explorer-my-next-moves-table__cell--outcomes"
+				role="cell"
+			>
+				<div class="explorer-my-next-moves-table__outcomes-values">
+					<span>{{ formatPercent(row.outcomes.whiteWinsPercent) }}</span>
+					<span>{{ formatPercent(row.outcomes.drawsPercent) }}</span>
+					<span>{{ formatPercent(row.outcomes.blackWinsPercent) }}</span>
+				</div>
+
+				<div class="explorer-my-next-moves-table__outcomes-bar" aria-hidden="true">
+					<div
+						class="explorer-my-next-moves-table__outcomes-segment explorer-my-next-moves-table__outcomes-segment--white"
+						[style.width.%]="clampPercent(row.outcomes.whiteWinsPercent)"
+					></div>
+
+					<div
+						class="explorer-my-next-moves-table__outcomes-segment explorer-my-next-moves-table__outcomes-segment--draw"
+						[style.width.%]="clampPercent(row.outcomes.drawsPercent)"
+					></div>
+
+					<div
+						class="explorer-my-next-moves-table__outcomes-segment explorer-my-next-moves-table__outcomes-segment--black"
+						[style.width.%]="clampPercent(row.outcomes.blackWinsPercent)"
+					></div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

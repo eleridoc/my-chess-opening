@@ -42,6 +42,12 @@ app-section-loader {
 	min-height: 0;
 }
 
+.explorer-my-next-moves-panel__table {
+	flex: 1 1 auto;
+	min-height: 0;
+	display: flex;
+}
+
 .explorer-my-next-moves-panel__summary-card {
 	border: 1px solid var(--app-border-color, rgba(255, 255, 255, 0.08));
 	border-radius: 12px;
