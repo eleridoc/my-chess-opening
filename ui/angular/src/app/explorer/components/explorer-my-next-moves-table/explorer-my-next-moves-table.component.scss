@@ -121,7 +121,7 @@
 }
 
 .explorer-my-next-moves-table__outcomes-segment--black {
-	background: rgba(69, 102, 132, 0.96);
+	background: var(--app-chess-black-bg);
 	color: rgba(255, 255, 255, 0.96);
 }
 

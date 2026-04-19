@@ -68,3 +68,53 @@ body {
 *::-webkit-scrollbar-corner {
 	background: var(--app-scrollbar-track);
 }
+
+/* -------------------------------------------------------------------------- */
+/* cm-chessboard custom arrow colors                                           */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * My next moves:
+ * - primary blue
+ * - clearer than the default green success arrow
+ */
+.cm-chessboard .arrow-my-next-moves .arrow-head {
+	fill: rgba(69, 102, 132, 1);
+	fill-rule: nonzero;
+}
+
+.cm-chessboard .arrow-my-next-moves .arrow-line {
+	stroke: rgba(69, 102, 132, 1);
+	stroke-linecap: round;
+	opacity: 0.78;
+}
+
+/**
+ * Opening book:
+ * - teal / cyan family
+ */
+.cm-chessboard .arrow-opening-book .arrow-head {
+	fill: #2bb9a9;
+	fill-rule: nonzero;
+}
+
+.cm-chessboard .arrow-opening-book .arrow-line {
+	stroke: #2bb9a9;
+	stroke-linecap: round;
+	opacity: 0.72;
+}
+
+/**
+ * Stockfish:
+ * - amber / orange family
+ */
+.cm-chessboard .arrow-stockfish .arrow-head {
+	fill: #ffb347;
+	fill-rule: nonzero;
+}
+
+.cm-chessboard .arrow-stockfish .arrow-line {
+	stroke: #ffb347;
+	stroke-linecap: round;
+	opacity: 0.8;
+}

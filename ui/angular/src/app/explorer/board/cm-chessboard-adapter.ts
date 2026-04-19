@@ -29,7 +29,7 @@
 
 import { Chessboard, COLOR, INPUT_EVENT_TYPE } from 'cm-chessboard/src/Chessboard.js';
 import { Markers } from 'cm-chessboard/src/extensions/markers/Markers.js';
-import { Arrows, ARROW_TYPE } from 'cm-chessboard/src/extensions/arrows/Arrows.js';
+import { Arrows } from 'cm-chessboard/src/extensions/arrows/Arrows.js';
 import { PromotionDialog } from 'cm-chessboard/src/extensions/promotion-dialog/PromotionDialog.js';
 
 import type { ExplorerBoardArrow } from './board-arrows.types';
@@ -67,6 +67,18 @@ const HINT_LEGAL_DOT = { class: 'mco-hint-legal-dot', slice: 'markerDot' };
  * Capture hint marker: ring stays visible even when a piece sits on the square.
  */
 const HINT_CAPTURE_CIRCLE = { class: 'mco-hint-capture-circle', slice: 'markerCircle' };
+
+/**
+ * Custom arrow styles rendered by the cm-chessboard Arrows extension.
+ *
+ * Important:
+ * - The Arrows extension only expects an object with a `class` property.
+ * - This allows us to define fully custom CSS classes instead of relying only
+ *   on the built-in preset colors.
+ */
+const ARROW_TYPE_MY_NEXT_MOVES = { class: 'arrow-my-next-moves' };
+const ARROW_TYPE_OPENING_BOOK = { class: 'arrow-opening-book' };
+const ARROW_TYPE_STOCKFISH = { class: 'arrow-stockfish' };
 
 // -----------------------------------------------------------------------------
 // Adapter
@@ -741,23 +753,15 @@ export class CmChessboardAdapter implements ChessBoardAdapter {
 		);
 	}
 
-	/**
-	 * Map our generic arrow source to the cm-chessboard built-in arrow styles.
-	 *
-	 * Current mapping:
-	 * - my-next-moves -> default
-	 * - opening-book  -> pointy
-	 * - stockfish     -> danger
-	 */
-	private toCmArrowType(arrow: ExplorerBoardArrow): string {
+	private toCmArrowType(arrow: ExplorerBoardArrow): { class: string } {
 		switch (arrow.source) {
 			case 'opening-book':
-				return ARROW_TYPE.pointy;
+				return ARROW_TYPE_OPENING_BOOK;
 			case 'stockfish':
-				return ARROW_TYPE.danger;
+				return ARROW_TYPE_STOCKFISH;
 			case 'my-next-moves':
 			default:
-				return ARROW_TYPE.default;
+				return ARROW_TYPE_MY_NEXT_MOVES;
 		}
 	}
 }

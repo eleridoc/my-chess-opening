@@ -46,9 +46,12 @@ declare module 'cm-chessboard/src/extensions/markers/Markers.js' {
 
 declare module 'cm-chessboard/src/extensions/arrows/Arrows.js' {
 	export const ARROW_TYPE: {
-		default: string;
-		pointy: string;
-		danger: string;
+		default: { class: string };
+		success: { class: string };
+		secondary: { class: string };
+		warning: { class: string };
+		info: { class: string };
+		danger: { class: string };
 	};
 
 	export class Arrows {}
