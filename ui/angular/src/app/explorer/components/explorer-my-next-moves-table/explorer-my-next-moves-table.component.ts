@@ -47,6 +47,14 @@ export class ExplorerMyNextMovesTableComponent {
 		return Math.max(0, Math.min(100, value));
 	}
 
+	/**
+	 * Only show an inline label inside an outcome segment when the segment
+	 * is wide enough to keep the row readable and dense.
+	 */
+	shouldShowOutcomeLabel(value: number): boolean {
+		return this.clampPercent(value) >= 14;
+	}
+
 	buildInfoTooltip(row: MyNextMoveRow, lastPlayedLabel: string): string {
 		return `Last played: ${lastPlayedLabel} • Counts White / Draw / Black: ${row.outcomes.whiteWinsCount} / ${row.outcomes.drawsCount} / ${row.outcomes.blackWinsCount}`;
 	}

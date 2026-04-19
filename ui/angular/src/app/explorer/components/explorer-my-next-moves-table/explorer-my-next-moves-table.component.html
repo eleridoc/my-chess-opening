@@ -51,19 +51,10 @@
 				</div>
 
 				<div
-					class="explorer-my-next-moves-table__cell explorer-my-next-moves-table__cell--share"
+					class="explorer-my-next-moves-table__cell explorer-my-next-moves-table__cell--share explorer-my-next-moves-table__share-text"
 					role="cell"
 				>
-					<div class="explorer-my-next-moves-table__share-value">
-						{{ formatPercent(row.gamesPercent) }}
-					</div>
-
-					<div class="explorer-my-next-moves-table__share-bar-track" aria-hidden="true">
-						<div
-							class="explorer-my-next-moves-table__share-bar-fill"
-							[style.width.%]="clampPercent(row.gamesPercent)"
-						></div>
-					</div>
+					{{ formatPercent(row.gamesPercent) }}
 				</div>
 
 				<div
@@ -77,27 +68,33 @@
 					class="explorer-my-next-moves-table__cell explorer-my-next-moves-table__cell--outcomes"
 					role="cell"
 				>
-					<div class="explorer-my-next-moves-table__outcomes-values">
-						<span>{{ formatPercent(row.outcomes.whiteWinsPercent) }}</span>
-						<span>{{ formatPercent(row.outcomes.drawsPercent) }}</span>
-						<span>{{ formatPercent(row.outcomes.blackWinsPercent) }}</span>
-					</div>
-
 					<div class="explorer-my-next-moves-table__outcomes-bar" aria-hidden="true">
 						<div
 							class="explorer-my-next-moves-table__outcomes-segment explorer-my-next-moves-table__outcomes-segment--white"
 							[style.width.%]="clampPercent(row.outcomes.whiteWinsPercent)"
-						></div>
+						>
+							<span *ngIf="shouldShowOutcomeLabel(row.outcomes.whiteWinsPercent)">
+								{{ formatPercent(row.outcomes.whiteWinsPercent) }}
+							</span>
+						</div>
 
 						<div
 							class="explorer-my-next-moves-table__outcomes-segment explorer-my-next-moves-table__outcomes-segment--draw"
 							[style.width.%]="clampPercent(row.outcomes.drawsPercent)"
-						></div>
+						>
+							<span *ngIf="shouldShowOutcomeLabel(row.outcomes.drawsPercent)">
+								{{ formatPercent(row.outcomes.drawsPercent) }}
+							</span>
+						</div>
 
 						<div
 							class="explorer-my-next-moves-table__outcomes-segment explorer-my-next-moves-table__outcomes-segment--black"
 							[style.width.%]="clampPercent(row.outcomes.blackWinsPercent)"
-						></div>
+						>
+							<span *ngIf="shouldShowOutcomeLabel(row.outcomes.blackWinsPercent)">
+								{{ formatPercent(row.outcomes.blackWinsPercent) }}
+							</span>
+						</div>
 					</div>
 				</div>
 
@@ -140,19 +137,10 @@
 		</div>
 
 		<div
-			class="explorer-my-next-moves-table__cell explorer-my-next-moves-table__cell--share"
+			class="explorer-my-next-moves-table__cell explorer-my-next-moves-table__cell--share explorer-my-next-moves-table__share-text"
 			role="cell"
 		>
-			<div class="explorer-my-next-moves-table__share-value">
-				{{ formatPercent(summary.gamesPercent) }}
-			</div>
-
-			<div class="explorer-my-next-moves-table__share-bar-track" aria-hidden="true">
-				<div
-					class="explorer-my-next-moves-table__share-bar-fill explorer-my-next-moves-table__share-bar-fill--summary"
-					[style.width.%]="clampPercent(summary.gamesPercent)"
-				></div>
-			</div>
+			{{ formatPercent(summary.gamesPercent) }}
 		</div>
 
 		<div
@@ -166,27 +154,33 @@
 			class="explorer-my-next-moves-table__cell explorer-my-next-moves-table__cell--outcomes"
 			role="cell"
 		>
-			<div class="explorer-my-next-moves-table__outcomes-values">
-				<span>{{ formatPercent(summary.outcomes.whiteWinsPercent) }}</span>
-				<span>{{ formatPercent(summary.outcomes.drawsPercent) }}</span>
-				<span>{{ formatPercent(summary.outcomes.blackWinsPercent) }}</span>
-			</div>
-
 			<div class="explorer-my-next-moves-table__outcomes-bar" aria-hidden="true">
 				<div
 					class="explorer-my-next-moves-table__outcomes-segment explorer-my-next-moves-table__outcomes-segment--white"
 					[style.width.%]="clampPercent(summary.outcomes.whiteWinsPercent)"
-				></div>
+				>
+					<span *ngIf="shouldShowOutcomeLabel(summary.outcomes.whiteWinsPercent)">
+						{{ formatPercent(summary.outcomes.whiteWinsPercent) }}
+					</span>
+				</div>
 
 				<div
 					class="explorer-my-next-moves-table__outcomes-segment explorer-my-next-moves-table__outcomes-segment--draw"
 					[style.width.%]="clampPercent(summary.outcomes.drawsPercent)"
-				></div>
+				>
+					<span *ngIf="shouldShowOutcomeLabel(summary.outcomes.drawsPercent)">
+						{{ formatPercent(summary.outcomes.drawsPercent) }}
+					</span>
+				</div>
 
 				<div
 					class="explorer-my-next-moves-table__outcomes-segment explorer-my-next-moves-table__outcomes-segment--black"
 					[style.width.%]="clampPercent(summary.outcomes.blackWinsPercent)"
-				></div>
+				>
+					<span *ngIf="shouldShowOutcomeLabel(summary.outcomes.blackWinsPercent)">
+						{{ formatPercent(summary.outcomes.blackWinsPercent) }}
+					</span>
+				</div>
 			</div>
 		</div>
 
