@@ -2,6 +2,7 @@
 	display: flex;
 	flex: 1 1 auto;
 	min-height: 0;
+	overflow: hidden;
 }
 
 .explorer-my-next-moves-table {
@@ -26,6 +27,7 @@
 }
 
 .explorer-my-next-moves-table__head {
+	flex: 0 0 auto;
 	border-bottom: 1px solid var(--app-border-color, rgba(255, 255, 255, 0.08));
 	font-size: 12px;
 	font-weight: 600;
@@ -35,7 +37,9 @@
 .explorer-my-next-moves-table__body {
 	flex: 1 1 auto;
 	min-height: 0;
-	overflow: auto;
+	overflow-y: auto;
+	overflow-x: hidden;
+	scrollbar-gutter: stable;
 }
 
 .explorer-my-next-moves-table__row {
