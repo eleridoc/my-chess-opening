@@ -10,8 +10,9 @@ import {
 } from '@angular/core';
 
 import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 import type { MyNextMoveRow, MyNextMovesResult } from 'my-chess-opening-core';
@@ -51,8 +52,9 @@ import { SectionLoaderComponent } from '../../../shared/loading/section-loader/s
 	imports: [
 		CommonModule,
 		MatButtonModule,
-		MatButtonToggleModule,
+		MatFormFieldModule,
 		MatIconModule,
+		MatSelectModule,
 		MatTooltipModule,
 		SectionLoaderComponent,
 		ExplorerMyNextMovesTableComponent,
@@ -111,7 +113,7 @@ export class ExplorerMyNextMovesPanelComponent implements OnDestroy {
 
 	readonly filterButtonLabel = computed(() => {
 		const activeCount = this.activeFilterCount();
-		return activeCount > 0 ? `Filters (${activeCount})` : 'Filters';
+		return activeCount > 0 ? `(${activeCount})` : '';
 	});
 
 	readonly currentArrowMode = computed(() => this.boardArrows.getArrowMode('my-next-moves'));
@@ -154,10 +156,6 @@ export class ExplorerMyNextMovesPanelComponent implements OnDestroy {
 				this.myNextMovesFilter.set(filter);
 			},
 		});
-	}
-
-	getArrowMode(): ExplorerBoardArrowDisplayMode {
-		return this.boardArrows.getArrowMode('my-next-moves');
 	}
 
 	setArrowMode(mode: string): void {

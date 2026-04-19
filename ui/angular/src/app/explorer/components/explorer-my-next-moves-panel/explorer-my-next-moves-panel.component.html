@@ -3,20 +3,25 @@
 		<span>Movements played</span>
 
 		<div class="explorer-my-next-moves-panel__header-actions">
-			<div class="explorer-my-next-moves-panel__arrows">
+			<div class="explorer-my-next-moves-panel__arrows app-density--5">
 				<span class="explorer-my-next-moves-panel__arrows-label">Arrows</span>
 
-				<mat-button-toggle-group
-					class="explorer-my-next-moves-panel__arrows-toggle"
-					[value]="getArrowMode()"
-					(change)="setArrowMode($event.value)"
-					aria-label="My next moves arrow mode"
+				<mat-form-field
+					appearance="outline"
+					subscriptSizing="dynamic"
+					class="explorer-my-next-moves-panel__arrow-select-field"
 				>
-					<mat-button-toggle value="off">Off</mat-button-toggle>
-					<mat-button-toggle value="top3">3</mat-button-toggle>
-					<mat-button-toggle value="top5">5</mat-button-toggle>
-					<mat-button-toggle value="all">All</mat-button-toggle>
-				</mat-button-toggle-group>
+					<mat-select
+						[value]="currentArrowMode()"
+						(selectionChange)="setArrowMode($event.value)"
+						aria-label="My next moves arrow mode"
+					>
+						<mat-option value="off">Off</mat-option>
+						<mat-option value="top3">3</mat-option>
+						<mat-option value="top5">5</mat-option>
+						<mat-option value="all">All</mat-option>
+					</mat-select>
+				</mat-form-field>
 			</div>
 
 			<button

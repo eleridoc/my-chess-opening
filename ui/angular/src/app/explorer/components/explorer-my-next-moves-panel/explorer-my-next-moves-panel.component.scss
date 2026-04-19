@@ -41,11 +41,27 @@
 .explorer-my-next-moves-panel__arrows-label {
 	font-size: 12px;
 	opacity: 0.72;
+	white-space: nowrap;
 }
 
-.explorer-my-next-moves-panel__arrows-toggle {
-	transform: scale(0.92);
-	transform-origin: right center;
+.explorer-my-next-moves-panel__arrow-select-field {
+	width: 84px;
+	margin: 0;
+}
+
+.explorer-my-next-moves-panel__arrow-select-field .mat-mdc-form-field-infix {
+	min-height: 0;
+	padding-top: 8px;
+	padding-bottom: 8px;
+}
+
+.explorer-my-next-moves-panel__arrow-select-field .mat-mdc-text-field-wrapper {
+	padding-left: 10px;
+	padding-right: 10px;
+}
+
+.explorer-my-next-moves-panel__arrow-select-field .mat-mdc-form-field-subscript-wrapper {
+	display: none;
 }
 
 .explorer-my-next-moves-panel__content {
