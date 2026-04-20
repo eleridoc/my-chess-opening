@@ -15,7 +15,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-import type { MyNextMoveRow, MyNextMovesResult } from 'my-chess-opening-core';
+import type { MyNextMoveRow, MyNextMovesResult, PromotionPiece } from 'my-chess-opening-core';
 import type { SharedGameFilter } from 'my-chess-opening-core/filters';
 import { countActiveSharedGameFilterFields } from 'my-chess-opening-core/filters';
 
@@ -166,6 +166,15 @@ export class ExplorerMyNextMovesPanelComponent implements OnDestroy {
 		this.boardArrows.setArrowMode('my-next-moves', mode);
 	}
 
+	onMoveSelected(row: MyNextMoveRow): void {
+		const parsed = this.parseMoveAttemptFromUci(row.moveUci);
+		if (!parsed) {
+			return;
+		}
+
+		this.facade.attemptMove(parsed);
+	}
+
 	private buildBoardArrows(rows: MyNextMoveRow[]): ExplorerBoardArrow[] {
 		const arrows: ExplorerBoardArrow[] = [];
 
@@ -201,6 +210,35 @@ export class ExplorerMyNextMovesPanelComponent implements OnDestroy {
 		return {
 			from: normalized.slice(0, 2),
 			to: normalized.slice(2, 4),
+		};
+	}
+
+	/**
+	 * Convert a UCI string into an Explorer move attempt.
+	 *
+	 * Supported forms:
+	 * - e2e4
+	 * - e7e8q
+	 */
+	private parseMoveAttemptFromUci(
+		uci: string,
+	): { from: string; to: string; promotion?: PromotionPiece } | null {
+		const normalized = typeof uci === 'string' ? uci.trim().toLowerCase() : '';
+
+		if (!/^[a-h][1-8][a-h][1-8][qrbn]?$/.test(normalized)) {
+			return null;
+		}
+
+		const promotionRaw = normalized.length === 5 ? normalized[4] : undefined;
+		const promotion =
+			promotionRaw === 'q' || promotionRaw === 'r' || promotionRaw === 'b' || promotionRaw === 'n'
+				? promotionRaw
+				: undefined;
+
+		return {
+			from: normalized.slice(0, 2),
+			to: normalized.slice(2, 4),
+			promotion,
 		};
 	}
 

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -17,6 +17,7 @@ import { IsoDateTimePipe } from '../../../shared/dates/pipes';
  * - show popularity and White / Draw / Black breakdowns
  * - expose per-row tooltip details
  * - keep the current-position summary row always visible at the bottom
+ * - emit UI intents when a candidate move row is selected
  */
 @Component({
 	selector: 'app-explorer-my-next-moves-table',
@@ -30,6 +31,15 @@ export class ExplorerMyNextMovesTableComponent {
 	@Input({ required: true }) rows: MyNextMoveRow[] = [];
 
 	@Input({ required: true }) positionSummary: MyNextMovesPositionSummary | null = null;
+
+	/**
+	 * Emitted when the user selects a candidate move row.
+	 *
+	 * Notes:
+	 * - Only candidate rows are clickable.
+	 * - The persistent "Current" summary row is informational only.
+	 */
+	@Output() readonly moveSelected = new EventEmitter<MyNextMoveRow>();
 
 	trackByMove(_index: number, row: MyNextMoveRow): string {
 		return `${row.moveUci}::${row.moveSan}`;
@@ -61,5 +71,9 @@ export class ExplorerMyNextMovesTableComponent {
 
 	buildSummaryTooltip(summary: MyNextMovesPositionSummary, lastPlayedLabel: string): string {
 		return `Current position • Last played: ${lastPlayedLabel} • Counts White / Draw / Black: ${summary.outcomes.whiteWinsCount} / ${summary.outcomes.drawsCount} / ${summary.outcomes.blackWinsCount}`;
+	}
+
+	onMoveRowClick(row: MyNextMoveRow): void {
+		this.moveSelected.emit(row);
 	}
 }

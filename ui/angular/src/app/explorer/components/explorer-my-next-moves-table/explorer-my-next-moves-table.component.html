@@ -39,9 +39,14 @@
 	<div class="explorer-my-next-moves-table__body" role="rowgroup">
 		<ng-container *ngIf="rows.length > 0; else emptyRows">
 			<div
-				class="explorer-my-next-moves-table__row"
-				role="row"
+				class="explorer-my-next-moves-table__row explorer-my-next-moves-table__row--interactive"
+				role="button"
+				tabindex="0"
 				*ngFor="let row of rows; trackBy: trackByMove"
+				(click)="onMoveRowClick(row)"
+				(keydown.enter)="onMoveRowClick(row)"
+				(keydown.space)="onMoveRowClick(row); $event.preventDefault()"
+				[attr.aria-label]="'Play move ' + row.moveSan"
 			>
 				<div
 					class="explorer-my-next-moves-table__cell explorer-my-next-moves-table__cell--move explorer-my-next-moves-table__move"
@@ -106,6 +111,8 @@
 						type="button"
 						mat-icon-button
 						class="explorer-my-next-moves-table__info-button"
+						(click)="$event.stopPropagation()"
+						(keydown)="$event.stopPropagation()"
 						[matTooltip]="
 							buildInfoTooltip(
 								row,
@@ -192,6 +199,8 @@
 				type="button"
 				mat-icon-button
 				class="explorer-my-next-moves-table__info-button"
+				(click)="$event.stopPropagation()"
+				(keydown)="$event.stopPropagation()"
 				[matTooltip]="
 					buildSummaryTooltip(
 						summary,

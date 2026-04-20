@@ -52,6 +52,7 @@
 							<app-explorer-my-next-moves-table
 								[rows]="result.moves"
 								[positionSummary]="result.positionSummary"
+								(moveSelected)="onMoveSelected($event)"
 							></app-explorer-my-next-moves-table>
 						</div>
 					</ng-container>

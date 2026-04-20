@@ -10,8 +10,8 @@
 	min-height: 0;
 	display: flex;
 	flex-direction: column;
-	//border: 1px solid var(--app-border-color, rgba(255, 255, 255, 0.08));
-	//border-radius: 12px;
+	border: 1px solid var(--app-border-color, rgba(255, 255, 255, 0.08));
+	border-radius: 12px;
 	background: rgba(255, 255, 255, 0.02);
 	overflow: hidden;
 }
@@ -23,7 +23,7 @@
 	grid-template-columns: 72px 68px 56px minmax(0, 1fr) 52px;
 	gap: 12px;
 	align-items: center;
-	padding: 2px 14px;
+	padding: 9px 14px;
 }
 
 .explorer-my-next-moves-table__head {
@@ -49,6 +49,23 @@
 
 .explorer-my-next-moves-table__row:last-child {
 	border-bottom: 0;
+}
+
+.explorer-my-next-moves-table__row--interactive {
+	cursor: pointer;
+	transition:
+		background-color 120ms ease,
+		border-color 120ms ease;
+}
+
+.explorer-my-next-moves-table__row--interactive:hover {
+	background: rgba(255, 255, 255, 0.05);
+}
+
+.explorer-my-next-moves-table__row--interactive:focus-visible {
+	outline: none;
+	background: rgba(255, 255, 255, 0.07);
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
 }
 
 .explorer-my-next-moves-table__footer {
@@ -85,7 +102,7 @@
 .explorer-my-next-moves-table__outcomes-bar {
 	display: flex;
 	align-items: stretch;
-	height: 18px;
+	height: 22px;
 	border-radius: 999px;
 	background: rgba(255, 255, 255, 0.08);
 	overflow: hidden;
@@ -121,7 +138,7 @@
 }
 
 .explorer-my-next-moves-table__outcomes-segment--black {
-	background: var(--app-chess-black-bg);
+	background: rgba(69, 102, 132, 0.96);
 	color: rgba(255, 255, 255, 0.96);
 }
 
