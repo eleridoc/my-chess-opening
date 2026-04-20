@@ -16,7 +16,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 import type { MyNextMoveRow, MyNextMovesResult, PromotionPiece } from 'my-chess-opening-core';
-import type { SharedGameFilter } from 'my-chess-opening-core/filters';
+import type { SharedGameFilter, SharedGameFilterPlayedColor } from 'my-chess-opening-core/filters';
 import { countActiveSharedGameFilterFields } from 'my-chess-opening-core/filters';
 
 import { ExplorerFacade } from '../../facade/explorer.facade';
@@ -45,6 +45,9 @@ import { SectionLoaderComponent } from '../../../shared/loading/section-loader/s
  * - Per-row tooltip details are handled by the table component.
  * - The current-position summary row is also rendered by the table component.
  * - Errors stay inline to avoid noisy global notifications while navigating.
+ * - `playedColor` is context-managed for this feature:
+ *   - DB game loaded => player's color in that game
+ *   - otherwise => color at the bottom of the board
  */
 @Component({
 	selector: 'app-explorer-my-next-moves-panel',
@@ -84,10 +87,40 @@ export class ExplorerMyNextMovesPanelComponent implements OnDestroy {
 
 	/**
 	 * Persisted shared filter for the "my-next-moves" context.
+	 *
+	 * Important:
+	 * - `playedColor` is not persisted as a user-owned filter for this feature
+	 * - it is derived dynamically from the Explorer context
 	 */
 	readonly myNextMovesFilter = signal<SharedGameFilter>(
-		this.sharedGameFilterStorage.loadSharedGameFilter('my-next-moves'),
+		this.normalizeManagedPlayedColor(
+			this.sharedGameFilterStorage.loadSharedGameFilter('my-next-moves'),
+		),
 	);
+
+	/**
+	 * Effective filter actually used by the feature.
+	 *
+	 * Rules:
+	 * - if a DB game is loaded, use the player's color in that game
+	 * - otherwise use the color at the bottom of the board
+	 *
+	 * This makes the reference color update automatically in study mode when the
+	 * board orientation changes.
+	 */
+	readonly effectiveMyNextMovesFilter = computed<SharedGameFilter>(() => {
+		const baseFilter = this.myNextMovesFilter();
+		const autoPlayedColor = this.resolveAutoPlayedColor();
+
+		if (!autoPlayedColor) {
+			return baseFilter;
+		}
+
+		return {
+			...baseFilter,
+			playedColor: autoPlayedColor,
+		};
+	});
 
 	/**
 	 * Last successful backend result.
@@ -124,7 +157,7 @@ export class ExplorerMyNextMovesPanelComponent implements OnDestroy {
 		effect(() => {
 			const positionKey = this.facade.positionKey();
 			const normalizedFen = this.facade.normalizedFen();
-			const filter = this.myNextMovesFilter();
+			const filter = this.effectiveMyNextMovesFilter();
 
 			void this.refresh(positionKey, normalizedFen, filter);
 		});
@@ -150,10 +183,11 @@ export class ExplorerMyNextMovesPanelComponent implements OnDestroy {
 		this.sharedGameFilterDialog.openSharedGameFilterDialog({
 			title: 'My next moves filters',
 			context: 'my-next-moves',
-			initialValue: this.myNextMovesFilter(),
+			initialValue: this.effectiveMyNextMovesFilter(),
 			persistInStorage: true,
 			onFilterChanged: (filter) => {
-				this.myNextMovesFilter.set(filter);
+				// Keep `playedColor` context-managed for this feature.
+				this.myNextMovesFilter.set(this.normalizeManagedPlayedColor(filter));
 			},
 		});
 	}
@@ -173,6 +207,39 @@ export class ExplorerMyNextMovesPanelComponent implements OnDestroy {
 		}
 
 		this.facade.attemptMove(parsed);
+	}
+
+	/**
+	 * Remove the persisted `playedColor` because this feature manages it from the
+	 * Explorer context instead of keeping it as a user-owned filter field.
+	 */
+	private normalizeManagedPlayedColor(filter: SharedGameFilter): SharedGameFilter {
+		return {
+			...filter,
+			playedColor: 'both',
+		};
+	}
+
+	/**
+	 * Resolve the automatic reference color for this feature.
+	 *
+	 * Priority:
+	 * 1. Player color in the currently loaded DB game
+	 * 2. Color at the bottom of the board
+	 */
+	private resolveAutoPlayedColor(): Exclude<SharedGameFilterPlayedColor, 'both'> | null {
+		const dbSnapshot = this.facade.dbGameSnapshot();
+
+		if (
+			dbSnapshot?.kind === 'DB' &&
+			(dbSnapshot.myColor === 'white' || dbSnapshot.myColor === 'black')
+		) {
+			return dbSnapshot.myColor;
+		}
+
+		const boardOrientation = this.facade.boardOrientation();
+
+		return boardOrientation === 'white' || boardOrientation === 'black' ? boardOrientation : null;
 	}
 
 	private buildBoardArrows(rows: MyNextMoveRow[]): ExplorerBoardArrow[] {
