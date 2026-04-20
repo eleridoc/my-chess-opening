@@ -77,9 +77,13 @@ const HINT_CAPTURE_CIRCLE = { class: 'mco-hint-capture-circle', slice: 'markerCi
  *   on the built-in preset colors.
  */
 const ARROW_TYPE_MY_NEXT_MOVES = { class: 'arrow-my-next-moves' };
-const ARROW_TYPE_OPENING_BOOK = { class: 'arrow-opening-book' };
-const ARROW_TYPE_STOCKFISH = { class: 'arrow-stockfish' };
+const ARROW_TYPE_MY_NEXT_MOVES_HIGHLIGHTED = { class: 'arrow-my-next-moves-highlighted' };
 
+const ARROW_TYPE_OPENING_BOOK = { class: 'arrow-opening-book' };
+const ARROW_TYPE_OPENING_BOOK_HIGHLIGHTED = { class: 'arrow-opening-book-highlighted' };
+
+const ARROW_TYPE_STOCKFISH = { class: 'arrow-stockfish' };
+const ARROW_TYPE_STOCKFISH_HIGHLIGHTED = { class: 'arrow-stockfish-highlighted' };
 // -----------------------------------------------------------------------------
 // Adapter
 // -----------------------------------------------------------------------------
@@ -756,12 +760,16 @@ export class CmChessboardAdapter implements ChessBoardAdapter {
 	private toCmArrowType(arrow: ExplorerBoardArrow): { class: string } {
 		switch (arrow.source) {
 			case 'opening-book':
-				return ARROW_TYPE_OPENING_BOOK;
+				return arrow.isHighlighted ? ARROW_TYPE_OPENING_BOOK_HIGHLIGHTED : ARROW_TYPE_OPENING_BOOK;
+
 			case 'stockfish':
-				return ARROW_TYPE_STOCKFISH;
+				return arrow.isHighlighted ? ARROW_TYPE_STOCKFISH_HIGHLIGHTED : ARROW_TYPE_STOCKFISH;
+
 			case 'my-next-moves':
 			default:
-				return ARROW_TYPE_MY_NEXT_MOVES;
+				return arrow.isHighlighted
+					? ARROW_TYPE_MY_NEXT_MOVES_HIGHLIGHTED
+					: ARROW_TYPE_MY_NEXT_MOVES;
 		}
 	}
 }

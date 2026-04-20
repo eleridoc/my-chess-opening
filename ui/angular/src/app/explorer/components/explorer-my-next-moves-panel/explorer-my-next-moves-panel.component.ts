@@ -167,6 +167,7 @@ export class ExplorerMyNextMovesPanelComponent implements OnDestroy {
 
 			if (!result) {
 				this.boardArrows.clearSourceArrows('my-next-moves');
+				this.boardArrows.clearHoveredArrow('my-next-moves');
 				return;
 			}
 
@@ -176,6 +177,7 @@ export class ExplorerMyNextMovesPanelComponent implements OnDestroy {
 
 	ngOnDestroy(): void {
 		this.boardArrows.clearSourceArrows('my-next-moves');
+		this.boardArrows.clearHoveredArrow('my-next-moves');
 		this.boardArrows.clearActiveSource('my-next-moves');
 	}
 
@@ -207,6 +209,10 @@ export class ExplorerMyNextMovesPanelComponent implements OnDestroy {
 		}
 
 		this.facade.attemptMove(parsed);
+	}
+
+	onMoveHovered(row: MyNextMoveRow | null): void {
+		this.boardArrows.setHoveredArrow('my-next-moves', row?.moveUci ?? null);
 	}
 
 	/**

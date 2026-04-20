@@ -8,12 +8,6 @@ import type {
 
 const STORAGE_KEY_PREFIX = 'mco.explorer.board-arrows.mode.';
 
-const ALL_ARROW_SOURCES: ExplorerBoardArrowSource[] = [
-	'my-next-moves',
-	'opening-book',
-	'stockfish',
-];
-
 function loadStoredArrowMode(source: ExplorerBoardArrowSource): ExplorerBoardArrowDisplayMode {
 	try {
 		const raw = localStorage.getItem(`${STORAGE_KEY_PREFIX}${source}`);
@@ -21,7 +15,7 @@ function loadStoredArrowMode(source: ExplorerBoardArrowSource): ExplorerBoardArr
 			return raw;
 		}
 	} catch {
-		// ignore storage errors
+		// Ignore storage errors.
 	}
 
 	return 'off';
@@ -45,6 +39,12 @@ export class ExplorerBoardArrowsService {
 		stockfish: [],
 	});
 
+	private readonly hoveredArrowUciState = signal<Record<ExplorerBoardArrowSource, string | null>>({
+		'my-next-moves': null,
+		'opening-book': null,
+		stockfish: null,
+	});
+
 	private readonly activeSourceState = signal<ExplorerBoardArrowSource | null>(null);
 
 	readonly visibleArrows = computed(() => {
@@ -55,21 +55,43 @@ export class ExplorerBoardArrowsService {
 		}
 
 		const mode = this.sourceModesState()[activeSource];
-		const arrows = this.sourceArrowsState()[activeSource];
+		const allSourceArrows = this.sourceArrowsState()[activeSource];
+		const hoveredUci = this.hoveredArrowUciState()[activeSource];
 
-		if (mode === 'off' || arrows.length === 0) {
+		if (mode === 'off' || allSourceArrows.length === 0) {
 			return [];
 		}
 
+		let visible: ExplorerBoardArrow[];
+
 		if (mode === 'top3') {
-			return arrows.slice(0, 3);
+			visible = allSourceArrows.slice(0, 3);
+		} else if (mode === 'top5') {
+			visible = allSourceArrows.slice(0, 5);
+		} else {
+			visible = allSourceArrows.slice();
 		}
 
-		if (mode === 'top5') {
-			return arrows.slice(0, 5);
+		/**
+		 * If the hovered move is not already visible because of the current mode,
+		 * add it temporarily so the user still gets a board highlight while hovering
+		 * the table row.
+		 */
+		if (hoveredUci) {
+			const alreadyVisible = visible.some((arrow) => arrow.uci === hoveredUci);
+
+			if (!alreadyVisible) {
+				const hoveredArrow = allSourceArrows.find((arrow) => arrow.uci === hoveredUci);
+				if (hoveredArrow) {
+					visible = [hoveredArrow, ...visible];
+				}
+			}
 		}
 
-		return arrows;
+		return visible.map((arrow) => ({
+			...arrow,
+			isHighlighted: hoveredUci !== null && arrow.uci === hoveredUci,
+		}));
 	});
 
 	getArrowMode(source: ExplorerBoardArrowSource): ExplorerBoardArrowDisplayMode {
@@ -85,7 +107,7 @@ export class ExplorerBoardArrowsService {
 		try {
 			localStorage.setItem(`${STORAGE_KEY_PREFIX}${source}`, mode);
 		} catch {
-			// ignore storage errors
+			// Ignore storage errors.
 		}
 	}
 
@@ -110,6 +132,22 @@ export class ExplorerBoardArrowsService {
 		this.sourceArrowsState.update((current) => ({
 			...current,
 			[source]: [],
+		}));
+
+		this.clearHoveredArrow(source);
+	}
+
+	setHoveredArrow(source: ExplorerBoardArrowSource, uci: string | null): void {
+		this.hoveredArrowUciState.update((current) => ({
+			...current,
+			[source]: uci,
+		}));
+	}
+
+	clearHoveredArrow(source: ExplorerBoardArrowSource): void {
+		this.hoveredArrowUciState.update((current) => ({
+			...current,
+			[source]: null,
 		}));
 	}
 }

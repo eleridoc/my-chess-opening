@@ -118,3 +118,36 @@ body {
 	stroke-linecap: round;
 	opacity: 0.8;
 }
+
+.cm-chessboard .arrow-my-next-moves-highlighted .arrow-head {
+	fill: #9ec5ff;
+	fill-rule: nonzero;
+}
+
+.cm-chessboard .arrow-my-next-moves-highlighted .arrow-line {
+	stroke: #9ec5ff;
+	stroke-linecap: round;
+	opacity: 1;
+}
+
+.cm-chessboard .arrow-opening-book-highlighted .arrow-head {
+	fill: #65e1d3;
+	fill-rule: nonzero;
+}
+
+.cm-chessboard .arrow-opening-book-highlighted .arrow-line {
+	stroke: #65e1d3;
+	stroke-linecap: round;
+	opacity: 1;
+}
+
+.cm-chessboard .arrow-stockfish-highlighted .arrow-head {
+	fill: #ffd180;
+	fill-rule: nonzero;
+}
+
+.cm-chessboard .arrow-stockfish-highlighted .arrow-line {
+	stroke: #ffd180;
+	stroke-linecap: round;
+	opacity: 1;
+}

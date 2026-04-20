@@ -17,7 +17,7 @@ import { IsoDateTimePipe } from '../../../shared/dates/pipes';
  * - show popularity and White / Draw / Black breakdowns
  * - expose per-row tooltip details
  * - keep the current-position summary row always visible at the bottom
- * - emit UI intents when a candidate move row is selected
+ * - emit UI intents when a candidate move row is selected or hovered
  */
 @Component({
 	selector: 'app-explorer-my-next-moves-table',
@@ -34,12 +34,17 @@ export class ExplorerMyNextMovesTableComponent {
 
 	/**
 	 * Emitted when the user selects a candidate move row.
-	 *
-	 * Notes:
-	 * - Only candidate rows are clickable.
-	 * - The persistent "Current" summary row is informational only.
 	 */
 	@Output() readonly moveSelected = new EventEmitter<MyNextMoveRow>();
+
+	/**
+	 * Emitted when the user hovers or focuses a candidate row.
+	 *
+	 * Payload:
+	 * - row => hover/focus start
+	 * - null => hover/focus end
+	 */
+	@Output() readonly moveHovered = new EventEmitter<MyNextMoveRow | null>();
 
 	trackByMove(_index: number, row: MyNextMoveRow): string {
 		return `${row.moveUci}::${row.moveSan}`;
@@ -75,5 +80,13 @@ export class ExplorerMyNextMovesTableComponent {
 
 	onMoveRowClick(row: MyNextMoveRow): void {
 		this.moveSelected.emit(row);
+	}
+
+	onMoveRowEnter(row: MyNextMoveRow): void {
+		this.moveHovered.emit(row);
+	}
+
+	onMoveRowLeave(): void {
+		this.moveHovered.emit(null);
 	}
 }

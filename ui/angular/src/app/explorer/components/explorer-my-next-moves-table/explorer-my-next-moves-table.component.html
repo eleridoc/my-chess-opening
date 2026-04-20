@@ -44,6 +44,10 @@
 				tabindex="0"
 				*ngFor="let row of rows; trackBy: trackByMove"
 				(click)="onMoveRowClick(row)"
+				(mouseenter)="onMoveRowEnter(row)"
+				(mouseleave)="onMoveRowLeave()"
+				(focus)="onMoveRowEnter(row)"
+				(blur)="onMoveRowLeave()"
 				(keydown.enter)="onMoveRowClick(row)"
 				(keydown.space)="onMoveRowClick(row); $event.preventDefault()"
 				[attr.aria-label]="'Play move ' + row.moveSan"
@@ -112,6 +116,8 @@
 						mat-icon-button
 						class="explorer-my-next-moves-table__info-button"
 						(click)="$event.stopPropagation()"
+						(mouseenter)="$event.stopPropagation()"
+						(mouseleave)="$event.stopPropagation()"
 						(keydown)="$event.stopPropagation()"
 						[matTooltip]="
 							buildInfoTooltip(

@@ -10,4 +10,12 @@ export interface ExplorerBoardArrow {
 	label?: string;
 	rank: number;
 	weight: number;
+
+	/**
+	 * Optional UI emphasis flag.
+	 *
+	 * Used for transient states such as:
+	 * - hovered row in the "my next moves" table
+	 */
+	isHighlighted?: boolean;
 }
