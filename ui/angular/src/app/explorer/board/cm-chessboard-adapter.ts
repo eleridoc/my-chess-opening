@@ -76,14 +76,15 @@ const HINT_CAPTURE_CIRCLE = { class: 'mco-hint-capture-circle', slice: 'markerCi
  * - This allows us to define fully custom CSS classes instead of relying only
  *   on the built-in preset colors.
  */
-const ARROW_TYPE_MY_NEXT_MOVES = { class: 'arrow-my-next-moves' };
-const ARROW_TYPE_MY_NEXT_MOVES_HIGHLIGHTED = { class: 'arrow-my-next-moves-highlighted' };
+const ARROW_CLASS_MY_NEXT_MOVES = 'arrow-my-next-moves';
+const ARROW_CLASS_MY_NEXT_MOVES_HIGHLIGHTED = 'arrow-my-next-moves-highlighted';
 
-const ARROW_TYPE_OPENING_BOOK = { class: 'arrow-opening-book' };
-const ARROW_TYPE_OPENING_BOOK_HIGHLIGHTED = { class: 'arrow-opening-book-highlighted' };
+const ARROW_CLASS_OPENING_BOOK = 'arrow-opening-book';
+const ARROW_CLASS_OPENING_BOOK_HIGHLIGHTED = 'arrow-opening-book-highlighted';
 
-const ARROW_TYPE_STOCKFISH = { class: 'arrow-stockfish' };
-const ARROW_TYPE_STOCKFISH_HIGHLIGHTED = { class: 'arrow-stockfish-highlighted' };
+const ARROW_CLASS_STOCKFISH = 'arrow-stockfish';
+const ARROW_CLASS_STOCKFISH_HIGHLIGHTED = 'arrow-stockfish-highlighted';
+
 // -----------------------------------------------------------------------------
 // Adapter
 // -----------------------------------------------------------------------------
@@ -758,18 +759,66 @@ export class CmChessboardAdapter implements ChessBoardAdapter {
 	}
 
 	private toCmArrowType(arrow: ExplorerBoardArrow): { class: string } {
+		const classes = [this.getArrowSourceClass(arrow), this.getArrowWeightClass(arrow)];
+
+		if (arrow.isHighlighted) {
+			classes.push(this.getArrowHighlightedClass(arrow));
+		}
+
+		return {
+			class: classes.join(' '),
+		};
+	}
+
+	private getArrowSourceClass(arrow: ExplorerBoardArrow): string {
 		switch (arrow.source) {
 			case 'opening-book':
-				return arrow.isHighlighted ? ARROW_TYPE_OPENING_BOOK_HIGHLIGHTED : ARROW_TYPE_OPENING_BOOK;
-
+				return ARROW_CLASS_OPENING_BOOK;
 			case 'stockfish':
-				return arrow.isHighlighted ? ARROW_TYPE_STOCKFISH_HIGHLIGHTED : ARROW_TYPE_STOCKFISH;
-
+				return ARROW_CLASS_STOCKFISH;
 			case 'my-next-moves':
 			default:
-				return arrow.isHighlighted
-					? ARROW_TYPE_MY_NEXT_MOVES_HIGHLIGHTED
-					: ARROW_TYPE_MY_NEXT_MOVES;
+				return ARROW_CLASS_MY_NEXT_MOVES;
 		}
+	}
+
+	private getArrowHighlightedClass(arrow: ExplorerBoardArrow): string {
+		switch (arrow.source) {
+			case 'opening-book':
+				return ARROW_CLASS_OPENING_BOOK_HIGHLIGHTED;
+			case 'stockfish':
+				return ARROW_CLASS_STOCKFISH_HIGHLIGHTED;
+			case 'my-next-moves':
+			default:
+				return ARROW_CLASS_MY_NEXT_MOVES_HIGHLIGHTED;
+		}
+	}
+
+	/**
+	 * Convert the move popularity percentage to a small number of visual buckets.
+	 *
+	 * Current buckets:
+	 * - weight-1: < 8%
+	 * - weight-2: 8% to < 15%
+	 * - weight-3: 15% to < 25%
+	 * - weight-4: 25% to < 40%
+	 * - weight-5: >= 40%
+	 */
+	private getArrowWeightClass(arrow: ExplorerBoardArrow): string {
+		const weight = this.normalizeArrowWeight(arrow.weight);
+
+		if (weight >= 40) return 'arrow-weight-5';
+		if (weight >= 25) return 'arrow-weight-4';
+		if (weight >= 15) return 'arrow-weight-3';
+		if (weight >= 8) return 'arrow-weight-2';
+		return 'arrow-weight-1';
+	}
+
+	private normalizeArrowWeight(value: number): number {
+		if (!Number.isFinite(value)) {
+			return 0;
+		}
+
+		return Math.max(0, Math.min(100, value));
 	}
 }

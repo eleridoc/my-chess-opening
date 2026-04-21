@@ -115,17 +115,9 @@
 						type="button"
 						mat-icon-button
 						class="explorer-my-next-moves-table__info-button"
-						(click)="$event.stopPropagation()"
-						(mouseenter)="$event.stopPropagation()"
-						(mouseleave)="$event.stopPropagation()"
+						(click)="openMoveInfo(row); $event.stopPropagation()"
 						(keydown)="$event.stopPropagation()"
-						[matTooltip]="
-							buildInfoTooltip(
-								row,
-								row.lastPlayedAtIso ? (row.lastPlayedAtIso | appIsoDateTime) : '—'
-							)
-						"
-						matTooltipPosition="above"
+						[matMenuTriggerFor]="infoMenu"
 						aria-label="Show move details"
 					>
 						<mat-icon aria-hidden="true">info</mat-icon>
@@ -205,15 +197,9 @@
 				type="button"
 				mat-icon-button
 				class="explorer-my-next-moves-table__info-button"
-				(click)="$event.stopPropagation()"
+				(click)="openSummaryInfo(summary); $event.stopPropagation()"
 				(keydown)="$event.stopPropagation()"
-				[matTooltip]="
-					buildSummaryTooltip(
-						summary,
-						summary.lastPlayedAtIso ? (summary.lastPlayedAtIso | appIsoDateTime) : '—'
-					)
-				"
-				matTooltipPosition="above"
+				[matMenuTriggerFor]="infoMenu"
 				aria-label="Show current position details"
 			>
 				<mat-icon aria-hidden="true">info</mat-icon>
@@ -221,3 +207,32 @@
 		</div>
 	</div>
 </div>
+
+<mat-menu
+	#infoMenu="matMenu"
+	xPosition="before"
+	yPosition="below"
+	overlapTrigger="false"
+	panelClass="explorer-my-next-moves-info-menu"
+>
+	<div class="explorer-my-next-moves-info-popover" (click)="$event.stopPropagation()">
+		<div class="explorer-my-next-moves-info-popover__title">
+			{{ infoPopoverData()?.title }}
+		</div>
+
+		<div class="explorer-my-next-moves-info-popover__line">
+			<div class="explorer-my-next-moves-info-popover__label">Last played</div>
+			<div class="explorer-my-next-moves-info-popover__value">
+				{{ infoPopoverData()?.lastPlayedLabel }}
+			</div>
+		</div>
+
+		<div class="explorer-my-next-moves-info-popover__line">
+			<div class="explorer-my-next-moves-info-popover__label">White / Draw / Black</div>
+			<div class="explorer-my-next-moves-info-popover__value">
+				{{ infoPopoverData()?.whiteWinsCount }} / {{ infoPopoverData()?.drawsCount }} /
+				{{ infoPopoverData()?.blackWinsCount }}
+			</div>
+		</div>
+	</div>
+</mat-menu>

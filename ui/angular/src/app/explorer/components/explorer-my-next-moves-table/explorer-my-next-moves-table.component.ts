@@ -1,13 +1,29 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	EventEmitter,
+	Input,
+	Output,
+	inject,
+	signal,
+} from '@angular/core';
 
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatMenuModule } from '@angular/material/menu';
 
 import type { MyNextMoveRow, MyNextMovesPositionSummary } from 'my-chess-opening-core';
 
-import { IsoDateTimePipe } from '../../../shared/dates/pipes';
+import { DateFormatService } from '../../../shared/dates/date-format.service';
+
+interface InfoPopoverData {
+	title: string;
+	lastPlayedLabel: string;
+	whiteWinsCount: number;
+	drawsCount: number;
+	blackWinsCount: number;
+}
 
 /**
  * Presentational table for Explorer "My next moves".
@@ -15,19 +31,21 @@ import { IsoDateTimePipe } from '../../../shared/dates/pipes';
  * Responsibilities:
  * - render the ordered candidate move rows
  * - show popularity and White / Draw / Black breakdowns
- * - expose per-row tooltip details
+ * - expose per-row info popovers
  * - keep the current-position summary row always visible at the bottom
  * - emit UI intents when a candidate move row is selected or hovered
  */
 @Component({
 	selector: 'app-explorer-my-next-moves-table',
 	standalone: true,
-	imports: [CommonModule, MatButtonModule, MatIconModule, MatTooltipModule, IsoDateTimePipe],
+	imports: [CommonModule, MatButtonModule, MatIconModule, MatMenuModule],
 	templateUrl: './explorer-my-next-moves-table.component.html',
 	styleUrl: './explorer-my-next-moves-table.component.scss',
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ExplorerMyNextMovesTableComponent {
+	private readonly dateFormat = inject(DateFormatService);
+
 	@Input({ required: true }) rows: MyNextMoveRow[] = [];
 
 	@Input({ required: true }) positionSummary: MyNextMovesPositionSummary | null = null;
@@ -45,6 +63,8 @@ export class ExplorerMyNextMovesTableComponent {
 	 * - null => hover/focus end
 	 */
 	@Output() readonly moveHovered = new EventEmitter<MyNextMoveRow | null>();
+
+	readonly infoPopoverData = signal<InfoPopoverData | null>(null);
 
 	trackByMove(_index: number, row: MyNextMoveRow): string {
 		return `${row.moveUci}::${row.moveSan}`;
@@ -70,14 +90,6 @@ export class ExplorerMyNextMovesTableComponent {
 		return this.clampPercent(value) >= 14;
 	}
 
-	buildInfoTooltip(row: MyNextMoveRow, lastPlayedLabel: string): string {
-		return `Last played: ${lastPlayedLabel} • Counts White / Draw / Black: ${row.outcomes.whiteWinsCount} / ${row.outcomes.drawsCount} / ${row.outcomes.blackWinsCount}`;
-	}
-
-	buildSummaryTooltip(summary: MyNextMovesPositionSummary, lastPlayedLabel: string): string {
-		return `Current position • Last played: ${lastPlayedLabel} • Counts White / Draw / Black: ${summary.outcomes.whiteWinsCount} / ${summary.outcomes.drawsCount} / ${summary.outcomes.blackWinsCount}`;
-	}
-
 	onMoveRowClick(row: MyNextMoveRow): void {
 		this.moveSelected.emit(row);
 	}
@@ -88,5 +100,33 @@ export class ExplorerMyNextMovesTableComponent {
 
 	onMoveRowLeave(): void {
 		this.moveHovered.emit(null);
+	}
+
+	openMoveInfo(row: MyNextMoveRow): void {
+		this.infoPopoverData.set({
+			title: row.moveSan,
+			lastPlayedLabel: this.formatLastPlayedLabel(row.lastPlayedAtIso),
+			whiteWinsCount: row.outcomes.whiteWinsCount,
+			drawsCount: row.outcomes.drawsCount,
+			blackWinsCount: row.outcomes.blackWinsCount,
+		});
+	}
+
+	openSummaryInfo(summary: MyNextMovesPositionSummary): void {
+		this.infoPopoverData.set({
+			title: 'Current position',
+			lastPlayedLabel: this.formatLastPlayedLabel(summary.lastPlayedAtIso),
+			whiteWinsCount: summary.outcomes.whiteWinsCount,
+			drawsCount: summary.outcomes.drawsCount,
+			blackWinsCount: summary.outcomes.blackWinsCount,
+		});
+	}
+
+	private formatLastPlayedLabel(value: string | null | undefined): string {
+		if (!value) {
+			return '—';
+		}
+
+		return this.dateFormat.formatDateTime(value);
 	}
 }

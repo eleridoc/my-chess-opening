@@ -70,29 +70,22 @@ body {
 }
 
 /* -------------------------------------------------------------------------- */
-/* cm-chessboard custom arrow colors                                           */
+/* cm-chessboard custom arrow colors and weights                              */
 /* -------------------------------------------------------------------------- */
 
 /**
- * My next moves:
- * - primary blue
- * - clearer than the default green success arrow
+ * Base source colors
  */
 .cm-chessboard .arrow-my-next-moves .arrow-head {
-	fill: rgba(69, 102, 132, 1);
+	fill: #4d93ff;
 	fill-rule: nonzero;
 }
 
 .cm-chessboard .arrow-my-next-moves .arrow-line {
-	stroke: rgba(69, 102, 132, 1);
+	stroke: #4d93ff;
 	stroke-linecap: round;
-	opacity: 0.78;
 }
 
-/**
- * Opening book:
- * - teal / cyan family
- */
 .cm-chessboard .arrow-opening-book .arrow-head {
 	fill: #2bb9a9;
 	fill-rule: nonzero;
@@ -101,13 +94,8 @@ body {
 .cm-chessboard .arrow-opening-book .arrow-line {
 	stroke: #2bb9a9;
 	stroke-linecap: round;
-	opacity: 0.72;
 }
 
-/**
- * Stockfish:
- * - amber / orange family
- */
 .cm-chessboard .arrow-stockfish .arrow-head {
 	fill: #ffb347;
 	fill-rule: nonzero;
@@ -116,38 +104,94 @@ body {
 .cm-chessboard .arrow-stockfish .arrow-line {
 	stroke: #ffb347;
 	stroke-linecap: round;
-	opacity: 0.8;
 }
 
-.cm-chessboard .arrow-my-next-moves-highlighted .arrow-head {
+/**
+ * Hover / highlighted variants
+ *
+ * Important:
+ * - keep color override here
+ * - keep opacity / thickness controlled by weight classes below
+ */
+.cm-chessboard .arrow-my-next-moves.arrow-my-next-moves-highlighted .arrow-head {
 	fill: #9ec5ff;
 	fill-rule: nonzero;
 }
 
-.cm-chessboard .arrow-my-next-moves-highlighted .arrow-line {
+.cm-chessboard .arrow-my-next-moves.arrow-my-next-moves-highlighted .arrow-line {
 	stroke: #9ec5ff;
 	stroke-linecap: round;
-	opacity: 1;
 }
 
-.cm-chessboard .arrow-opening-book-highlighted .arrow-head {
+.cm-chessboard .arrow-opening-book.arrow-opening-book-highlighted .arrow-head {
 	fill: #65e1d3;
 	fill-rule: nonzero;
 }
 
-.cm-chessboard .arrow-opening-book-highlighted .arrow-line {
+.cm-chessboard .arrow-opening-book.arrow-opening-book-highlighted .arrow-line {
 	stroke: #65e1d3;
 	stroke-linecap: round;
-	opacity: 1;
 }
 
-.cm-chessboard .arrow-stockfish-highlighted .arrow-head {
+.cm-chessboard .arrow-stockfish.arrow-stockfish-highlighted .arrow-head {
 	fill: #ffd180;
 	fill-rule: nonzero;
 }
 
-.cm-chessboard .arrow-stockfish-highlighted .arrow-line {
+.cm-chessboard .arrow-stockfish.arrow-stockfish-highlighted .arrow-line {
 	stroke: #ffd180;
 	stroke-linecap: round;
+}
+
+/**
+ * Visual weight buckets driven by move popularity.
+ *
+ * Notes:
+ * - stroke-width controls line thickness
+ * - opacity affects both line and head
+ * - marker size follows the arrow stroke rendering well enough for this use case
+ */
+.cm-chessboard .arrow-weight-1 .arrow-line {
+	stroke-width: 6px;
+	opacity: 0.78;
+}
+
+.cm-chessboard .arrow-weight-1 .arrow-head {
+	opacity: 1;
+}
+
+.cm-chessboard .arrow-weight-2 .arrow-line {
+	stroke-width: 10px;
+	opacity: 0.78;
+}
+
+.cm-chessboard .arrow-weight-2 .arrow-head {
+	opacity: 1;
+}
+
+.cm-chessboard .arrow-weight-3 .arrow-line {
+	stroke-width: 12px;
+	opacity: 0.78;
+}
+
+.cm-chessboard .arrow-weight-3 .arrow-head {
+	opacity: 1;
+}
+
+.cm-chessboard .arrow-weight-4 .arrow-line {
+	stroke-width: 14px;
+	opacity: 0.78;
+}
+
+.cm-chessboard .arrow-weight-4 .arrow-head {
+	opacity: 1;
+}
+
+.cm-chessboard .arrow-weight-5 .arrow-line {
+	stroke-width: 16px;
+	opacity: 0.78;
+}
+
+.cm-chessboard .arrow-weight-5 .arrow-head {
 	opacity: 1;
 }
