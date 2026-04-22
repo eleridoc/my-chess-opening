@@ -10,10 +10,10 @@ export interface ExplorerPositionExportDialogData {
 	/** Optional custom dialog title. */
 	title?: string;
 
-	/** Optional future FEN value. */
+	/** Current FEN value. */
 	fen?: string | null;
 
-	/** Optional future PGN value. */
+	/** Current PGN value. */
 	pgn?: string | null;
 
 	/** Enable Copy FEN when the action is implemented. */
@@ -29,10 +29,10 @@ export interface ExplorerPositionExportDialogData {
 /**
  * Dialog shell for position export actions.
  *
- * V1.10.2 scope:
- * - provide the dedicated popup UI
- * - expose the future FEN / PGN / PNG sections
- * - keep actions disabled until the next V1.10 tasks wire the real logic
+ * V1.10.4 scope:
+ * - display the real current FEN
+ * - display the real current PGN
+ * - keep actions disabled until copy / PNG tasks are implemented
  */
 @Component({
 	selector: 'app-explorer-position-export-dialog',
@@ -52,12 +52,12 @@ export class ExplorerPositionExportDialogComponent {
 
 	get fenPreview(): string {
 		const fen = this.data.fen?.trim();
-		return fen && fen.length > 0 ? fen : 'Current FEN will be wired in V1.10.4.';
+		return fen && fen.length > 0 ? fen : 'FEN is not available for the current position.';
 	}
 
 	get pgnPreview(): string {
 		const pgn = this.data.pgn?.trim();
-		return pgn && pgn.length > 0 ? pgn : 'Current PGN will be wired in V1.10.4.';
+		return pgn && pgn.length > 0 ? pgn : 'PGN is not available for the current position.';
 	}
 
 	onClose(): void {

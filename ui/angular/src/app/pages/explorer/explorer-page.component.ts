@@ -223,12 +223,23 @@ export class ExplorerPageComponent implements AfterViewInit {
 	}
 
 	onExportPosition(): void {
-		this.positionExportDialog.openExplorerPositionExportDialog({
-			title: 'Export current position',
-			canCopyFen: false,
-			canCopyPgn: false,
-			canExportPng: false,
-		});
+		const fen = this.facade.fen();
+
+		try {
+			const pgn = this.facade.getCurrentLinePgn();
+
+			this.positionExportDialog.openExplorerPositionExportDialog({
+				title: 'Export current position',
+				fen,
+				pgn,
+				canCopyFen: false,
+				canCopyPgn: false,
+				canExportPng: false,
+			});
+		} catch (error) {
+			console.error('[Explorer] Failed to prepare current position export dialog.', error);
+			this.notify.error('Failed to prepare current position export.');
+		}
 	}
 
 	/**

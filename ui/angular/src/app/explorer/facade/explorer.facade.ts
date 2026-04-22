@@ -157,6 +157,20 @@ export class ExplorerFacade {
 		this.state._boardOrientation.set(orientation);
 	}
 
+	/**
+	 * Builds the PGN of the current active line up to the current cursor.
+	 *
+	 * Notes:
+	 * - DB sessions reuse snapshot headers/tags from the core session.
+	 * - Ephemeral PGN imports reuse the raw parsed tags cached by the facade.
+	 * - The returned PGN is intended for export-oriented UI actions.
+	 */
+	getCurrentLinePgn(): string {
+		return this.session.getCurrentLinePgn({
+			pgnTags: this.state._ephemeralPgnTags(),
+		});
+	}
+
 	/** UI-friendly alias for ephemeral import. */
 	loadFen(fen: string): void {
 		// Ephemeral PGN cache becomes irrelevant as soon as we load a FEN.
