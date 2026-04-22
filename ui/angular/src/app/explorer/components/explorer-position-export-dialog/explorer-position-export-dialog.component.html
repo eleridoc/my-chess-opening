@@ -3,112 +3,94 @@
 </h2>
 
 <mat-dialog-content class="explorer-position-export-dialog__content app-density--5">
-	<p class="explorer-position-export-dialog__intro">
-		Export tools for the current Explorer position.
-	</p>
-
-	<section class="explorer-position-export-dialog__section">
-		<div class="explorer-position-export-dialog__section-header">
-			<div>
+	<div class="explorer-position-export-dialog__grid">
+		<section class="explorer-position-export-dialog__section">
+			<div class="explorer-position-export-dialog__section-header">
 				<h3 class="explorer-position-export-dialog__section-title">FEN</h3>
 				<p class="explorer-position-export-dialog__section-subtitle">
 					Exact current board position.
 				</p>
 			</div>
-		</div>
 
-		<mat-form-field
-			appearance="fill"
-			subscriptSizing="dynamic"
-			class="explorer-position-export-dialog__field"
-		>
-			<textarea matInput rows="3" [value]="fenPreview" readonly></textarea>
-		</mat-form-field>
-
-		<p class="explorer-position-export-dialog__hint">
-			Copy the exact current FEN of the active Explorer position.
-		</p>
-
-		<div class="explorer-position-export-dialog__actions-row">
-			<button
-				mat-flat-button
-				class="mat-flat-button-d-5"
-				color="primary"
-				type="button"
-				[disabled]="!canCopyFen"
-				(click)="onCopyFen()"
+			<mat-form-field
+				appearance="fill"
+				subscriptSizing="dynamic"
+				class="explorer-position-export-dialog__field explorer-position-export-dialog__field--fen"
 			>
-				Copy FEN
-			</button>
-		</div>
-	</section>
+				<textarea matInput rows="2" [value]="fenPreview" readonly></textarea>
+			</mat-form-field>
+		</section>
 
-	<section class="explorer-position-export-dialog__section">
-		<div class="explorer-position-export-dialog__section-header">
-			<div>
+		<section class="explorer-position-export-dialog__section">
+			<div class="explorer-position-export-dialog__section-header">
 				<h3 class="explorer-position-export-dialog__section-title">PGN</h3>
 				<p class="explorer-position-export-dialog__section-subtitle">
 					Current line up to the active cursor.
 				</p>
 			</div>
-		</div>
 
-		<mat-form-field
-			appearance="fill"
-			subscriptSizing="dynamic"
-			class="explorer-position-export-dialog__field"
-		>
-			<textarea matInput rows="8" [value]="pgnPreview" readonly></textarea>
-		</mat-form-field>
-
-		<p class="explorer-position-export-dialog__hint">
-			Copy the current active line as PGN up to the current cursor.
-		</p>
-
-		<div class="explorer-position-export-dialog__actions-row">
-			<button
-				mat-flat-button
-				class="mat-flat-button-d-5"
-				color="primary"
-				type="button"
-				[disabled]="!canCopyPgn"
-				(click)="onCopyPgn()"
+			<mat-form-field
+				appearance="fill"
+				subscriptSizing="dynamic"
+				class="explorer-position-export-dialog__field explorer-position-export-dialog__field--pgn"
 			>
-				Copy PGN
-			</button>
-		</div>
-	</section>
+				<textarea matInput rows="6" [value]="pgnPreview" readonly></textarea>
+			</mat-form-field>
+		</section>
 
-	<section class="explorer-position-export-dialog__section">
-		<div class="explorer-position-export-dialog__section-header">
-			<div>
+		<section class="explorer-position-export-dialog__section">
+			<div class="explorer-position-export-dialog__section-header">
 				<h3 class="explorer-position-export-dialog__section-title">PNG</h3>
 				<p class="explorer-position-export-dialog__section-subtitle">
-					Export the current board rendering as an image.
+					Export the current live board rendering.
 				</p>
 			</div>
-		</div>
 
-		<p class="explorer-position-export-dialog__hint explorer-position-export-dialog__hint--block">
-			Export the current board exactly as rendered by the live board component whenever the SVG
-			board is available.
-		</p>
-
-		<div class="explorer-position-export-dialog__actions-row">
-			<button
-				mat-flat-button
-				class="mat-flat-button-d-5"
-				color="primary"
-				type="button"
-				[disabled]="!canExportPng"
-				(click)="onExportPng()"
-			>
-				Export PNG
-			</button>
-		</div>
-	</section>
+			<div class="explorer-position-export-dialog__png-box">
+				<p class="explorer-position-export-dialog__hint">
+					The PNG export uses the current rendered board and keeps the visible board state as close
+					as possible to what is displayed in Explorer.
+				</p>
+			</div>
+		</section>
+	</div>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end" class="explorer-position-export-dialog__footer">
-	<button mat-button class="mat-flat-button-d-5" type="button" (click)="onClose()">Close</button>
+	<div class="explorer-position-export-dialog__footer-actions">
+		<button
+			mat-flat-button
+			class="mat-flat-button-d-5"
+			color="primary"
+			type="button"
+			[disabled]="!canCopyFen"
+			(click)="onCopyFen()"
+		>
+			Copy FEN
+		</button>
+
+		<button
+			mat-flat-button
+			class="mat-flat-button-d-5"
+			color="primary"
+			type="button"
+			[disabled]="!canCopyPgn"
+			(click)="onCopyPgn()"
+		>
+			Copy PGN
+		</button>
+
+		<button
+			mat-flat-button
+			class="mat-flat-button-d-5"
+			color="primary"
+			type="button"
+			[disabled]="!canExportPng"
+			(click)="onExportPng()"
+		>
+			Export PNG
+		</button>
+
+		<button mat-button class="mat-flat-button-d-5" type="button" (click)="onClose()">Close</button>
+	</div>
 </mat-dialog-actions>

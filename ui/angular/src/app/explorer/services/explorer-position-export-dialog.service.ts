@@ -25,8 +25,8 @@ export class ExplorerPositionExportDialogService {
 			ExplorerPositionExportDialogData,
 			void
 		>(ExplorerPositionExportDialogComponent, {
-			width: '880px',
-			maxWidth: '96vw',
+			width: '1080px',
+			maxWidth: '98vw',
 			autoFocus: false,
 			restoreFocus: true,
 			panelClass: 'app-dialog-panel',
