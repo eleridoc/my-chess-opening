@@ -23,7 +23,7 @@
 	grid-template-columns: 72px 68px 56px minmax(0, 1fr) 52px;
 	gap: 12px;
 	align-items: center;
-	padding: 2px 14px;
+	padding: 2px 0px 2px 15px;
 }
 
 .explorer-my-next-moves-table__head {
@@ -32,6 +32,7 @@
 	font-size: 10px;
 	font-weight: 600;
 	opacity: 0.78;
+	margin-right: 15px;
 }
 
 .explorer-my-next-moves-table__body {
@@ -80,6 +81,7 @@
 	border-top: 1px solid var(--app-border-color, rgba(255, 255, 255, 0.08));
 	background: rgba(255, 255, 255, 0.06);
 	font-size: 13px;
+	padding-right: 15px;
 }
 
 .explorer-my-next-moves-table__cell {
@@ -91,6 +93,11 @@
 	align-items: center;
 	justify-content: center;
 }
+
+// .explorer-my-next-moves-table__head .explorer-my-next-moves-table__cell--info {
+// 	background-color: red;
+// 	margin-right: 25px;
+// }
 
 .explorer-my-next-moves-table__move,
 .explorer-my-next-moves-table__games,
