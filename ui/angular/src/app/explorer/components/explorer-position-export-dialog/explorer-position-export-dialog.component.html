@@ -26,7 +26,7 @@
 		</mat-form-field>
 
 		<p class="explorer-position-export-dialog__hint">
-			The copy action will be enabled in the next export task.
+			Copy the exact current FEN of the active Explorer position.
 		</p>
 
 		<div class="explorer-position-export-dialog__actions-row">
@@ -35,7 +35,8 @@
 				class="mat-flat-button-d-5"
 				color="primary"
 				type="button"
-				[disabled]="!(data.canCopyFen ?? false)"
+				[disabled]="!canCopyFen"
+				(click)="onCopyFen()"
 			>
 				Copy FEN
 			</button>
@@ -61,7 +62,7 @@
 		</mat-form-field>
 
 		<p class="explorer-position-export-dialog__hint">
-			The copy action will be enabled in the next export task.
+			Copy the current active line as PGN up to the current cursor.
 		</p>
 
 		<div class="explorer-position-export-dialog__actions-row">
@@ -70,7 +71,8 @@
 				class="mat-flat-button-d-5"
 				color="primary"
 				type="button"
-				[disabled]="!(data.canCopyPgn ?? false)"
+				[disabled]="!canCopyPgn"
+				(click)="onCopyPgn()"
 			>
 				Copy PGN
 			</button>

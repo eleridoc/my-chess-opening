@@ -232,8 +232,8 @@ export class ExplorerPageComponent implements AfterViewInit {
 				title: 'Export current position',
 				fen,
 				pgn,
-				canCopyFen: false,
-				canCopyPgn: false,
+				canCopyFen: (fen ?? '').trim().length > 0,
+				canCopyPgn: (pgn ?? '').trim().length > 0,
 				canExportPng: false,
 			});
 		} catch (error) {

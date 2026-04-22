@@ -6,6 +6,8 @@ import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/materia
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 
+import { NotificationService } from '../../../shared/notifications/notification.service';
+
 export interface ExplorerPositionExportDialogData {
 	/** Optional custom dialog title. */
 	title?: string;
@@ -29,10 +31,11 @@ export interface ExplorerPositionExportDialogData {
 /**
  * Dialog shell for position export actions.
  *
- * V1.10.4 scope:
+ * V1.10.5 scope:
  * - display the real current FEN
  * - display the real current PGN
- * - keep actions disabled until copy / PNG tasks are implemented
+ * - enable FEN / PGN copy actions
+ * - keep PNG export disabled until the dedicated PNG task
  */
 @Component({
 	selector: 'app-explorer-position-export-dialog',
@@ -45,6 +48,7 @@ export class ExplorerPositionExportDialogComponent {
 	readonly data = inject<ExplorerPositionExportDialogData>(MAT_DIALOG_DATA);
 
 	private readonly ref = inject(MatDialogRef<ExplorerPositionExportDialogComponent, void>);
+	private readonly notifications = inject(NotificationService);
 
 	get title(): string {
 		return this.data.title ?? 'Export current position';
@@ -60,7 +64,77 @@ export class ExplorerPositionExportDialogComponent {
 		return pgn && pgn.length > 0 ? pgn : 'PGN is not available for the current position.';
 	}
 
+	get canCopyFen(): boolean {
+		return (this.data.canCopyFen ?? false) && this.hasCopyableText(this.data.fen);
+	}
+
+	get canCopyPgn(): boolean {
+		return (this.data.canCopyPgn ?? false) && this.hasCopyableText(this.data.pgn);
+	}
+
 	onClose(): void {
 		this.ref.close();
+	}
+
+	async onCopyFen(): Promise<void> {
+		const ok = await this.copyText(this.data.fen, 'FEN copied to clipboard.');
+		if (!ok) {
+			this.notifications.error('Failed to copy FEN.');
+		}
+	}
+
+	async onCopyPgn(): Promise<void> {
+		const ok = await this.copyText(this.data.pgn, 'PGN copied to clipboard.');
+		if (!ok) {
+			this.notifications.error('Failed to copy PGN.');
+		}
+	}
+
+	private hasCopyableText(value: string | null | undefined): boolean {
+		return (value ?? '').trim().length > 0;
+	}
+
+	/**
+	 * Copies trimmed text to the clipboard.
+	 *
+	 * Strategy:
+	 * - try the Clipboard API first
+	 * - fallback to execCommand for restricted browser/Electron contexts
+	 */
+	private async copyText(
+		text: string | null | undefined,
+		successMessage: string,
+	): Promise<boolean> {
+		const value = (text ?? '').trim();
+		if (!value) return false;
+
+		try {
+			await navigator.clipboard.writeText(value);
+			this.notifications.success(successMessage);
+			return true;
+		} catch (err) {
+			try {
+				const ta = document.createElement('textarea');
+				ta.value = value;
+				ta.style.position = 'fixed';
+				ta.style.left = '-9999px';
+				ta.style.top = '0';
+				document.body.appendChild(ta);
+				ta.focus();
+				ta.select();
+				const ok = document.execCommand('copy');
+				document.body.removeChild(ta);
+
+				if (ok) {
+					this.notifications.success(successMessage);
+					return true;
+				}
+
+				return false;
+			} catch {
+				console.warn('[ExplorerPositionExportDialog] Clipboard copy failed:', err);
+				return false;
+			}
+		}
 	}
 }
