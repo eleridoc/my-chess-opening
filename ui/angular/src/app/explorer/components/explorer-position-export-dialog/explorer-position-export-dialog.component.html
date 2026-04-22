@@ -1,0 +1,111 @@
+<h2 mat-dialog-title class="explorer-position-export-dialog__title">
+	{{ title }}
+</h2>
+
+<mat-dialog-content class="explorer-position-export-dialog__content app-density--5">
+	<p class="explorer-position-export-dialog__intro">
+		Export tools for the current Explorer position. This dialog shell is introduced in V1.10.2. The
+		real data wiring and actions will be added in the next V1.10 tasks.
+	</p>
+
+	<section class="explorer-position-export-dialog__section">
+		<div class="explorer-position-export-dialog__section-header">
+			<div>
+				<h3 class="explorer-position-export-dialog__section-title">FEN</h3>
+				<p class="explorer-position-export-dialog__section-subtitle">
+					Exact current board position.
+				</p>
+			</div>
+		</div>
+
+		<mat-form-field
+			appearance="fill"
+			subscriptSizing="dynamic"
+			class="explorer-position-export-dialog__field"
+		>
+			<textarea matInput rows="3" [value]="fenPreview" readonly></textarea>
+		</mat-form-field>
+
+		<p class="explorer-position-export-dialog__hint">The copy action will be enabled in V1.10.4.</p>
+
+		<div class="explorer-position-export-dialog__actions-row">
+			<button
+				mat-flat-button
+				class="mat-flat-button-d-5"
+				color="primary"
+				type="button"
+				[disabled]="!(data.canCopyFen ?? false)"
+			>
+				Copy FEN
+			</button>
+		</div>
+	</section>
+
+	<section class="explorer-position-export-dialog__section">
+		<div class="explorer-position-export-dialog__section-header">
+			<div>
+				<h3 class="explorer-position-export-dialog__section-title">PGN</h3>
+				<p class="explorer-position-export-dialog__section-subtitle">
+					Current line up to the active cursor.
+				</p>
+			</div>
+		</div>
+
+		<mat-form-field
+			appearance="fill"
+			subscriptSizing="dynamic"
+			class="explorer-position-export-dialog__field"
+		>
+			<textarea matInput rows="8" [value]="pgnPreview" readonly></textarea>
+		</mat-form-field>
+
+		<p class="explorer-position-export-dialog__hint">
+			The PGN builder and copy action will be enabled in V1.10.3 and V1.10.5.
+		</p>
+
+		<div class="explorer-position-export-dialog__actions-row">
+			<button
+				mat-flat-button
+				class="mat-flat-button-d-5"
+				color="primary"
+				type="button"
+				[disabled]="!(data.canCopyPgn ?? false)"
+			>
+				Copy PGN
+			</button>
+		</div>
+	</section>
+
+	<section class="explorer-position-export-dialog__section">
+		<div class="explorer-position-export-dialog__section-header">
+			<div>
+				<h3 class="explorer-position-export-dialog__section-title">PNG</h3>
+				<p class="explorer-position-export-dialog__section-subtitle">
+					Export the current board rendering as an image.
+				</p>
+			</div>
+		</div>
+
+		<p class="explorer-position-export-dialog__hint explorer-position-export-dialog__hint--block">
+			V1.10.6 will first try to export the current `cm-chessboard` rendering as displayed (option
+			A). If that is not technically reliable, the implementation will fall back to a simpler board
+			image export.
+		</p>
+
+		<div class="explorer-position-export-dialog__actions-row">
+			<button
+				mat-flat-button
+				class="mat-flat-button-d-5"
+				color="primary"
+				type="button"
+				[disabled]="!(data.canExportPng ?? false)"
+			>
+				Export PNG
+			</button>
+		</div>
+	</section>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end" class="explorer-position-export-dialog__footer">
+	<button mat-button class="mat-flat-button-d-5" type="button" (click)="onClose()">Close</button>
+</mat-dialog-actions>

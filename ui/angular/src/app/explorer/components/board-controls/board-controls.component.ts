@@ -2,11 +2,12 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
 	selector: 'app-board-controls',
 	standalone: true,
-	imports: [MatButtonModule, MatIconModule],
+	imports: [MatButtonModule, MatIconModule, MatTooltipModule],
 	templateUrl: './board-controls.component.html',
 	styleUrl: './board-controls.component.scss',
 })
@@ -17,7 +18,7 @@ export class BoardControlsComponent {
 	 * This component does NOT implement chess rules.
 	 * It only:
 	 * - displays buttons
-	 * - emits user intentions (start/prev/next/end/reset)
+	 * - emits user intentions (start/prev/next/end/reset/rotate/export)
 	 */
 
 	@Input() canStart = false;
@@ -31,6 +32,7 @@ export class BoardControlsComponent {
 	@Output() next = new EventEmitter<void>();
 	@Output() end = new EventEmitter<void>();
 	@Output() rotate = new EventEmitter<void>();
+	@Output() exportPosition = new EventEmitter<void>();
 
 	/** Emit "reset" (hard reset to initial state). */
 	onResetClick(): void {
@@ -60,5 +62,10 @@ export class BoardControlsComponent {
 	/** Emit "rotate" (toggle board orientation). */
 	onRotateClick(): void {
 		this.rotate.emit();
+	}
+
+	/** Emit "exportPosition" (open the position export workflow). */
+	onExportClick(): void {
+		this.exportPosition.emit();
 	}
 }

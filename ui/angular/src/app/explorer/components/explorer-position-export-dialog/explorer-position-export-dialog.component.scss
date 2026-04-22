@@ -1,0 +1,94 @@
+:host {
+	display: block;
+}
+
+.explorer-position-export-dialog__title {
+	margin: 0;
+}
+
+.explorer-position-export-dialog__content {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	min-width: 0;
+}
+
+.explorer-position-export-dialog__intro {
+	margin: 0;
+	line-height: 1.5;
+	opacity: 0.82;
+}
+
+.explorer-position-export-dialog__section {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	border: 1px solid var(--app-border);
+	border-radius: var(--app-main-radius);
+	padding: 14px;
+	background: rgba(255, 255, 255, 0.015);
+}
+
+.explorer-position-export-dialog__section-header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.explorer-position-export-dialog__section-title {
+	margin: 0;
+	font-size: 16px;
+	line-height: 1.2;
+}
+
+.explorer-position-export-dialog__section-subtitle {
+	margin: 4px 0 0;
+	line-height: 1.45;
+	opacity: 0.78;
+}
+
+.explorer-position-export-dialog__field {
+	width: 100%;
+}
+
+.explorer-position-export-dialog__field textarea {
+	resize: vertical;
+	font-family:
+		ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+		monospace;
+	line-height: 1.45;
+}
+
+.explorer-position-export-dialog__hint {
+	margin: 0;
+	line-height: 1.45;
+	opacity: 0.8;
+}
+
+.explorer-position-export-dialog__hint--block {
+	border: 1px dashed var(--app-border);
+	border-radius: var(--app-main-radius);
+	padding: 12px;
+	background: rgba(255, 255, 255, 0.015);
+}
+
+.explorer-position-export-dialog__actions-row {
+	display: flex;
+	justify-content: flex-end;
+	gap: 12px;
+}
+
+.explorer-position-export-dialog__footer {
+	padding-top: 8px;
+}
+
+@media (max-width: 640px) {
+	.explorer-position-export-dialog__actions-row {
+		justify-content: stretch;
+	}
+
+	.explorer-position-export-dialog__actions-row > button {
+		flex: 1 1 auto;
+	}
+}

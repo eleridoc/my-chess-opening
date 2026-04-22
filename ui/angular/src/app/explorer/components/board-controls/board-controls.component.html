@@ -19,6 +19,15 @@
 		<mat-icon aria-hidden="true">rotate_90_degrees_ccw</mat-icon>
 	</button>
 
+	<button
+		matMiniFab
+		(click)="onExportClick()"
+		matTooltip="Export current position"
+		aria-label="Export current position"
+	>
+		<mat-icon aria-hidden="true">ios_share</mat-icon>
+	</button>
+
 	<button matMiniFab (click)="onResetClick()">
 		<mat-icon aria-hidden="true">delete_forever</mat-icon>
 	</button>

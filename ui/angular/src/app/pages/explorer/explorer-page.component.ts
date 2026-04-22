@@ -19,11 +19,8 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { firstValueFrom } from 'rxjs';
-
 import type { ExplorerMoveAttempt } from 'my-chess-opening-core/explorer';
-
 import { ExplorerFacade } from '../../explorer/facade/explorer.facade';
-
 import { BoardControlsComponent } from '../../explorer/components/board-controls/board-controls.component';
 import { ChessBoardComponent } from '../../explorer/components/chess-board/chess-board.component';
 import { ExplorerImportComponent } from '../../explorer/components/explorer-import/explorer-import.component';
@@ -31,7 +28,6 @@ import { MoveListComponent } from '../../explorer/components/move-list/move-list
 import { ExplorerGameInfoPanelComponent } from '../../explorer/components/explorer-game-info-panel/explorer-game-info-panel.component';
 import { PlayerInfoCardComponent } from '../../explorer/components/player-info-card/player-info-card.component';
 import { ExplorerDebugTabComponent } from '../../explorer/components/explorer-debug-tab/explorer-debug-tab.component';
-
 import { ExplorerDbService } from '../../services/explorer/explorer-db.service';
 import { NotificationService } from '../../shared/notifications/notification.service';
 import {
@@ -39,10 +35,9 @@ import {
 	type ConfirmDialogData,
 } from '../../shared/dialogs/confirm-dialog/confirm-dialog.component';
 import { ExplorerNavigationShortcutsDirective } from './explorer-navigation-shortcuts.directive';
-
 import { ExplorerMyNextMovesPanelComponent } from '../../explorer/components/explorer-my-next-moves-panel/explorer-my-next-moves-panel.component';
-
 import { ExplorerBoardArrowsService } from '../../explorer/services/explorer-board-arrows.service';
+import { ExplorerPositionExportDialogService } from '../../explorer/services/explorer-position-export-dialog.service';
 
 type ResetReason = 'DB_LOAD' | 'PGN_IMPORT' | 'FEN_IMPORT';
 
@@ -76,6 +71,7 @@ export class ExplorerPageComponent implements AfterViewInit {
 	private readonly dialog = inject(MatDialog);
 	private readonly notify = inject(NotificationService);
 	private readonly boardArrows = inject(ExplorerBoardArrowsService);
+	private readonly positionExportDialog = inject(ExplorerPositionExportDialogService);
 
 	@ViewChild('centerCol', { read: ElementRef }) private centerCol!: ElementRef<HTMLElement>;
 	@ViewChild('topPlayerWrap', { read: ElementRef }) private topPlayerWrap!: ElementRef<HTMLElement>;
@@ -224,6 +220,15 @@ export class ExplorerPageComponent implements AfterViewInit {
 
 	onRotateBoard(): void {
 		this.facade.toggleBoardOrientation();
+	}
+
+	onExportPosition(): void {
+		this.positionExportDialog.openExplorerPositionExportDialog({
+			title: 'Export current position',
+			canCopyFen: false,
+			canCopyPgn: false,
+			canExportPng: false,
+		});
 	}
 
 	/**
