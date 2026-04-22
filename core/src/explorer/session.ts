@@ -38,6 +38,7 @@ import type {
 
 import { createExplorerSessionState, type ExplorerSessionState } from './session.state';
 
+import * as exportHelpers from './session.export';
 import * as loaders from './session.loaders';
 import * as moves from './session.moves';
 import * as nav from './session.navigation';
@@ -292,6 +293,24 @@ export class ExplorerSession {
 	 */
 	getMaterialAtCursor(): MaterialAtCursor {
 		return sel.getMaterialAtCursor(this.state);
+	}
+
+	// ---------------------------------------------------------------------------
+	// Public API — Export helpers
+	// ---------------------------------------------------------------------------
+
+	/**
+	 * Builds a PGN for the active line from the root to the current cursor.
+	 *
+	 * Notes:
+	 * - Only the currently selected line is exported in V1.10.3.
+	 * - Variations are intentionally excluded for now.
+	 * - Result is exported as "*" because the line may be truncated before the original game end.
+	 * - DB sessions automatically reuse snapshot headers/tags when available.
+	 * - Ephemeral PGN imports may pass parsed tags through `input.pgnTags`.
+	 */
+	getCurrentLinePgn(input?: exportHelpers.ExplorerCurrentLinePgnInput): string {
+		return exportHelpers.getCurrentLinePgn(this.state, input);
 	}
 
 	// ---------------------------------------------------------------------------

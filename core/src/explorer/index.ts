@@ -14,6 +14,7 @@ export * from './types';
 export * from './ids';
 export * from './model';
 export * from './session';
+export * from './position-export';
 export * from './position-identity';
 export * from './utils/pgn-tags';
 
