@@ -223,6 +223,15 @@ export class ChessBoardComponent implements AfterViewInit, OnDestroy, OnChanges 
 		}
 	}
 
+	/**
+	 * Returns the live board host element used by the adapter.
+	 *
+	 * PNG export uses this host to locate the currently rendered SVG board.
+	 */
+	getExportRootElement(): HTMLElement | null {
+		return this.host?.nativeElement ?? null;
+	}
+
 	// ---------------------------------------------------------------------------
 	// Mapping helpers
 	// ---------------------------------------------------------------------------

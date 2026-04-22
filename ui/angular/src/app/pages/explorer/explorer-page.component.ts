@@ -79,6 +79,7 @@ export class ExplorerPageComponent implements AfterViewInit {
 	private bottomPlayerWrap!: ElementRef<HTMLElement>;
 	@ViewChild('controlsWrap', { read: ElementRef }) private controlsWrap!: ElementRef<HTMLElement>;
 	@ViewChild('boardControls', { read: ElementRef }) private boardControls!: ElementRef<HTMLElement>;
+	@ViewChild('chessBoard') private chessBoard?: ChessBoardComponent;
 
 	readonly isDevBuild = isDevMode();
 	readonly boardSizePx = signal<number>(0);
@@ -224,6 +225,7 @@ export class ExplorerPageComponent implements AfterViewInit {
 
 	onExportPosition(): void {
 		const fen = this.facade.fen();
+		const boardElement = this.chessBoard?.getExportRootElement() ?? null;
 
 		try {
 			const pgn = this.facade.getCurrentLinePgn();
@@ -232,14 +234,21 @@ export class ExplorerPageComponent implements AfterViewInit {
 				title: 'Export current position',
 				fen,
 				pgn,
+				boardElement,
+				pngFileName: this.buildPositionPngFileName(),
 				canCopyFen: (fen ?? '').trim().length > 0,
 				canCopyPgn: (pgn ?? '').trim().length > 0,
-				canExportPng: false,
+				canExportPng: boardElement !== null,
 			});
 		} catch (error) {
 			console.error('[Explorer] Failed to prepare current position export dialog.', error);
 			this.notify.error('Failed to prepare current position export.');
 		}
+	}
+
+	private buildPositionPngFileName(): string {
+		const shortPositionKey = this.facade.positionKey().slice(0, 12);
+		return `my-chess-opening-position-${shortPositionKey}.png`;
 	}
 
 	/**

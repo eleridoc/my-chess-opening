@@ -90,8 +90,8 @@
 		</div>
 
 		<p class="explorer-position-export-dialog__hint explorer-position-export-dialog__hint--block">
-			The PNG action will first try to export the current board rendering as displayed. If that is
-			not technically reliable, the implementation will fall back to a simpler board image export.
+			Export the current board exactly as rendered by the live board component whenever the SVG
+			board is available.
 		</p>
 
 		<div class="explorer-position-export-dialog__actions-row">
@@ -100,7 +100,8 @@
 				class="mat-flat-button-d-5"
 				color="primary"
 				type="button"
-				[disabled]="!(data.canExportPng ?? false)"
+				[disabled]="!canExportPng"
+				(click)="onExportPng()"
 			>
 				Export PNG
 			</button>

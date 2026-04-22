@@ -7,6 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 
 import { NotificationService } from '../../../shared/notifications/notification.service';
+import { ExplorerPositionExportPngService } from '../../services/explorer-position-export-png.service';
 
 export interface ExplorerPositionExportDialogData {
 	/** Optional custom dialog title. */
@@ -17,6 +18,12 @@ export interface ExplorerPositionExportDialogData {
 
 	/** Current PGN value. */
 	pgn?: string | null;
+
+	/** Live board host element used for PNG export. */
+	boardElement?: HTMLElement | SVGSVGElement | null;
+
+	/** Preferred downloaded PNG file name. */
+	pngFileName?: string;
 
 	/** Enable Copy FEN when the action is implemented. */
 	canCopyFen?: boolean;
@@ -31,11 +38,11 @@ export interface ExplorerPositionExportDialogData {
 /**
  * Dialog shell for position export actions.
  *
- * V1.10.5 scope:
+ * V1.10.6 scope:
  * - display the real current FEN
  * - display the real current PGN
  * - enable FEN / PGN copy actions
- * - keep PNG export disabled until the dedicated PNG task
+ * - enable PNG export from the current rendered board
  */
 @Component({
 	selector: 'app-explorer-position-export-dialog',
@@ -49,6 +56,7 @@ export class ExplorerPositionExportDialogComponent {
 
 	private readonly ref = inject(MatDialogRef<ExplorerPositionExportDialogComponent, void>);
 	private readonly notifications = inject(NotificationService);
+	private readonly pngExport = inject(ExplorerPositionExportPngService);
 
 	get title(): string {
 		return this.data.title ?? 'Export current position';
@@ -72,6 +80,10 @@ export class ExplorerPositionExportDialogComponent {
 		return (this.data.canCopyPgn ?? false) && this.hasCopyableText(this.data.pgn);
 	}
 
+	get canExportPng(): boolean {
+		return (this.data.canExportPng ?? false) && !!this.data.boardElement;
+	}
+
 	onClose(): void {
 		this.ref.close();
 	}
@@ -87,6 +99,25 @@ export class ExplorerPositionExportDialogComponent {
 		const ok = await this.copyText(this.data.pgn, 'PGN copied to clipboard.');
 		if (!ok) {
 			this.notifications.error('Failed to copy PGN.');
+		}
+	}
+
+	async onExportPng(): Promise<void> {
+		if (!this.data.boardElement) {
+			this.notifications.error('Failed to export PNG.');
+			return;
+		}
+
+		try {
+			await this.pngExport.exportBoardAsPng({
+				element: this.data.boardElement,
+				fileName: this.data.pngFileName ?? 'my-chess-opening-position.png',
+			});
+
+			this.notifications.success('PNG exported successfully.');
+		} catch (error) {
+			console.error('[ExplorerPositionExportDialog] Failed to export PNG.', error);
+			this.notifications.error('Failed to export PNG.');
 		}
 	}
 
