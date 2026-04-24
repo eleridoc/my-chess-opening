@@ -23,29 +23,53 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 
 ### Added
 
-- Production-ready Electron renderer runtime with local packaged Angular loading.
-- Centralized runtime paths for renderer, assets, logs, user data, database, and Prisma resources.
+- Production-ready Electron renderer runtime with:
+    - development mode loading the Angular dev server
+    - production/local preview mode loading the Angular production build
+    - custom `mco://renderer` protocol for serving the packaged Angular renderer
+    - renderer build existence check before local production startup
+- Centralized runtime path management in Electron with:
+    - development runtime directory
+    - production user data directory
+    - logs directory
+    - database directory
+    - renderer dist directory
+    - assets directory
+    - Prisma schema and migrations paths
 - Runtime SQLite database initialization with Prisma migrations.
-- Linux packaging support for AppImage and Debian package.
+- Linux packaging support with:
+    - AppImage generation
+    - Debian package generation
 - Automated GitHub Release workflow for Linux artifacts.
 - SHA-256 checksum generation for release artifacts.
-- Production release documentation and Linux installation instructions.
+- Release documentation covering:
+    - production preview
+    - Linux installation
+    - AppImage usage
+    - Debian package usage
+    - runtime data locations
+    - checksum verification
+    - production smoke tests
 
 ### Changed
 
-- Electron now separates development renderer loading from production renderer loading.
+- Electron startup now separates development and production renderer loading.
+- Production renderer loading now uses the `mco://renderer` custom protocol instead of depending on the Angular dev server.
 - Packaged app data is now stored under `~/.config/my-chess-opening`.
 - Prisma initialization is now lazy and runtime-aware.
+- `DATABASE_URL` is now configured at runtime from the Electron runtime database path.
 - Production build and packaging scripts are now explicit and reproducible.
 - CI now validates production build artifacts.
 
 ### Fixed
 
 - Fixed production CSS loading blocked by CSP-incompatible Angular critical CSS output.
+- Fixed theme switching behavior in production preview.
 - Fixed packaged renderer loading without Angular dev server.
-- Fixed packaged app startup failing to resolve `my-chess-opening-core`.
+- Fixed packaged AppImage startup failing to resolve `my-chess-opening-core`.
 - Fixed packaged SQLite database initialization path.
 - Fixed `.deb` packaging metadata requirements.
+- Fixed release artifact integrity verification by adding SHA-256 checksums.
 
 ## [1.10(.7)]
 

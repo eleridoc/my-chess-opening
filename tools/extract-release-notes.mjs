@@ -36,20 +36,16 @@ if (!content) {
 	process.exit(0);
 }
 
-const title =
-	version === stableVersion ? `# My Chess Opening ${version}` : `# My Chess Opening ${version}`;
-
 const releaseNotes = [
-	title,
+	`# My Chess Opening ${version}`,
 	'',
-	version === stableVersion ? '' : `Pre-release candidate for My Chess Opening ${stableVersion}.`,
-	version === stableVersion ? '' : '',
+	version === stableVersion
+		? null
+		: `Pre-release candidate for My Chess Opening ${stableVersion}.`,
+	version === stableVersion ? null : '',
 	content,
 ]
-	.filter((line, index, lines) => {
-		// Keep one intentional blank line, but avoid noisy double blanks from empty optional lines.
-		return line !== '' || lines[index - 1] !== '';
-	})
+	.filter((line) => line !== null)
 	.join('\n');
 
 await writeFile(outputPath, `${releaseNotes}\n`, 'utf8');
@@ -57,13 +53,28 @@ await writeFile(outputPath, `${releaseNotes}\n`, 'utf8');
 console.log(`[release-notes] Wrote ${outputPath} for ${version}.`);
 
 function extractChangelogSection(changelogContent, searchedVersion) {
-	const escapedVersion = searchedVersion.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+	const lines = changelogContent.split(/\r?\n/);
+	const headingRegex = new RegExp(`^## \\[${escapeRegExp(searchedVersion)}\\](?:\\s|$)`);
 
-	const sectionRegex = new RegExp(
-		`^## \\[${escapedVersion}\\].*$(?<content>[\\s\\S]*?)(?=^## \\[|\\z)`,
-		'm',
-	);
+	const startIndex = lines.findIndex((line) => headingRegex.test(line));
 
-	const match = changelogContent.match(sectionRegex);
-	return match?.groups?.content?.trim() || null;
+	if (startIndex === -1) {
+		return null;
+	}
+
+	const contentStartIndex = startIndex + 1;
+	let contentEndIndex = lines.length;
+
+	for (let index = contentStartIndex; index < lines.length; index += 1) {
+		if (/^## \[/.test(lines[index])) {
+			contentEndIndex = index;
+			break;
+		}
+	}
+
+	return lines.slice(contentStartIndex, contentEndIndex).join('\n').trim() || null;
+}
+
+function escapeRegExp(value) {
+	return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
