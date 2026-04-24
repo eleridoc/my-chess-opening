@@ -77,3 +77,6 @@ help_versions/
 
 # --- Electron Builder output ---
 release/
+
+# --- Generated release notes ---
+RELEASE_NOTES.md

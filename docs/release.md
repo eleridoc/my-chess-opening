@@ -431,16 +431,32 @@ git push origin v1.11.0
 
 ## GitHub Release
 
-Until the automated release workflow is added, create the GitHub Release manually:
+GitHub Releases are created automatically by the `Release Linux` workflow.
 
-- Go to **GitHub → Releases**
-- Select **Draft a new release**
-- Select the tag, for example `v1.11.0`
-- Copy the notes from `CHANGELOG.md`
-- Upload the generated Linux artifacts from `release/`:
-    - AppImage
-    - `.deb`
-- Publish the release
+The workflow runs when a release tag is pushed:
+
+```bash
+git tag -a v1.11.0 -m "v1.11.0"
+git push origin v1.11.0
+```
+
+The workflow will:
+
+- install dependencies with `npm ci`
+- validate that the Git tag matches the root `package.json` version
+- build production artifacts
+- package Linux AppImage and `.deb`
+- extract release notes from `CHANGELOG.md`
+- create a GitHub Release
+- upload the generated Linux artifacts
+
+The release workflow expects the changelog to contain a section matching the tag version, for example:
+
+```md
+## [1.11.0] - 2026-04-24
+```
+
+If the changelog section is missing, the workflow will still publish a release with fallback notes, but this should be avoided for stable releases.
 
 ## Notes
 
