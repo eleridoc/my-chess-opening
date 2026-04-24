@@ -67,3 +67,6 @@ Thumbs.db
 # Local help snapshots
 help_versions/
 .ignore
+
+# --- Local Electron runtime data ---
+.runtime/

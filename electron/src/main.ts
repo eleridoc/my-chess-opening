@@ -3,7 +3,12 @@ import * as path from 'node:path';
 import { PrismaClient } from '@prisma/client';
 import { coreIsReady } from 'my-chess-opening-core';
 
-import { getAssetsDir } from './system/paths';
+import {
+	configureRuntimePaths,
+	ensureRuntimeDirectories,
+	getAssetsDir,
+	getRuntimePathsSnapshot,
+} from './system/paths';
 
 import {
 	assertLocalRendererBuildExists,
@@ -28,6 +33,7 @@ import type { ImportEvent } from 'my-chess-opening-core';
 
 app.setName('My Chess Opening');
 app.setAppUserModelId('com.eleridoc.my-chess-opening');
+configureRuntimePaths();
 registerRendererProtocolScheme();
 
 /**
@@ -250,6 +256,17 @@ function isAllowedRendererNavigationUrl(url: string, useLocalRenderer: boolean):
 	return useLocalRenderer ? isLocalRendererUrl(url) : isDevServerUrl(url);
 }
 
+function logRuntimePaths(): void {
+	const paths = getRuntimePathsSnapshot();
+
+	console.info('[RUNTIME] mode:', paths.runtimeMode);
+	console.info('[RUNTIME] userDataDir:', paths.userDataDir);
+	console.info('[RUNTIME] logsDir:', paths.logsDir);
+	console.info('[RUNTIME] databaseDir:', paths.databaseDir);
+	console.info('[RUNTIME] assetsDir:', paths.assetsDir);
+	console.info('[RUNTIME] rendererDistDir:', paths.rendererDistDir);
+}
+
 function createWindow(): void {
 	const { width, height, minWidth, minHeight } = getInitialWindowBounds();
 
@@ -322,6 +339,9 @@ function createWindow(): void {
 app.whenReady().then(async () => {
 	// Register CSP before creating any BrowserWindow.
 	registerContentSecurityPolicy();
+
+	ensureRuntimeDirectories();
+	logRuntimePaths();
 
 	if (shouldUseLocalRenderer()) {
 		registerLocalRendererProtocol();
