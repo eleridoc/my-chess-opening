@@ -19,6 +19,111 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 
 - (placeholder)
 
+## [1.11.7] 2026-04-24
+
+### Added
+
+- Production renderer runtime for Electron with:
+    - development mode loading the Angular dev server
+    - production/local preview mode loading the Angular production build
+    - custom `mco://renderer` protocol for serving the packaged Angular renderer
+    - renderer build existence check before local production startup
+- Local production preview command:
+    - `npm run preview:prod`
+    - `npm run preview:prod:compiled`
+- Dedicated Angular production build command:
+    - `build:ui:angular:prod`
+    - `build:prod`
+- Centralized runtime path management in Electron with:
+    - development runtime directory
+    - production user data directory
+    - logs directory
+    - database directory
+    - renderer dist directory
+    - assets directory
+    - Prisma schema and migrations paths
+- Runtime path diagnostics at startup.
+- Dedicated development runtime folder:
+    - `.runtime/user-data`
+    - `.runtime/logs`
+    - `.runtime/user-data/data`
+- Production user data folder using a stable Linux-friendly path:
+    - `~/.config/my-chess-opening`
+- Runtime SQLite database path:
+    - development/local preview: `.runtime/user-data/data/my-chess-opening.sqlite`
+    - packaged production: `~/.config/my-chess-opening/data/my-chess-opening.sqlite`
+- Lazy Prisma client singleton to ensure `DATABASE_URL` is configured before client creation.
+- Runtime Prisma database URL configuration based on the centralized SQLite path.
+- SQLite migration runner for packaged production usage.
+- Automatic application of pending Prisma SQLite migrations at startup.
+- Prisma disconnect handling on application shutdown.
+- Cross-platform build helpers:
+    - `tools/clean-dist.mjs`
+    - `tools/clean-runtime.mjs`
+- Cross-platform environment variable handling with `cross-env`.
+- Linux packaging support with `electron-builder`.
+- Linux AppImage generation.
+- Linux Debian package generation.
+- Electron Builder configuration with:
+    - packaged Angular renderer resources
+    - Electron assets resources
+    - Prisma schema and migrations resources
+    - Prisma client/runtime packaging
+    - `my-chess-opening-core` runtime packaging
+- GitHub Actions workflow for automated Linux releases on version tags.
+- Automatic GitHub Release creation from tags matching `v*.*.*`.
+- Release tag and package version validation in CI.
+- Release notes extraction from `CHANGELOG.md`.
+- SHA-256 checksum generation for Linux release artifacts.
+- Aggregate `SHA256SUMS` file generation.
+- Individual `.sha256` files for AppImage and `.deb` artifacts.
+- Release documentation covering:
+    - build commands
+    - production preview
+    - Linux packaging
+    - AppImage usage
+    - Debian package usage
+    - runtime data locations
+    - production smoke test checklist
+    - checksum verification
+    - automated GitHub release workflow
+
+### Changed
+
+- Electron startup now separates development and production renderer loading.
+- Production renderer loading now uses the `mco://renderer` custom protocol instead of relying on the Angular dev server.
+- Renderer navigation is restricted to the expected dev server or local production protocol.
+- Content Security Policy now adapts to the active renderer mode.
+- Angular production optimization was adjusted to avoid CSP-incompatible critical CSS inline handlers.
+- Global CSS loading order was made more deterministic for production builds.
+- Theme initialization was hardened so theme switching does not depend on `localStorage` availability.
+- Local development data is now isolated under `.runtime/` instead of mixing with future packaged production data.
+- Packaged app data now uses `~/.config/my-chess-opening` instead of Electron’s default `~/.config/My Chess Opening`.
+- Prisma client creation is now lazy and centralized.
+- `DATABASE_URL` is now configured at runtime from the Electron runtime database path.
+- Production build scripts were clarified and separated from development scripts.
+- CI now validates the production build instead of only the generic workspace build.
+- Linux packaging scripts now generate checksums automatically.
+- GitHub release workflow now uploads:
+    - AppImage
+    - `.deb`
+    - individual `.sha256` files
+    - `SHA256SUMS`
+- Release documentation was expanded into a full production release process.
+
+### Fixed
+
+- Fixed production renderer startup depending on `localhost:4200`.
+- Fixed production CSS not applying correctly because Angular generated CSP-incompatible inline stylesheet handlers.
+- Fixed theme switch appearing to change classes without visually updating colors in production.
+- Fixed local renderer fallback returning `index.html` for missing asset-like files.
+- Fixed packaged AppImage startup failing with `Cannot find module 'my-chess-opening-core'`.
+- Fixed packaged app database path using Electron’s default product-name folder with spaces.
+- Fixed production SQLite database initialization by moving runtime data to a stable kebab-case directory.
+- Fixed `.deb` packaging failure caused by missing maintainer/author email metadata.
+- Fixed potential Prisma initialization order issues by preventing `PrismaClient` creation before `DATABASE_URL` is configured.
+- Fixed release artifact integrity verification by adding SHA-256 checksum generation.
+
 ## [1.10(.7)]
 
 ### Added

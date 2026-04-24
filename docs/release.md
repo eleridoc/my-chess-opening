@@ -97,6 +97,21 @@ This removes the local development runtime directory:
 
 Use this only when you want to reset the local development/preview database.
 
+### Generate release checksums
+
+```bash
+npm run checksums:release
+```
+
+This generates SHA-256 checksum files for Linux release artifacts under `release/`.
+
+Expected generated files:
+
+```txt
+release/*.sha256
+release/SHA256SUMS
+```
+
 ## Runtime data locations
 
 ### Development / local production preview
@@ -194,7 +209,9 @@ Supported local targets:
 npm run package:linux
 ```
 
-This runs a full production build and then generates Linux artifacts under:
+This runs a full production build, generates Linux artifacts, then generates SHA-256 checksums.
+
+Generated files are written under:
 
 ```txt
 release/
@@ -204,7 +221,10 @@ Expected output examples:
 
 ```txt
 release/my-chess-opening-<version>-x86_64.AppImage
+release/my-chess-opening-<version>-x86_64.AppImage.sha256
 release/my-chess-opening-<version>-amd64.deb
+release/my-chess-opening-<version>-amd64.deb.sha256
+release/SHA256SUMS
 ```
 
 ### Package without rebuilding
@@ -214,6 +234,8 @@ npm run package:linux:compiled
 ```
 
 Use this only after a successful production build.
+
+This command also regenerates SHA-256 checksums.
 
 ## Linux artifact types
 
@@ -258,6 +280,39 @@ Uninstall it with:
 sudo apt remove my-chess-opening
 ```
 
+## Checksums
+
+Release artifacts include SHA-256 checksum files.
+
+### Verify all release artifacts
+
+From the repository root:
+
+```bash
+cd release
+sha256sum -c SHA256SUMS
+cd ..
+```
+
+Expected result:
+
+```txt
+my-chess-opening-<version>-amd64.deb: OK
+my-chess-opening-<version>-x86_64.AppImage: OK
+```
+
+### Verify one artifact
+
+Example:
+
+```bash
+cd release
+sha256sum -c my-chess-opening-<version>-amd64.deb.sha256
+cd ..
+```
+
+The checksum files are uploaded to GitHub Releases together with the Linux artifacts.
+
 ## Production smoke test checklist
 
 Before publishing a release, validate both the AppImage and the `.deb`.
@@ -269,6 +324,9 @@ Before publishing a release, validate both the AppImage and the `.deb`.
 - [ ] Run `npm run package:linux`
 - [ ] Confirm the AppImage exists in `release/`
 - [ ] Confirm the `.deb` exists in `release/`
+- [ ] Confirm `.sha256` files exist in `release/`
+- [ ] Confirm `SHA256SUMS` exists in `release/`
+- [ ] Run `(cd release && sha256sum -c SHA256SUMS)`
 
 ### 2. AppImage smoke test
 
@@ -365,6 +423,7 @@ Before releasing:
 - [ ] `npm ci` succeeds
 - [ ] `npm run build:prod` succeeds
 - [ ] `npm run package:linux` succeeds
+- [ ] `sha256sum -c release/SHA256SUMS` succeeds
 - [ ] AppImage smoke test passes
 - [ ] `.deb` smoke test passes
 - [ ] Core app smoke test passes
@@ -376,6 +435,7 @@ Before releasing:
 - [ ] Ensure no generated artifact is committed
 - [ ] Ensure `release/` remains ignored by Git
 - [ ] Ensure `.runtime/` remains ignored by Git
+- [ ] Ensure `RELEASE_NOTES.md` remains ignored by Git
 
 ## How to cut a release
 
@@ -403,6 +463,9 @@ Run:
 npm ci
 npm run build:prod
 npm run package:linux
+cd release
+sha256sum -c SHA256SUMS
+cd ..
 ```
 
 Then execute the production smoke test checklist.
@@ -446,9 +509,10 @@ The workflow will:
 - validate that the Git tag matches the root `package.json` version
 - build production artifacts
 - package Linux AppImage and `.deb`
+- generate SHA-256 checksums
 - extract release notes from `CHANGELOG.md`
 - create a GitHub Release
-- upload the generated Linux artifacts
+- upload the generated Linux artifacts and checksum files
 
 The release workflow expects the changelog to contain a section matching the tag version, for example:
 

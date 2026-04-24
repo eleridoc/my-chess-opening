@@ -60,3 +60,5 @@ jobs:
                   files: |
                       release/*.AppImage
                       release/*.deb
+                      release/*.sha256
+                      release/SHA256SUMS

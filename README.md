@@ -11,6 +11,7 @@ My Chess Opening is a desktop application to import, store, and explore your che
 - Games database powered by Prisma + SQLite
 - Explorer UI to navigate games and openings (ECO dataset-based enrichment)
 - Dark/Light theme support
+- Linux production packages: AppImage and Debian package (`.deb`)
 
 ## Tech stack
 
@@ -26,6 +27,75 @@ This is a multi-workspace repository:
 - `core/` — shared types and core logic
 - `electron/` — Electron main/preload + IPC + DB access (Prisma)
 - `ui/angular/` — Angular frontend
+
+## Install on Linux
+
+Download the latest release from the GitHub Releases page.
+
+### AppImage
+
+The AppImage is the portable Linux build. It can be run without installing the app:
+
+```bash
+chmod +x my-chess-opening-<version>-x86_64.AppImage
+./my-chess-opening-<version>-x86_64.AppImage
+```
+
+This format is intended to work on most modern x86_64 Linux desktop distributions, provided AppImage/FUSE support is available.
+
+### Debian / Ubuntu / Linux Mint
+
+The `.deb` package is recommended for Debian-based distributions such as Debian, Ubuntu, Linux Mint, Pop!\_OS, and Zorin OS.
+
+Install it with:
+
+```bash
+sudo apt install ./my-chess-opening-<version>-amd64.deb
+```
+
+Run it from the terminal:
+
+```bash
+my-chess-opening
+```
+
+Uninstall it with:
+
+```bash
+sudo apt remove my-chess-opening
+```
+
+### User data
+
+Packaged Linux builds store user data under:
+
+```txt
+~/.config/my-chess-opening
+```
+
+The local SQLite database is stored under:
+
+```txt
+~/.config/my-chess-opening/data/my-chess-opening.sqlite
+```
+
+Removing the AppImage or uninstalling the `.deb` does not remove user data automatically.
+
+To remove local production data manually:
+
+```bash
+rm -rf ~/.config/my-chess-opening
+```
+
+### Verify release checksums
+
+Release artifacts include SHA-256 checksum files.
+
+To verify all downloaded artifacts from the release folder:
+
+```bash
+sha256sum -c SHA256SUMS
+```
 
 ## Getting started (development)
 
@@ -51,15 +121,23 @@ npm run build:all
 ### Run the UI (Angular dev server)
 
 ```bash
-npm run build:watch:ui:angular
+npm run dev:ui:angular
 ```
 
 ### Run the desktop app (Electron)
 
-After building everything:
+In another terminal:
 
 ```bash
-npm run build:all:run:electron
+npm run dev:electron
+```
+
+### Preview production renderer locally
+
+This builds the app in production mode and starts Electron with the local packaged renderer protocol:
+
+```bash
+npm run preview:prod
 ```
 
 ## Useful commands
@@ -143,6 +221,42 @@ Generate a new Angular page component (example):
 
 ```bash
 npx ng g c dashboard-page --path src/app/pages/dashboard --flat --standalone --skip-tests --type=component
+```
+
+### Production build and packaging
+
+Build production artifacts:
+
+```bash
+npm run build:prod
+```
+
+Generate Linux packages locally:
+
+```bash
+npm run package:linux
+```
+
+Generated artifacts are written under:
+
+```txt
+release/
+```
+
+Expected files include:
+
+```txt
+my-chess-opening-<version>-x86_64.AppImage
+my-chess-opening-<version>-amd64.deb
+SHA256SUMS
+```
+
+Verify generated checksums:
+
+```bash
+cd release
+sha256sum -c SHA256SUMS
+cd ..
 ```
 
 ## Troubleshooting

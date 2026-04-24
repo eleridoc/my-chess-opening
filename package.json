@@ -1,6 +1,6 @@
 {
   "name": "my-chess-opening",
-  "version": "1.11.6",
+  "version": "1.11.8",
   "license": "GPL-3.0-only",
   "private": true,
   "workspaces": [
@@ -31,8 +31,9 @@
     "prisma:studio": "npm -w electron run prisma:studio",
     "eco:update": "tsx tools/eco/update-lichess-chess-openings.ts",
     "sync:version": "node tools/sync-versions.mjs",
-    "package:linux": "npm run build:prod && electron-builder --linux AppImage deb --publish never",
-    "package:linux:compiled": "electron-builder --linux AppImage deb --publish never"
+    "package:linux": "npm run build:prod && electron-builder --linux AppImage deb --publish never && npm run checksums:release",
+    "package:linux:compiled": "electron-builder --linux AppImage deb --publish never && npm run checksums:release",
+    "checksums:release": "node tools/generate-checksums.mjs"
   },
   "keywords": [],
   "author": {
