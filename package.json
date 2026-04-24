@@ -1,6 +1,6 @@
 {
   "name": "my-chess-opening",
-  "version": "1.11.2",
+  "version": "1.11.3",
   "license": "GPL-3.0-only",
   "private": true,
   "workspaces": [
@@ -9,13 +9,20 @@
     "ui/*"
   ],
   "scripts": {
+    "dev:ui:angular": "npm -w ui/angular start",
+    "dev:electron": "npm -w electron run start:dev",
     "build": "npm run build:all",
     "build:all": "npm run build:core && npm run build:electron && npm run build:ui:angular",
+    "build:prod": "npm run clean:dist && npm run build:core && npm run build:electron && npm run build:ui:angular:prod",
     "build:core": "npm -w core run build",
     "build:electron": "npm -w electron run build",
     "build:ui:angular": "npm -w ui/angular run build",
-    "build:all:run:electron": "npm run build:all && npm -w electron start",
-    "build:watch:ui:angular": "npm -w ui/angular start",
+    "build:ui:angular:prod": "npm -w ui/angular run build:prod",
+    "preview:prod": "npm run build:prod && npm -w electron run preview:prod",
+    "preview:prod:compiled": "npm -w electron run preview:prod",
+    "clean": "npm run clean:dist",
+    "clean:dist": "node tools/clean-dist.mjs",
+    "clean:runtime": "node tools/clean-runtime.mjs",
     "format": "prettier --write \"**/*.{ts,js,tsx,jsx,html,scss,json,md}\"",
     "prisma:reset": "npm -w electron run prisma:reset",
     "prisma:migrate": "npm -w electron run prisma:migrate --",
@@ -23,10 +30,7 @@
     "prisma:generate": "npm -w electron run prisma:generate",
     "prisma:studio": "npm -w electron run prisma:studio",
     "eco:update": "tsx tools/eco/update-lichess-chess-openings.ts",
-    "sync:version": "node tools/sync-versions.mjs",
-    "build:ui:angular:prod": "npm -w ui/angular run build:prod",
-    "build:prod": "npm run build:core && npm run build:electron && npm run build:ui:angular:prod",
-    "preview:prod": "npm run build:prod && npm -w electron run preview:prod"
+    "sync:version": "node tools/sync-versions.mjs"
   },
   "keywords": [],
   "author": "",
@@ -37,6 +41,7 @@
   },
   "devDependencies": {
     "baseline-browser-mapping": "^2.9.19",
+    "cross-env": "^10.1.0",
     "prettier": "^3.7.3",
     "tsx": "^4.21.0"
   }

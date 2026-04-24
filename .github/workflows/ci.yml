@@ -7,7 +7,7 @@ on:
 
 jobs:
     build:
-        name: Build (Node 22)
+        name: Build production (Node 22)
         runs-on: ubuntu-latest
 
         steps:
@@ -23,5 +23,5 @@ jobs:
             - name: Install dependencies
               run: npm ci
 
-            - name: Build all workspaces
-              run: npm run build:all
+            - name: Build production artifacts
+              run: npm run build:prod
