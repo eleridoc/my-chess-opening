@@ -1,6 +1,6 @@
 {
   "name": "my-chess-opening-electron",
-  "version": "1.10.7",
+  "version": "1.11.0",
   "license": "GPL-3.0-only",
   "private": true,
   "main": "dist/main.js",
@@ -8,6 +8,8 @@
     "prebuild": "prisma generate",
     "build": "tsc -p tsconfig.json",
     "start": "npm run build && electron dist/main.js",
+    "start:compiled": "electron dist/main.js",
+    "preview:prod": "MCO_RENDERER_MODE=local electron dist/main.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:reset": "prisma migrate reset",

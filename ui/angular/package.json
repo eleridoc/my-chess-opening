@@ -1,11 +1,12 @@
 {
   "name": "my-chess-opening-ui-angular",
-  "version": "1.10.7",
+  "version": "1.11.0",
   "license": "GPL-3.0-only",
   "scripts": {
     "ng": "ng",
     "start": "ng serve --prebundle=false --poll=1000",
     "build": "ng build",
+    "build:prod": "ng build --configuration production",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },

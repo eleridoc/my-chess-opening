@@ -11,10 +11,19 @@ export class ThemeService {
 
 	readonly theme = signal<AppTheme>('dark');
 
+	/**
+	 * Initialize the app theme as early as possible.
+	 *
+	 * Notes:
+	 * - Stored preference wins when available.
+	 * - OS preference is used as a fallback.
+	 * - DOM class update must never depend on localStorage availability.
+	 */
 	init(): void {
 		const saved = this.readStoredTheme();
 		const preferred = this.getPreferredTheme();
-		this.setTheme(saved ?? preferred);
+
+		this.applyTheme(saved ?? preferred, { persist: false });
 	}
 
 	toggle(): void {
@@ -22,28 +31,67 @@ export class ThemeService {
 	}
 
 	setTheme(theme: AppTheme): void {
-		this.theme.set(theme);
-		this.storeTheme(theme);
-
-		const body = this.doc.body;
-		body.classList.remove('theme-dark', 'theme-light');
-		body.classList.add(theme === 'dark' ? 'theme-dark' : 'theme-light');
+		this.applyTheme(theme, { persist: true });
 	}
 
 	isDark(): boolean {
 		return this.theme() === 'dark';
 	}
 
+	private applyTheme(theme: AppTheme, options: { persist: boolean }): void {
+		this.theme.set(theme);
+		this.applyBodyThemeClass(theme);
+
+		if (options.persist) {
+			this.storeTheme(theme);
+		}
+	}
+
+	private applyBodyThemeClass(theme: AppTheme): void {
+		const body = this.doc.body;
+
+		body.classList.remove('theme-dark', 'theme-light');
+		body.classList.add(theme === 'dark' ? 'theme-dark' : 'theme-light');
+	}
+
 	private readStoredTheme(): AppTheme | null {
-		const raw = localStorage.getItem(STORAGE_KEY);
+		const storage = this.getStorage();
+
+		if (!storage) {
+			return null;
+		}
+
+		const raw = storage.getItem(STORAGE_KEY);
 		return raw === 'dark' || raw === 'light' ? raw : null;
 	}
 
 	private storeTheme(theme: AppTheme): void {
-		localStorage.setItem(STORAGE_KEY, theme);
+		const storage = this.getStorage();
+
+		if (!storage) {
+			return;
+		}
+
+		try {
+			storage.setItem(STORAGE_KEY, theme);
+		} catch {
+			// Theme switching must keep working even if storage is unavailable.
+		}
 	}
 
 	private getPreferredTheme(): AppTheme {
-		return window.matchMedia?.('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+		try {
+			return window.matchMedia?.('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+		} catch {
+			return 'dark';
+		}
+	}
+
+	private getStorage(): Storage | null {
+		try {
+			return globalThis.localStorage ?? null;
+		} catch {
+			return null;
+		}
 	}
 }

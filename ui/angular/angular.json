@@ -35,11 +35,11 @@
 							}
 						],
 						"styles": [
-							"src/styles.scss",
 							"../../node_modules/cm-chessboard/assets/chessboard.css",
 							"../../node_modules/cm-chessboard/assets/extensions/markers/markers.css",
 							"../../node_modules/cm-chessboard/assets/extensions/arrows/arrows.css",
-							"../../node_modules/cm-chessboard/assets/extensions/promotion-dialog/promotion-dialog.css"
+							"../../node_modules/cm-chessboard/assets/extensions/promotion-dialog/promotion-dialog.css",
+							"src/styles.scss"
 						]
 					},
 					"configurations": {
@@ -56,6 +56,16 @@
 									"maximumError": "8kB"
 								}
 							],
+							"optimization": {
+								"scripts": true,
+								"styles": {
+									"minify": true,
+									"inlineCritical": false
+								},
+								"fonts": {
+									"inline": false
+								}
+							},
 							"outputHashing": "all"
 						},
 						"development": {

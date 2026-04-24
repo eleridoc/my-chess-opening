@@ -4,6 +4,16 @@ import { PrismaClient } from '@prisma/client';
 import { coreIsReady } from 'my-chess-opening-core';
 
 import { getAssetsDir } from './system/paths';
+
+import {
+	assertLocalRendererBuildExists,
+	getLocalRendererUrl,
+	isLocalRendererUrl,
+	registerLocalRendererProtocol,
+	registerRendererProtocolScheme,
+	shouldUseLocalRenderer,
+} from './system/rendererProtocol';
+
 import { cleanupAbortedImportRuns } from './import/importAllAccounts';
 import { registerAccountsIpc } from './accounts/accountsIpc';
 import { registerLogsIpc } from './logs/logsIpc';
@@ -18,6 +28,7 @@ import type { ImportEvent } from 'my-chess-opening-core';
 
 app.setName('My Chess Opening');
 app.setAppUserModelId('com.eleridoc.my-chess-opening');
+registerRendererProtocolScheme();
 
 /**
  * Prisma client used by the main process.
@@ -102,7 +113,7 @@ async function getSetupState(): Promise<{ hasAccounts: boolean; hasCompletedSetu
  * - Google Fonts are handled explicitly (style-src-elem + font-src).
  */
 function registerContentSecurityPolicy(): void {
-	const isDev = !app.isPackaged;
+	const isDev = !shouldUseLocalRenderer();
 
 	// Toggle if your Angular dev setup really requires eval().
 	// Keeping this OFF removes Electron's "unsafe-eval" warning.
@@ -220,8 +231,29 @@ function getInitialWindowBounds(): {
 	return { width, height, minWidth, minHeight };
 }
 
+function isDevServerUrl(url: string): boolean {
+	try {
+		const parsedUrl = new URL(url);
+		const devServerUrl = new URL(DEV_SERVER_URL);
+
+		return parsedUrl.origin === devServerUrl.origin;
+	} catch {
+		return false;
+	}
+}
+
+function isAllowedRendererNavigationUrl(url: string, useLocalRenderer: boolean): boolean {
+	if (url === 'about:blank') {
+		return true;
+	}
+
+	return useLocalRenderer ? isLocalRendererUrl(url) : isDevServerUrl(url);
+}
+
 function createWindow(): void {
 	const { width, height, minWidth, minHeight } = getInitialWindowBounds();
+
+	const useLocalRenderer = shouldUseLocalRenderer();
 
 	mainWindow = new BrowserWindow({
 		// Default "restored" bounds (used when the user restores down from maximized).
@@ -261,9 +293,26 @@ function createWindow(): void {
 		return { action: 'deny' };
 	});
 
-	// DEV only (current setup).
-	// In production, you will likely load a local file (Angular build output).
-	mainWindow.loadURL(DEV_SERVER_URL);
+	/**
+	 * Security hardening:
+	 * - Prevent unexpected full-window navigation to external websites.
+	 * - Keep renderer navigation inside the expected dev server or local protocol.
+	 */
+	mainWindow.webContents.on('will-navigate', (event, url) => {
+		if (isAllowedRendererNavigationUrl(url, useLocalRenderer)) {
+			return;
+		}
+
+		event.preventDefault();
+		shell.openExternal(url).catch(() => void 0);
+	});
+
+	if (useLocalRenderer) {
+		assertLocalRendererBuildExists();
+		mainWindow.loadURL(getLocalRendererUrl());
+	} else {
+		mainWindow.loadURL(DEV_SERVER_URL);
+	}
 
 	mainWindow.on('closed', () => {
 		mainWindow = null;
@@ -273,6 +322,10 @@ function createWindow(): void {
 app.whenReady().then(async () => {
 	// Register CSP before creating any BrowserWindow.
 	registerContentSecurityPolicy();
+
+	if (shouldUseLocalRenderer()) {
+		registerLocalRendererProtocol();
+	}
 
 	/**
 	 * Minimal health-check used to validate IPC wiring from the renderer.

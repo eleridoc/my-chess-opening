@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 
 import { AccountsStateService } from './services/accounts/accounts-state.service';
 import { ImportStateService } from './services/import/import-state.service';
+import { ThemeService } from './services/theme.service';
 
 @Component({
 	selector: 'app-root',
@@ -13,6 +14,7 @@ import { ImportStateService } from './services/import/import-state.service';
 export class App implements OnInit {
 	private readonly accountsState = inject(AccountsStateService);
 	private readonly importState = inject(ImportStateService);
+	private readonly theme = inject(ThemeService);
 
 	/**
 	 * App bootstrap:
@@ -21,6 +23,9 @@ export class App implements OnInit {
 	 * - In Electron, run a lightweight ping to validate IPC wiring.
 	 */
 	async ngOnInit(): Promise<void> {
+		// Apply the persisted or preferred theme before loading app state.
+		this.theme.init();
+
 		// Ensure global state is populated as early as possible.
 		await this.accountsState.refresh();
 
