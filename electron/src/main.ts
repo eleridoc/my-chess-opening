@@ -1,7 +1,9 @@
 import { app, BrowserWindow, ipcMain, session, shell, screen } from 'electron';
 import * as path from 'node:path';
-import { PrismaClient } from '@prisma/client';
 import { coreIsReady } from 'my-chess-opening-core';
+
+import { initializeDatabase } from './db/database';
+import { disconnectPrismaClient, prisma } from './db/prisma';
 
 import {
 	configureRuntimePaths,
@@ -35,15 +37,6 @@ app.setName('My Chess Opening');
 app.setAppUserModelId('com.eleridoc.my-chess-opening');
 configureRuntimePaths();
 registerRendererProtocolScheme();
-
-/**
- * Prisma client used by the main process.
- *
- * Notes:
- * - Keep a single instance for the whole process lifetime.
- * - Do not create per-request clients in IPC handlers.
- */
-const prisma = new PrismaClient();
 
 /**
  * Main BrowserWindow reference (single-window app for now).
@@ -347,6 +340,14 @@ app.whenReady().then(async () => {
 		registerLocalRendererProtocol();
 	}
 
+	try {
+		await initializeDatabase();
+	} catch (err) {
+		console.error('[DB] Failed to initialize database', err);
+		app.quit();
+		return;
+	}
+
 	/**
 	 * Minimal health-check used to validate IPC wiring from the renderer.
 	 *
@@ -404,4 +405,10 @@ app.on('window-all-closed', () => {
 	if (process.platform !== 'darwin') {
 		app.quit();
 	}
+});
+
+app.on('before-quit', () => {
+	disconnectPrismaClient().catch((err) => {
+		console.error('[DB] Failed to disconnect Prisma client', err);
+	});
 });

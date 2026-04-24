@@ -12,6 +12,10 @@ yarn.lock
 *.sqlite
 *.sqlite3
 **/prisma/dev.db
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+*.db-journal
 
 # --- Build outputs (général) ---
 dist/
