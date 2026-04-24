@@ -5,13 +5,14 @@ import { getDatabaseFilePath } from '../system/paths';
 /**
  * Convert a local filesystem path to a Prisma SQLite connection URL.
  *
- * Prisma expects SQLite URLs to use the `file:` prefix.
+ * Prisma SQLite URLs use the `file:` prefix. Keep the filesystem path
+ * unescaped so native SQLite can resolve paths containing spaces.
  */
 export function toPrismaSqliteUrl(filePath: string): string {
 	const absolutePath = path.resolve(filePath);
 	const normalizedPath = absolutePath.replace(/\\/g, '/');
 
-	return `file:${encodeURI(normalizedPath)}`;
+	return `file:${normalizedPath}`;
 }
 
 /**

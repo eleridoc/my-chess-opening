@@ -1,0 +1,86 @@
+appId: com.eleridoc.my-chess-opening
+productName: My Chess Opening
+copyright: Copyright © 2026 Eleridoc
+
+artifactName: ${name}-${version}-${arch}.${ext}
+
+directories:
+    output: release
+    buildResources: electron/assets
+
+extraMetadata:
+    main: electron/dist/main.js
+
+compression: normal
+asar: true
+
+asarUnpack:
+    - node_modules/.prisma/client/**
+
+files:
+    - package.json
+
+    - from: electron/dist
+      to: electron/dist
+      filter:
+          - '**/*'
+
+    - from: core
+      to: node_modules/my-chess-opening-core
+      filter:
+          - package.json
+          - dist/**/*
+          - dist-esm/**/*
+
+    - from: node_modules/chess.js
+      to: node_modules/chess.js
+      filter:
+          - '**/*'
+
+    - from: node_modules/@prisma/client
+      to: node_modules/@prisma/client
+      filter:
+          - '**/*'
+
+    - from: node_modules/.prisma/client
+      to: node_modules/.prisma/client
+      filter:
+          - '**/*'
+
+extraResources:
+    - from: ui/angular/dist/angular/browser
+      to: renderer
+      filter:
+          - '**/*'
+
+    - from: electron/assets
+      to: assets
+      filter:
+          - '**/*'
+
+    - from: electron/prisma
+      to: prisma
+      filter:
+          - schema.prisma
+          - migrations/**/*
+
+linux:
+    icon: electron/assets/icon.png
+    category: Utility
+    target:
+        - target: AppImage
+          arch:
+              - x64
+        - target: deb
+          arch:
+              - x64
+
+deb:
+    depends:
+        - libgtk-3-0
+        - libnotify4
+        - libnss3
+        - libxss1
+        - libxtst6
+        - xdg-utils
+        - libatspi2.0-0

@@ -74,3 +74,6 @@ help_versions/
 
 # --- Local Electron runtime data ---
 .runtime/
+
+# --- Electron Builder output ---
+release/

@@ -27,6 +27,7 @@ export async function initializeDatabase(): Promise<DatabaseInitializationResult
 	fs.mkdirSync(databaseDir, { recursive: true });
 
 	const databaseUrl = configurePrismaDatabaseUrl();
+	console.info('[DB] SQLite database URL:', databaseUrl);
 	const prisma = getPrismaClient();
 
 	await applyPendingSqliteMigrations(prisma);

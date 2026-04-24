@@ -5,6 +5,7 @@ import * as path from 'node:path';
 export type AppRuntimeMode = 'development' | 'production';
 
 const DEFAULT_DEV_RUNTIME_DIR_NAME = '.runtime';
+const APP_RUNTIME_DIR_NAME = 'my-chess-opening';
 const DATABASE_DIR_NAME = 'data';
 const DATABASE_FILE_NAME = 'my-chess-opening.sqlite';
 
@@ -73,6 +74,18 @@ export function getDevelopmentLogsDir(): string {
 }
 
 /**
+ * Resolve the production user data directory.
+ *
+ * We intentionally use a stable kebab-case folder instead of Electron's
+ * default product name folder (`My Chess Opening`).
+ */
+export function getProductionUserDataDir(): string {
+	return (
+		getEnvPath('MCO_USER_DATA_DIR') ?? path.join(app.getPath('appData'), APP_RUNTIME_DIR_NAME)
+	);
+}
+
+/**
  * Configure Electron runtime paths.
  *
  * This must run before `app.whenReady()` so Chromium storage, localStorage,
@@ -91,8 +104,14 @@ export function configureRuntimePaths(): void {
 		return;
 	}
 
-	// In packaged mode, use Electron's platform-specific logs directory.
-	app.setAppLogsPath();
+	const productionUserDataDir = getProductionUserDataDir();
+	const productionLogsDir = path.join(productionUserDataDir, 'logs');
+
+	fs.mkdirSync(productionUserDataDir, { recursive: true });
+	fs.mkdirSync(productionLogsDir, { recursive: true });
+
+	app.setPath('userData', productionUserDataDir);
+	app.setAppLogsPath(productionLogsDir);
 }
 
 export function getUserDataDir(): string {

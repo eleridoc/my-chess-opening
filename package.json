@@ -1,6 +1,6 @@
 {
   "name": "my-chess-opening",
-  "version": "1.11.3",
+  "version": "1.11.4",
   "license": "GPL-3.0-only",
   "private": true,
   "workspaces": [
@@ -30,11 +30,18 @@
     "prisma:generate": "npm -w electron run prisma:generate",
     "prisma:studio": "npm -w electron run prisma:studio",
     "eco:update": "tsx tools/eco/update-lichess-chess-openings.ts",
-    "sync:version": "node tools/sync-versions.mjs"
+    "sync:version": "node tools/sync-versions.mjs",
+    "package:linux": "npm run build:prod && electron-builder --linux AppImage deb --publish never",
+    "package:linux:compiled": "electron-builder --linux AppImage deb --publish never"
   },
   "keywords": [],
-  "author": "",
-  "description": "",
+  "author": {
+    "name": "Eleridoc",
+    "email": "eleridoc@gmail.com",
+    "url": "https://github.com/eleridoc"
+  },
+  "description": "Open-source desktop app to import, store, and explore chess games.",
+  "main": "electron/dist/main.js",
   "dependencies": {
     "@types/node": "^24.10.1",
     "typescript": "^5.9.3"
@@ -42,6 +49,7 @@
   "devDependencies": {
     "baseline-browser-mapping": "^2.9.19",
     "cross-env": "^10.1.0",
+    "electron-builder": "^26.8.1",
     "prettier": "^3.7.3",
     "tsx": "^4.21.0"
   }
