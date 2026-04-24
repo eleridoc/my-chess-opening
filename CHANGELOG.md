@@ -19,6 +19,96 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 
 - (placeholder)
 
+## [1.10(.7)]
+
+### Added
+
+- **Export current position** entrypoint in `board-controls`
+- Dedicated position export dialog in the Explorer
+- Current position export actions for:
+    - **FEN**
+    - **PGN**
+    - **PNG**
+- Core current-line PGN export builder for the active line up to the current cursor
+- Dedicated `session.export.ts` module to keep Explorer session export logic split by concern
+- Explorer facade support for retrieving the current export PGN
+- Copy actions for:
+    - **Copy FEN**
+    - **Copy PGN**
+- PNG export service based on the live rendered board
+- Automatic PNG file naming based on the current position key
+
+### Changed
+
+- Added a dedicated export workflow to the Explorer instead of exposing raw export actions directly on the page
+- Wired the export dialog with the real current FEN and current PGN from the active Explorer state
+- Kept PGN export logic in `core` while keeping UI export actions in Angular
+- Reworked the export dialog into a more compact layout
+- Updated the dialog to show **FEN / PGN / PNG** sections side by side
+- Aligned export actions on a single row so the full dialog remains visible when opened
+
+### Fixed
+
+- Fixed PNG export so it no longer relies on a single SVG layer from the board
+- Composed the rendered board from multiple SVG layers for PNG export
+- Embedded external SVG assets required by the board export pipeline
+- Embedded missing local SVG fragment definitions so exported PNGs correctly preserve board visuals
+- Improved PNG export fidelity for live board rendering, including overlays such as arrows and piece rendering
+
+## [1.9(.14)]
+
+### Added
+
+- Dedicated **My next moves** feature in the Explorer based on imported database games
+- Shared `my-next-moves` domain across `core`, preload, and Electron IPC
+- Backend aggregation for the current position with:
+    - most played next moves
+    - move percentages
+    - game counts
+    - White / Draw / Black statistics
+    - current position summary
+- Position identity alignment using a **SHA-256 hash of normalized 4-field FEN**
+- Dedicated Explorer panel for **My next moves** with:
+    - automatic loading from the current position
+    - loading / empty / error states
+    - popup access to the shared game filter
+- Next moves table with:
+    - one row per move
+    - fixed final row for the current position
+    - internal scroll
+    - hover / focus / keyboard selection support
+- Move information popovers for each move row and for the `Current` row
+- Direct move play from the **My next moves** list
+- Board arrow integration through `cm-chessboard`
+- Arrow display modes:
+    - `off`
+    - `3`
+    - `5`
+    - `all`
+- Arrow hover highlight on row focus/hover
+- Visual arrow weighting based on move popularity
+- Custom arrow colors to better separate current and future data sources
+
+### Changed
+
+- Turned the Explorer lower-right section into a real **My next moves** product feature
+- Aligned Explorer and import position matching around the same normalized position identity logic
+- Automatically resolved `playedColor` for **My next moves**:
+    - player color when a DB game is loaded
+    - board bottom color in study mode
+- Reworked the next moves UI from a multi-line layout into a denser table layout
+- Replaced the former `Share` presentation with a cleaner percentage-first display
+- Refined the `White / Draw / Black` column into a more compact integrated stats bar
+- Replaced the inline arrow mode controls with a compact select control
+- Reduced the visual size of several dense Explorer elements for better readability
+
+### Fixed
+
+- Kept DB move lookup consistent with imported positions by reusing the same normalized FEN hashing strategy
+- Improved table scrolling behavior in the **My next moves** panel
+- Improved row hover / selection feedback for move-to-board interactions
+- Reduced visual clutter in dense Explorer sections such as the move stats and arrow controls
+
 ## [1.8(.7)] 2026-04-18
 
 ### Added

@@ -1,3 +1,8 @@
+# NVM
+
+nvm install 22.12.0
+nvm use 22.12.0
+
 # Build everything (ordered)
 
 npm run build:all
