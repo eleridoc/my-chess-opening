@@ -22,9 +22,20 @@ function main() {
 		process.exit(1);
 	}
 
-	// Minimal SemVer validation (x.y.z). Keep it strict on purpose.
-	if (!/^\d+\.\d+\.\d+$/.test(version)) {
-		console.error(`Invalid version "${version}". Expected SemVer: x.y.z`);
+	// SemVer validation with optional prerelease/build metadata.
+	// Examples:
+	// - 1.11.9
+	// - 1.11.9-rc.1
+	// - 1.11.9-beta.1
+	// - 1.11.9+build.1
+	// - 1.11.9-rc.1+build.1
+	const semverRegex =
+		/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|[0-9A-Za-z-]*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|[0-9A-Za-z-]*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/;
+
+	if (!semverRegex.test(version)) {
+		console.error(
+			`Invalid version "${version}". Expected SemVer: x.y.z, x.y.z-rc.1 or x.y.z+build.1`,
+		);
 		process.exit(1);
 	}
 
