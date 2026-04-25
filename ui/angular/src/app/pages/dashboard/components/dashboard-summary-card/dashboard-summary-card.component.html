@@ -1,0 +1,67 @@
+<section class="dashboard-summary-card">
+	<header class="dashboard-summary-card__header">
+		<div>
+			<h2 class="dashboard-summary-card__title">{{ title }}</h2>
+			<p class="dashboard-summary-card__subtitle" *ngIf="subtitle">
+				{{ subtitle }}
+			</p>
+		</div>
+	</header>
+
+	<div class="dashboard-summary-card__total">
+		<div class="dashboard-summary-card__total-label">Total games</div>
+		<div class="dashboard-summary-card__total-value">{{ summary.totalGames }}</div>
+	</div>
+
+	<div class="dashboard-summary-card__results">
+		<div class="dashboard-summary-card__result dashboard-summary-card__result--wins">
+			<div class="dashboard-summary-card__result-main">
+				<span class="dashboard-summary-card__result-label">Wins</span>
+				<span class="dashboard-summary-card__result-count">{{ summary.wins }}</span>
+			</div>
+
+			<div class="dashboard-summary-card__result-rate">
+				{{ formatPercent(summary.winRatePercent) }}
+			</div>
+		</div>
+
+		<div class="dashboard-summary-card__result dashboard-summary-card__result--draws">
+			<div class="dashboard-summary-card__result-main">
+				<span class="dashboard-summary-card__result-label">Draws</span>
+				<span class="dashboard-summary-card__result-count">{{ summary.draws }}</span>
+			</div>
+
+			<div class="dashboard-summary-card__result-rate">
+				{{ formatPercent(summary.drawRatePercent) }}
+			</div>
+		</div>
+
+		<div class="dashboard-summary-card__result dashboard-summary-card__result--losses">
+			<div class="dashboard-summary-card__result-main">
+				<span class="dashboard-summary-card__result-label">Losses</span>
+				<span class="dashboard-summary-card__result-count">{{ summary.losses }}</span>
+			</div>
+
+			<div class="dashboard-summary-card__result-rate">
+				{{ formatPercent(summary.lossRatePercent) }}
+			</div>
+		</div>
+	</div>
+
+	<div class="dashboard-summary-card__bar" aria-hidden="true">
+		<div
+			class="dashboard-summary-card__bar-segment dashboard-summary-card__bar-segment--wins"
+			[style.flex-grow]="summary.wins"
+		></div>
+
+		<div
+			class="dashboard-summary-card__bar-segment dashboard-summary-card__bar-segment--draws"
+			[style.flex-grow]="summary.draws"
+		></div>
+
+		<div
+			class="dashboard-summary-card__bar-segment dashboard-summary-card__bar-segment--losses"
+			[style.flex-grow]="summary.losses"
+		></div>
+	</div>
+</section>

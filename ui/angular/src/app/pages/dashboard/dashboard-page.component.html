@@ -1,3 +1,120 @@
-<div class="app-page">
-	<div>Coming soon</div>
+<div class="dashboard-page app-density--5">
+	<header class="dashboard-page__header">
+		<div>
+			<h1 class="dashboard-page__title">Dashboard</h1>
+			<p class="dashboard-page__subtitle">
+				Track your imported games activity, results and rating evolution from your local database.
+			</p>
+		</div>
+	</header>
+
+	<div class="dashboard-page__layout">
+		<section class="dashboard-page__filter-panel">
+			<div class="app-card-flat">
+				<div class="app-card-flat-top">Filter</div>
+
+				<div class="app-card-flat-fit-content dashboard-page__card-content">
+					<app-shared-game-filter
+						[context]="'dashboard'"
+						[persistInStorage]="true"
+						[showActions]="true"
+						[resetButtonLabel]="'Reset period'"
+						[disabled]="isLoading()"
+						(filterChanged)="onInlineFilterChanged($event)"
+					/>
+				</div>
+			</div>
+		</section>
+
+		<section class="dashboard-page__content-panel">
+			<app-section-loader
+				[loading]="isLoading()"
+				[label]="'Loading Dashboard…'"
+				[mask]="true"
+				[blocking]="true"
+				[showDelayMs]="0"
+				[minVisibleMs]="250"
+			>
+				<div class="app-card-flat">
+					<div class="app-card-flat-top">Overview</div>
+
+					<div class="app-card-flat-content dashboard-page__card-content">
+						<ng-container *ngIf="errorMessage() as error; else dashboardState">
+							<div class="dashboard-page__state dashboard-page__state--error">
+								<h2 class="dashboard-page__state-title">Dashboard loading failed</h2>
+								<p class="dashboard-page__state-text">{{ error }}</p>
+
+								<button
+									type="button"
+									class="dashboard-page__link-button"
+									(click)="onRetry()"
+									[disabled]="isLoading()"
+								>
+									Retry loading
+								</button>
+							</div>
+						</ng-container>
+
+						<ng-template #dashboardState>
+							<ng-container *ngIf="hasLoaded(); else dashboardInitialState">
+								<div
+									class="dashboard-page__state dashboard-page__state--empty"
+									*ngIf="isEmpty(); else dashboardLoadedState"
+								>
+									<h2 class="dashboard-page__state-title">No games found</h2>
+									<p class="dashboard-page__state-text">
+										No bullet, blitz or rapid games match the selected period.
+									</p>
+								</div>
+
+								<ng-template #dashboardLoadedState>
+									<ng-container *ngIf="overview() as currentOverview">
+										<div class="dashboard-page__overview-grid">
+											<app-dashboard-summary-card
+												[title]="'Global results'"
+												[subtitle]="'Bullet, blitz and rapid games from the selected period'"
+												[summary]="currentOverview.global.summary"
+											/>
+
+											<section class="dashboard-page__meta-card">
+												<h2 class="dashboard-page__meta-title">Loaded dataset</h2>
+
+												<div class="dashboard-page__meta-list">
+													<div class="dashboard-page__meta-item">
+														<span class="dashboard-page__meta-label">Period</span>
+														<span class="dashboard-page__meta-value">{{ periodLabel() }}</span>
+													</div>
+
+													<div class="dashboard-page__meta-item">
+														<span class="dashboard-page__meta-label">Accounts</span>
+														<span class="dashboard-page__meta-value">{{
+															loadedAccountsCount()
+														}}</span>
+													</div>
+
+													<div class="dashboard-page__meta-item">
+														<span class="dashboard-page__meta-label">Included speeds</span>
+														<span class="dashboard-page__meta-value">Bullet, Blitz, Rapid</span>
+													</div>
+												</div>
+											</section>
+										</div>
+									</ng-container>
+								</ng-template>
+							</ng-container>
+						</ng-template>
+
+						<ng-template #dashboardInitialState>
+							<div class="dashboard-page__state dashboard-page__state--idle">
+								<h2 class="dashboard-page__state-title">Loading Dashboard</h2>
+								<p class="dashboard-page__state-text">
+									The Dashboard overview will appear here once the local database has been queried.
+								</p>
+							</div>
+						</ng-template>
+					</div>
+				</div>
+			</app-section-loader>
+		</section>
+	</div>
 </div>

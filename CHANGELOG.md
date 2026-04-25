@@ -33,6 +33,7 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 - Added an Angular Dashboard service wrapping the Dashboard overview IPC API.
 - Wired the Dashboard page to the dedicated inline shared filter and Dashboard overview IPC service.
 - Added Dashboard loading, error and empty states.
+- Added the first Dashboard global summary card with total games, wins, draws, losses and result percentages.
 
 ### Changed
 
