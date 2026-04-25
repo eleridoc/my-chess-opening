@@ -10,8 +10,16 @@ $_base-dark: (
 		theme-type: dark,
 	),
 	typography: (
-		plain-family: Ubuntu,
-		brand-family: Ubuntu,
+		plain-family: (
+			'Ubuntu',
+			system-ui,
+			sans-serif,
+		),
+		brand-family: (
+			'Ubuntu',
+			system-ui,
+			sans-serif,
+		),
 	),
 	density: 0,
 );
@@ -23,8 +31,16 @@ $_base-light: (
 		theme-type: light,
 	),
 	typography: (
-		plain-family: Ubuntu,
-		brand-family: Ubuntu,
+		plain-family: (
+			'Ubuntu',
+			system-ui,
+			sans-serif,
+		),
+		brand-family: (
+			'Ubuntu',
+			system-ui,
+			sans-serif,
+		),
 	),
 	density: 0,
 );

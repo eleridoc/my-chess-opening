@@ -84,3 +84,27 @@ deb:
         - libxtst6
         - xdg-utils
         - libatspi2.0-0
+
+win:
+    icon: electron/assets/icon.ico
+    target:
+        - target: nsis
+          arch:
+              - x64
+        - target: portable
+          arch:
+              - x64
+
+nsis:
+    artifactName: ${name}-${version}-setup-${arch}.${ext}
+    oneClick: false
+    perMachine: false
+    allowToChangeInstallationDirectory: true
+    createDesktopShortcut: true
+    createStartMenuShortcut: true
+    shortcutName: My Chess Opening
+    uninstallDisplayName: My Chess Opening
+    deleteAppDataOnUninstall: false
+
+portable:
+    artifactName: ${name}-${version}-portable-${arch}.${ext}

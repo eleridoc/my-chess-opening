@@ -9,11 +9,11 @@ npm run build:all
 
 # Run Angular dev server
 
-npm run build:watch:ui:angular
+npm run dev:ui:angular
 
 # Run Electron (after building everything)
 
-npm run build:all:run:electron
+npm run dev:electron
 
 # Run Electron (after building everything) and limit import to 10 games for dev
 

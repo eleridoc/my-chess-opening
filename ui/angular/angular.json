@@ -35,6 +35,10 @@
 							}
 						],
 						"styles": [
+							"../../node_modules/@fontsource/ubuntu/300.css",
+							"../../node_modules/@fontsource/ubuntu/400.css",
+							"../../node_modules/@fontsource/ubuntu/500.css",
+							"../../node_modules/@fontsource/ubuntu/700.css",
 							"../../node_modules/cm-chessboard/assets/chessboard.css",
 							"../../node_modules/cm-chessboard/assets/extensions/markers/markers.css",
 							"../../node_modules/cm-chessboard/assets/extensions/arrows/arrows.css",

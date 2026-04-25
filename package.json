@@ -1,6 +1,6 @@
 {
   "name": "my-chess-opening",
-  "version": "1.11.9-rc.1",
+  "version": "1.11.10",
   "license": "GPL-3.0-only",
   "private": true,
   "workspaces": [
@@ -33,6 +33,8 @@
     "sync:version": "node tools/sync-versions.mjs",
     "package:linux": "npm run build:prod && electron-builder --linux AppImage deb --publish never && npm run checksums:release",
     "package:linux:compiled": "electron-builder --linux AppImage deb --publish never && npm run checksums:release",
+    "package:windows": "npm run build:prod && electron-builder --win nsis portable --x64 --publish never && npm run checksums:release",
+    "package:windows:compiled": "electron-builder --win nsis portable --x64 --publish never && npm run checksums:release",
     "checksums:release": "node tools/generate-checksums.mjs"
   },
   "keywords": [],

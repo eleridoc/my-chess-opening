@@ -8,7 +8,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
 const releaseDir = path.join(rootDir, 'release');
 
-const artifactExtensions = ['.AppImage', '.deb'];
+const artifactExtensions = ['.AppImage', '.deb', '.exe'];
 const aggregateFileName = 'SHA256SUMS';
 
 async function main() {

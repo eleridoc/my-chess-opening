@@ -19,10 +19,14 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 
 - (placeholder)
 
-## [Unreleased]
+## [1.11.10]
 
 ### Added
 
+- Windows packaging support with:
+    - NSIS installer generation
+    - portable `.exe` generation
+    - Windows `.exe` checksum generation
 - (placeholder)
 
 ### Changed
@@ -32,6 +36,7 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 ### Fixed
 
 - Fixed missing **My next moves** arrows on fresh packaged Linux installs by defaulting the Explorer board arrows mode to top 3.
+- Fixed Ubuntu font not being applied on Windows packages by bundling it with the Angular build.
 
 ## [1.11.9] - 2026-04-24
 
