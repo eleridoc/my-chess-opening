@@ -29,6 +29,7 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 - Added shared Dashboard IPC contracts for the upcoming Dashboard overview.
 - Added the Dashboard Electron IPC backend handler with Prisma-based overview loading.
 - Added initial Dashboard backend aggregations for global stats, daily activity, result ratio, per-account data, per-speed data and Elo history.
+- Extracted Dashboard backend aggregation logic into a dedicated Electron module.
 
 ### Changed
 

@@ -1,6 +1,6 @@
 {
   "name": "my-chess-opening-electron",
-  "version": "1.12.4",
+  "version": "1.12.5",
   "license": "GPL-3.0-only",
   "private": true,
   "main": "dist/main.js",
