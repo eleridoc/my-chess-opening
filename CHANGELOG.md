@@ -23,7 +23,10 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 
 ### Added
 
-- Added a `Last 12 months` period preset to the shared game filter.
+- Added a `Last 12 months` period preset to all shared game filter contexts, preparing the default Dashboard period for V1.12.
+- Added a dedicated `dashboard` shared game filter context with its own localStorage scope.
+- Configured the Dashboard filter context to expose only played date fields and default to `Last 12 months`.
+- Added shared Dashboard IPC contracts for the upcoming Dashboard overview.
 
 ### Changed
 

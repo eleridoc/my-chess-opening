@@ -76,6 +76,21 @@ export type {
 } from './export/types';
 
 export type {
+	DashboardGameSpeed,
+	DashboardOverviewInput,
+	DashboardPlayedDateRange,
+	DashboardSummaryStats,
+	DashboardDailyActivityPoint,
+	DashboardDailyResultRatioPoint,
+	DashboardEloPoint,
+	DashboardSpeedBlock,
+	DashboardAccountBlock,
+	DashboardGlobalBlock,
+	DashboardOverviewResult,
+	DashboardApi,
+} from './dashboard/types';
+
+export type {
 	MyNextMovesInput,
 	MyNextMovesOutcomeStats,
 	MyNextMoveRow,
@@ -94,6 +109,7 @@ import type { ExplorerApi } from './explorer/types';
 import type { GamesApi } from './games/types';
 import type { AccountsApi } from './accounts/types';
 import type { ExportApi } from './export/types';
+import type { DashboardApi } from './dashboard/types';
 import type { MyNextMovesApi } from './my-next-moves/types';
 
 /**
@@ -146,6 +162,9 @@ export interface ElectronApi {
 
 	/** Export APIs (summary + PGN file generation). */
 	export: ExportApi;
+
+	/** Dashboard APIs (global, per-account and per-speed statistics). */
+	dashboard: DashboardApi;
 
 	/** Explorer "My next moves" APIs (position-based move statistics). */
 	myNextMoves: MyNextMovesApi;

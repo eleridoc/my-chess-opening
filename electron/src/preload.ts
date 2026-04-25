@@ -14,6 +14,8 @@ import type {
 	ExportSummaryResult,
 	ExportBuildPgnInput,
 	ExportBuildPgnResult,
+	DashboardOverviewInput,
+	DashboardOverviewResult,
 	AccountsListResult,
 	AccountsSetEnabledResult,
 	AccountsDeleteResult,
@@ -54,6 +56,7 @@ const CHANNELS = {
 	GAMES_LIST: 'games:list',
 	EXPORT_GET_SUMMARY: 'export:getSummary',
 	EXPORT_BUILD_PGN_FILE: 'export:buildPgnFile',
+	DASHBOARD_GET_OVERVIEW: 'dashboard:getOverview',
 	MY_NEXT_MOVES_GET_MOVES: 'myNextMoves:getMoves',
 	SYSTEM_OPEN_EXTERNAL: 'system:openExternal',
 	ACCOUNTS_LIST: 'accounts:list',
@@ -165,6 +168,12 @@ const api: ElectronApi = {
 		create: (site, username) =>
 			invoke<AccountsCreateResult>(CHANNELS.ACCOUNTS_CREATE, { site, username }),
 	},
+
+	dashboard: {
+		getOverview: (input: DashboardOverviewInput) =>
+			invoke<DashboardOverviewResult>(CHANNELS.DASHBOARD_GET_OVERVIEW, input),
+	},
+
 	myNextMoves: {
 		getMoves: (input: MyNextMovesInput) =>
 			invoke<MyNextMovesResult>(CHANNELS.MY_NEXT_MOVES_GET_MOVES, input),
