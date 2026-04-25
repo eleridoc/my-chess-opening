@@ -145,6 +145,7 @@ export class DashboardHeatmapComponent implements AfterViewInit, OnChanges, OnDe
 		await this.ngZone.runOutsideAngular(async () => {
 			await calendar.paint(
 				{
+					theme: this.getCalHeatmapTheme(),
 					itemSelector: `#${this.elementId}`,
 					range: Math.max(1, this.rangeMonths),
 					date: {
@@ -283,6 +284,10 @@ export class DashboardHeatmapComponent implements AfterViewInit, OnChanges, OnDe
 				interpolate: 'hsl',
 			},
 		};
+	}
+
+	private getCalHeatmapTheme(): 'light' | 'dark' {
+		return document.body.classList.contains('theme-light') ? 'light' : 'dark';
 	}
 }
 

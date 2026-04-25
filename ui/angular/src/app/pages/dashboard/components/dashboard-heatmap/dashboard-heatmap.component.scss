@@ -1,3 +1,6 @@
+:host {
+}
+
 .dashboard-heatmap {
 	display: flex;
 	flex-direction: column;
@@ -58,11 +61,18 @@
  * cal-heatmap renders its SVG content dynamically.
  * ::ng-deep is used here only to style third-party generated nodes.
  */
-:host ::ng-deep .ch-domain-text {
-	fill: var(--app-text-muted);
+:host ::ng-deep .ch-domain-text,
+:host ::ng-deep .ch-subdomain-text,
+:host ::ng-deep .ch-legend text {
+	fill: var(--app-text-muted) !important;
+	color: var(--app-text-muted);
 	font-family: inherit;
 	font-size: 0.68rem;
 	font-weight: 700;
+}
+
+:host ::ng-deep .ch-domain-bg {
+	fill: transparent;
 }
 
 :host ::ng-deep .ch-subdomain-bg {
