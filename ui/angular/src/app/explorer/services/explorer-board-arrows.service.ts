@@ -18,7 +18,7 @@ function loadStoredArrowMode(source: ExplorerBoardArrowSource): ExplorerBoardArr
 		// Ignore storage errors.
 	}
 
-	return 'off';
+	return source === 'my-next-moves' ? 'top3' : 'off';
 }
 
 @Injectable({ providedIn: 'root' })

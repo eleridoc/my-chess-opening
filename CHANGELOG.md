@@ -19,6 +19,20 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 
 - (placeholder)
 
+## [Unreleased]
+
+### Added
+
+- (placeholder)
+
+### Changed
+
+- (placeholder)
+
+### Fixed
+
+- Fixed missing **My next moves** arrows on fresh packaged Linux installs by defaulting the Explorer board arrows mode to top 3.
+
 ## [1.11.9] - 2026-04-24
 
 ### Added
