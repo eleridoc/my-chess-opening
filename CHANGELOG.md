@@ -31,6 +31,8 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 - Added initial Dashboard backend aggregations for global stats, daily activity, result ratio, per-account data, per-speed data and Elo history.
 - Extracted Dashboard backend aggregation logic into a dedicated Electron module.
 - Added an Angular Dashboard service wrapping the Dashboard overview IPC API.
+- Wired the Dashboard page to the dedicated inline shared filter and Dashboard overview IPC service.
+- Added Dashboard loading, error and empty states.
 
 ### Changed
 
