@@ -193,3 +193,41 @@ body {
 .cm-chessboard .arrow-weight-5 .arrow-head {
 	opacity: 1;
 }
+
+/**
+ * Global cal-heatmap tooltip styling.
+ *
+ * cal-heatmap renders the tooltip as a global #ch-tooltip element, outside of
+ * Angular component style encapsulation. Keep this styling global.
+ */
+#ch-tooltip {
+	z-index: 10000;
+
+	max-width: 260px;
+	padding: 8px 10px;
+
+	border: 1px solid var(--app-divider);
+	border-radius: var(--app-main-radius);
+	background: color-mix(in srgb, var(--app-bg-plus-2) 96%, black);
+	box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+
+	color: var(--app-text);
+	font-family: inherit;
+	font-size: 0.78rem;
+	font-weight: 700;
+	line-height: 1.35;
+	white-space: nowrap;
+
+	pointer-events: none;
+}
+
+#ch-tooltip[aria-hidden='true'],
+#ch-tooltip:not([data-show]) {
+	opacity: 0;
+	visibility: hidden;
+}
+
+#ch-tooltip[data-show] {
+	opacity: 1;
+	visibility: visible;
+}

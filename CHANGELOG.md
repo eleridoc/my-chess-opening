@@ -37,6 +37,8 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 - Added `cal-heatmap` as the Dashboard calendar heatmap dependency.
 - Added an Angular Dashboard heatmap wrapper component for upcoming activity and result-ratio charts.
 - Added the global Dashboard daily activity heatmap showing games played by day.
+- Added the global Dashboard daily result-ratio heatmap showing positive and negative result trends by day.
+- Added Dashboard heatmap tooltips with date and value details.
 
 ### Changed
 

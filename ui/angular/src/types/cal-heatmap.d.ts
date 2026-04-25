@@ -14,3 +14,9 @@ declare module 'cal-heatmap' {
 		destroy(): Promise<void>;
 	}
 }
+
+declare module 'cal-heatmap/plugins/Tooltip' {
+	const Tooltip: unknown;
+
+	export default Tooltip;
+}

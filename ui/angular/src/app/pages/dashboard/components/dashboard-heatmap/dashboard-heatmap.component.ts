@@ -14,6 +14,7 @@ import {
 } from '@angular/core';
 
 import CalHeatmap from 'cal-heatmap';
+import Tooltip from 'cal-heatmap/plugins/Tooltip';
 
 let dashboardHeatmapId = 0;
 
@@ -29,6 +30,10 @@ export interface DashboardHeatmapPoint {
 	 * Numeric value displayed on the heatmap.
 	 */
 	value: number;
+}
+
+interface DashboardHeatmapTooltipDate {
+	format: (format: string) => string;
 }
 
 /**
@@ -100,9 +105,9 @@ export class DashboardHeatmapComponent implements AfterViewInit, OnChanges, OnDe
 
 	ngOnDestroy(): void {
 		this.latestRenderId += 1;
+
 		void this.destroyCalendar();
 	}
-
 	private async render(): Promise<void> {
 		if (!this.viewReady) {
 			return;
@@ -138,41 +143,55 @@ export class DashboardHeatmapComponent implements AfterViewInit, OnChanges, OnDe
 		this.calendar = calendar;
 
 		await this.ngZone.runOutsideAngular(async () => {
-			await calendar.paint({
-				itemSelector: `#${this.elementId}`,
-				range: Math.max(1, this.rangeMonths),
-				date: {
-					start,
-					locale: {
-						weekStart: 1,
+			await calendar.paint(
+				{
+					itemSelector: `#${this.elementId}`,
+					range: Math.max(1, this.rangeMonths),
+					date: {
+						start,
+						locale: {
+							weekStart: 1,
+						},
 					},
-				},
-				domain: {
-					type: 'month',
-					gutter: 8,
-					label: {
-						text: 'MMM',
-						textAlign: 'start',
-						position: 'top',
+					domain: {
+						type: 'month',
+						gutter: 8,
+						label: {
+							text: 'MMM',
+							textAlign: 'start',
+							position: 'top',
+						},
 					},
+					subDomain: {
+						type: 'ghDay',
+						width: 11,
+						height: 11,
+						gutter: 2,
+						radius: 2,
+					},
+					data: {
+						source,
+						x: 'date',
+						y: 'value',
+						groupY: 'sum',
+						defaultValue: null,
+					},
+					scale: this.buildScale(maxActivityValue),
+					animationDuration: 120,
 				},
-				subDomain: {
-					type: 'ghDay',
-					width: 11,
-					height: 11,
-					gutter: 2,
-					radius: 2,
-				},
-				data: {
-					source,
-					x: 'date',
-					y: 'value',
-					groupY: 'sum',
-					defaultValue: null,
-				},
-				scale: this.buildScale(maxActivityValue),
-				animationDuration: 120,
-			});
+				[
+					[
+						Tooltip,
+						{
+							text: (
+								_timestamp: number,
+								value: number | null,
+								dayjsDate: DashboardHeatmapTooltipDate,
+							) => this.buildTooltipText(value, dayjsDate),
+						},
+					],
+				],
+			);
 		});
 	}
 
@@ -191,27 +210,77 @@ export class DashboardHeatmapComponent implements AfterViewInit, OnChanges, OnDe
 		this.containerRef?.nativeElement.replaceChildren();
 	}
 
+	private buildTooltipText(value: number | null, dayjsDate: DashboardHeatmapTooltipDate): string {
+		const dateLabel = dayjsDate.format('YYYY-MM-DD');
+
+		if (value === null || value === undefined) {
+			return `No data on ${dateLabel}`;
+		}
+
+		if (this.mode === 'ratio') {
+			return `${this.formatRatioTooltip(value)} on ${dateLabel}`;
+		}
+
+		return `${this.formatActivityTooltip(value)} on ${dateLabel}`;
+	}
+
+	private formatActivityTooltip(value: number): string {
+		const roundedValue = Math.round(value);
+
+		if (roundedValue <= 0) {
+			return 'No games';
+		}
+
+		if (roundedValue === 1) {
+			return '1 game';
+		}
+
+		return `${roundedValue} games`;
+	}
+
+	private formatRatioTooltip(value: number): string {
+		const normalizedValue = Number(value.toFixed(4));
+
+		if (normalizedValue > 0) {
+			return `Positive day · ratio ${normalizedValue}`;
+		}
+
+		if (normalizedValue < 0) {
+			return `Negative day · ratio ${normalizedValue}`;
+		}
+
+		return 'Neutral day · ratio 0';
+	}
+
 	private buildScale(maxActivityValue: number): object {
 		if (this.mode === 'ratio') {
 			return {
 				color: {
-					type: 'linear',
-					domain: [-1, 1],
+					/**
+					 * Ratio heatmaps are categorical on purpose:
+					 * - negative days: more losses than wins
+					 * - neutral days: equal wins/losses or only draws
+					 * - positive days: more wins than losses
+					 *
+					 * Using a threshold scale avoids unreadable continuous gradients.
+					 */
+					type: 'threshold',
+					domain: [-0.0001, 0.0001],
 					range: [
 						getCssColor('--app-danger', '#ff6b6b'),
 						getCssColor('--app-bg-plus-2', '#2a2f3a'),
 						getCssColor('--app-success', '#7bd88f'),
 					],
-					interpolate: 'hsl',
 				},
 			};
 		}
 
 		return {
-			opacity: {
-				baseColor: getCssColor('--app-primary', '#abc7ff'),
+			color: {
 				type: 'linear',
 				domain: [0, maxActivityValue],
+				range: [getCssColor('--app-bg-plus-2', '#2a2f3a'), getCssColor('--app-primary', '#abc7ff')],
+				interpolate: 'hsl',
 			},
 		};
 	}

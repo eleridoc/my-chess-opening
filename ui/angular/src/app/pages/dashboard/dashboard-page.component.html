@@ -109,6 +109,15 @@
 												[startDate]="heatmapStartDate()"
 												[rangeMonths]="12"
 											/>
+
+											<app-dashboard-heatmap
+												[title]="'Daily result ratio'"
+												[subtitle]="'Positive days have more wins than losses. Draws are neutral.'"
+												[mode]="'ratio'"
+												[points]="globalDailyResultRatioPoints()"
+												[startDate]="heatmapStartDate()"
+												[rangeMonths]="12"
+											/>
 										</div>
 									</ng-container>
 								</ng-template>

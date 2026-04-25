@@ -91,6 +91,19 @@ export class DashboardPageComponent {
 		}));
 	});
 
+	readonly globalDailyResultRatioPoints = computed<DashboardHeatmapPoint[]>(() => {
+		const overview = this.overview();
+
+		if (!overview) {
+			return [];
+		}
+
+		return overview.global.dailyResultRatio.map((point) => ({
+			date: point.date,
+			value: point.ratio,
+		}));
+	});
+
 	readonly heatmapStartDate = computed(() => {
 		const range = this.overview()?.playedDateRange;
 
