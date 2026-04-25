@@ -19,14 +19,17 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 
 - (placeholder)
 
-## [1.11.12]
+## [1.11.13]
 
 ### Added
 
+- Added Windows installation documentation for NSIS installer and portable executable.
+- Added Windows runtime data documentation, including `%APPDATA%\my-chess-opening`.
+- Added Windows smoke test checklist for portable and installed builds.
+- Added Discord release announcement directly in the GitHub release workflow.
 - Added multi-platform GitHub release automation with separate Linux and Windows build jobs.
 - Added Windows release artifacts generation on `windows-latest` for NSIS installer and portable executable.
 - Added combined release checksum generation after collecting Linux and Windows artifacts.
-
 - Windows packaging support with:
     - NSIS installer generation
     - portable `.exe` generation
@@ -34,11 +37,14 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 
 ### Changed
 
+- Updated release documentation for multi-platform Linux and Windows releases.
+- Updated README packaging documentation to include Windows artifacts and checksum verification.
 - Validated Windows runtime behavior for both portable and NSIS installer builds.
 - Replaced the Linux-only release workflow with a unified multi-platform release workflow.
 
 ### Fixed
 
+- Fixed Discord release announcements not running reliably when releases are created by GitHub Actions.
 - Fixed missing **My next moves** arrows on fresh packaged Linux installs by defaulting the Explorer board arrows mode to top 3.
 - Fixed Ubuntu font not being applied on Windows packages by bundling it with the Angular build.
 - Avoided platform-specific `SHA256SUMS` conflicts by generating checksums only once during the final release publish job.
