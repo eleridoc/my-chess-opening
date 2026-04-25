@@ -10,6 +10,11 @@ import { SectionLoaderComponent } from '../../shared/loading/section-loader/sect
 import { NotificationService } from '../../shared/notifications/notification.service';
 import { DashboardSummaryCardComponent } from './components/dashboard-summary-card/dashboard-summary-card.component';
 
+import {
+	DashboardHeatmapComponent,
+	type DashboardHeatmapPoint,
+} from './components/dashboard-heatmap/dashboard-heatmap.component';
+
 /**
  * Dashboard page.
  *
@@ -29,6 +34,7 @@ import { DashboardSummaryCardComponent } from './components/dashboard-summary-ca
 		SharedGameFilterComponent,
 		SectionLoaderComponent,
 		DashboardSummaryCardComponent,
+		DashboardHeatmapComponent,
 	],
 	templateUrl: './dashboard-page.component.html',
 	styleUrl: './dashboard-page.component.scss',
@@ -71,6 +77,25 @@ export class DashboardPageComponent {
 	readonly loadedGamesCount = computed(() => this.overview()?.global.summary.totalGames ?? 0);
 
 	readonly loadedAccountsCount = computed(() => this.overview()?.accounts.length ?? 0);
+
+	readonly globalDailyActivityPoints = computed<DashboardHeatmapPoint[]>(() => {
+		const overview = this.overview();
+
+		if (!overview) {
+			return [];
+		}
+
+		return overview.global.dailyActivity.map((point) => ({
+			date: point.date,
+			value: point.gamesCount,
+		}));
+	});
+
+	readonly heatmapStartDate = computed(() => {
+		const range = this.overview()?.playedDateRange;
+
+		return range?.from ?? null;
+	});
 
 	readonly periodLabel = computed(() => {
 		const range = this.overview()?.playedDateRange;

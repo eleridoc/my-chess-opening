@@ -34,6 +34,9 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 - Wired the Dashboard page to the dedicated inline shared filter and Dashboard overview IPC service.
 - Added Dashboard loading, error and empty states.
 - Added the first Dashboard global summary card with total games, wins, draws, losses and result percentages.
+- Added `cal-heatmap` as the Dashboard calendar heatmap dependency.
+- Added an Angular Dashboard heatmap wrapper component for upcoming activity and result-ratio charts.
+- Added the global Dashboard daily activity heatmap showing games played by day.
 
 ### Changed
 

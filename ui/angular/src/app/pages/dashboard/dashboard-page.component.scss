@@ -119,6 +119,14 @@
 	cursor: default;
 }
 
+.dashboard-page__overview-stack {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+
+	min-width: 0;
+}
+
 .dashboard-page__overview-grid {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
