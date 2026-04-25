@@ -27,6 +27,8 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 - Added a dedicated `dashboard` shared game filter context with its own localStorage scope.
 - Configured the Dashboard filter context to expose only played date fields and default to `Last 12 months`.
 - Added shared Dashboard IPC contracts for the upcoming Dashboard overview.
+- Added the Dashboard Electron IPC backend handler with Prisma-based overview loading.
+- Added initial Dashboard backend aggregations for global stats, daily activity, result ratio, per-account data, per-speed data and Elo history.
 
 ### Changed
 

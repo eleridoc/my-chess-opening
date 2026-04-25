@@ -29,6 +29,7 @@ import { registerGamesIpc } from './games/gamesIpc';
 import { registerSystemIpc } from './system/systemIpc';
 import { registerImportIpc } from './import/importIpc';
 import { registerExportIpc } from './export/exportIpc';
+import { registerDashboardIpc } from './dashboard/dashboardIpc';
 import { registerMyNextMovesIpc } from './my-next-moves/myNextMovesIpc';
 
 import type { ImportEvent } from 'my-chess-opening-core';
@@ -371,6 +372,7 @@ app.whenReady().then(async () => {
 	registerSystemIpc();
 	registerImportIpc({ emitImportEvent });
 	registerExportIpc();
+	registerDashboardIpc();
 	registerMyNextMovesIpc();
 	createWindow();
 
