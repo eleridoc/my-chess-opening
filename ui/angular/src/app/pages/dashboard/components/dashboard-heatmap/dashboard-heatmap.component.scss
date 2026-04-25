@@ -1,0 +1,75 @@
+.dashboard-heatmap {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+
+	min-width: 0;
+	padding: 16px;
+
+	border-radius: var(--app-main-radius);
+	border: 1px solid var(--app-divider);
+	background: var(--app-bg-plus-1);
+}
+
+.dashboard-heatmap__header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.dashboard-heatmap__title {
+	margin: 0;
+
+	font-size: 1rem;
+	line-height: 1.25;
+	font-weight: 700;
+}
+
+.dashboard-heatmap__subtitle {
+	margin: 4px 0 0;
+
+	color: var(--app-text-muted);
+	font-size: 0.82rem;
+	line-height: 1.35;
+}
+
+.dashboard-heatmap__scroll {
+	min-width: 0;
+	overflow-x: auto;
+	overflow-y: hidden;
+
+	padding-bottom: 4px;
+}
+
+.dashboard-heatmap__container {
+	min-width: max-content;
+}
+
+.dashboard-heatmap__empty {
+	margin: 0;
+
+	color: var(--app-text-muted);
+	font-size: 0.82rem;
+	line-height: 1.35;
+}
+
+/**
+ * cal-heatmap renders its SVG content dynamically.
+ * ::ng-deep is used here only to style third-party generated nodes.
+ */
+:host ::ng-deep .ch-domain-text {
+	fill: var(--app-text-muted);
+	font-family: inherit;
+	font-size: 0.68rem;
+	font-weight: 700;
+}
+
+:host ::ng-deep .ch-subdomain-bg {
+	stroke: color-mix(in srgb, var(--app-divider) 70%, transparent);
+}
+
+:host ::ng-deep .ch-subdomain-bg:hover {
+	stroke: var(--app-primary);
+	stroke-width: 1.5px;
+}

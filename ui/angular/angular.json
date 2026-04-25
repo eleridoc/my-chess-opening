@@ -43,6 +43,7 @@
 							"../../node_modules/cm-chessboard/assets/extensions/markers/markers.css",
 							"../../node_modules/cm-chessboard/assets/extensions/arrows/arrows.css",
 							"../../node_modules/cm-chessboard/assets/extensions/promotion-dialog/promotion-dialog.css",
+							"../../node_modules/cal-heatmap/dist/cal-heatmap.css",
 							"src/styles.scss"
 						]
 					},
