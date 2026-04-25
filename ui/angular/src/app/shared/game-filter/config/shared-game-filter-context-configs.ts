@@ -50,6 +50,12 @@ const MY_NEXT_MOVES_VISIBLE_FIELDS: SharedGameFilterFieldKey[] = [
 	'playerRatingMax',
 ];
 
+const DASHBOARD_VISIBLE_FIELDS: SharedGameFilterFieldKey[] = [
+	'periodPreset',
+	'datePlayedFrom',
+	'datePlayedTo',
+];
+
 export const SHARED_GAME_FILTER_CONTEXT_CONFIGS: Record<
 	SharedGameFilterContext,
 	SharedGameFilterContextConfig
@@ -69,5 +75,19 @@ export const SHARED_GAME_FILTER_CONTEXT_CONFIGS: Record<
 	},
 	'my-next-moves': {
 		visibleFields: MY_NEXT_MOVES_VISIBLE_FIELDS,
+	},
+	dashboard: {
+		/**
+		 * Dashboard only exposes date fields in V1.12.
+		 *
+		 * Hidden filter fields must stay neutral so that persisted dashboard
+		 * filters never accidentally apply speed or rated restrictions later.
+		 */
+		defaultValueOverrides: {
+			periodPreset: 'last12Months',
+			gameSpeeds: [],
+			ratedMode: 'both',
+		},
+		visibleFields: DASHBOARD_VISIBLE_FIELDS,
 	},
 };

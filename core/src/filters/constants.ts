@@ -7,7 +7,13 @@
  * - context configuration
  */
 
-export const SHARED_GAME_FILTER_CONTEXTS = ['default', 'games', 'export', 'my-next-moves'] as const;
+export const SHARED_GAME_FILTER_CONTEXTS = [
+	'default',
+	'games',
+	'export',
+	'my-next-moves',
+	'dashboard',
+] as const;
 
 export const SHARED_GAME_FILTER_PERIOD_PRESETS = [
 	'all',
