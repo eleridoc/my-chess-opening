@@ -339,6 +339,8 @@ export class SharedGameFilterComponent implements OnInit, OnChanges {
 				return 'Last 3 months';
 			case 'last6Months':
 				return 'Last 6 months';
+			case 'last12Months':
+				return 'Last 12 months';
 			case 'thisYear':
 				return 'This year';
 			case 'custom':

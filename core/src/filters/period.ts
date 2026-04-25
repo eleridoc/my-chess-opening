@@ -116,7 +116,13 @@ function resolveComputedSharedGameFilterPlayedDateRange(
 				),
 				to: referenceCalendarDate,
 			};
-
+		case 'last12Months':
+			return {
+				from: formatSharedGameFilterCalendarDate(
+					addSharedGameFilterUtcMonths(referenceUtcDate, -12),
+				),
+				to: referenceCalendarDate,
+			};
 		case 'thisYear':
 			return {
 				from: formatSharedGameFilterCalendarDate(

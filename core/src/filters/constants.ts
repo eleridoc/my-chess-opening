@@ -17,6 +17,7 @@ export const SHARED_GAME_FILTER_PERIOD_PRESETS = [
 	'thisMonth',
 	'last3Months',
 	'last6Months',
+	'last12Months',
 	'thisYear',
 	'custom',
 ] as const;

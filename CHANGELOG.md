@@ -19,6 +19,20 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 
 - (placeholder)
 
+## [1.12]
+
+### Added
+
+- Added a `Last 12 months` period preset to the shared game filter.
+
+### Changed
+
+- (placeholder)
+
+### Fixed
+
+- (placeholder)
+
 ## [1.11.13]
 
 ### Added

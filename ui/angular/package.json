@@ -1,6 +1,6 @@
 {
   "name": "my-chess-opening-ui-angular",
-  "version": "1.11.13",
+  "version": "1.12.1",
   "license": "GPL-3.0-only",
   "scripts": {
     "ng": "ng",
