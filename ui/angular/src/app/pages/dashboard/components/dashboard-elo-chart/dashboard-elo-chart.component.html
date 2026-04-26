@@ -1,0 +1,82 @@
+<section class="dashboard-elo-chart">
+	<header class="dashboard-elo-chart__header">
+		<div>
+			<h3 class="dashboard-elo-chart__title">{{ title }}</h3>
+			<p class="dashboard-elo-chart__subtitle" *ngIf="subtitle">
+				{{ subtitle }}
+			</p>
+		</div>
+	</header>
+
+	<ng-container *ngIf="chart.hasData; else noEloData">
+		<div class="dashboard-elo-chart__metrics">
+			<div class="dashboard-elo-chart__metric">
+				<span class="dashboard-elo-chart__metric-label">Start</span>
+				<span class="dashboard-elo-chart__metric-value">{{ chart.startElo }}</span>
+			</div>
+
+			<div class="dashboard-elo-chart__metric">
+				<span class="dashboard-elo-chart__metric-label">End</span>
+				<span class="dashboard-elo-chart__metric-value">{{ chart.endElo }}</span>
+			</div>
+
+			<div class="dashboard-elo-chart__metric">
+				<span class="dashboard-elo-chart__metric-label">Delta</span>
+				<span class="dashboard-elo-chart__metric-value" [ngClass]="deltaClass(chart.deltaElo)">
+					{{ formatDelta(chart.deltaElo) }}
+				</span>
+			</div>
+		</div>
+
+		<div class="dashboard-elo-chart__svg-wrap">
+			<svg
+				class="dashboard-elo-chart__svg"
+				[attr.viewBox]="viewBox"
+				role="img"
+				[attr.aria-label]="ariaLabel()"
+				preserveAspectRatio="none"
+			>
+				<g class="dashboard-elo-chart__grid">
+					<g *ngFor="let tick of chart.yTicks">
+						<line
+							class="dashboard-elo-chart__grid-line"
+							x1="52"
+							x2="702"
+							[attr.y1]="tick.y"
+							[attr.y2]="tick.y"
+						/>
+
+						<text class="dashboard-elo-chart__grid-label" x="8" [attr.y]="tick.y + 4">
+							{{ tick.label }}
+						</text>
+					</g>
+				</g>
+
+				<path class="dashboard-elo-chart__area" [attr.d]="chart.areaD" *ngIf="chart.areaD" />
+
+				<path class="dashboard-elo-chart__line" [attr.d]="chart.pathD" />
+
+				<g class="dashboard-elo-chart__markers">
+					<circle
+						*ngFor="let point of chart.markerPoints"
+						class="dashboard-elo-chart__marker"
+						[attr.cx]="point.x"
+						[attr.cy]="point.y"
+						r="3.5"
+					>
+						<title>{{ point.elo }} Elo · {{ point.playedAtIso | appIsoDate }}</title>
+					</circle>
+				</g>
+			</svg>
+		</div>
+
+		<footer class="dashboard-elo-chart__footer" *ngIf="chart.firstPoint && chart.lastPoint">
+			<span>{{ chart.firstPoint.playedAtIso | appIsoDate }}</span>
+			<span>{{ chart.lastPoint.playedAtIso | appIsoDate }}</span>
+		</footer>
+	</ng-container>
+
+	<ng-template #noEloData>
+		<p class="dashboard-elo-chart__empty">No Elo history available for this account and speed.</p>
+	</ng-template>
+</section>

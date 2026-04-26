@@ -43,6 +43,8 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 - Reused the Dashboard summary card component to display account-level games, wins, draws and losses.
 - Added per-account speed sections to the Dashboard.
 - Added speed-level summary, activity heatmap and result-ratio heatmap blocks for each account.
+- Added Elo evolution charts to Dashboard account speed sections.
+- Added a lightweight SVG Dashboard Elo chart component based on imported account rating history.
 
 ### Changed
 

@@ -4,10 +4,12 @@ import { ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChanges } f
 import type {
 	DashboardAccountBlock,
 	DashboardDailyResultRatioPoint,
+	DashboardEloPoint,
 	DashboardGameSpeed,
 	DashboardSpeedBlock,
 } from 'my-chess-opening-core';
 
+import { DashboardEloChartComponent } from '../dashboard-elo-chart/dashboard-elo-chart.component';
 import {
 	DashboardHeatmapComponent,
 	type DashboardHeatmapPoint,
@@ -18,6 +20,7 @@ interface DashboardAccountSpeedViewModel {
 	block: DashboardSpeedBlock;
 	label: string;
 	subtitle: string;
+	eloHistory: DashboardEloPoint[];
 	dailyActivityPoints: DashboardHeatmapPoint[];
 	dailyResultRatioPoints: DashboardHeatmapPoint[];
 }
@@ -28,12 +31,18 @@ interface DashboardAccountSpeedViewModel {
  * Displays:
  * - one account-level summary
  * - one section per speed with data
+ * - Elo history chart for each speed
  * - activity and result-ratio heatmaps for each speed
  */
 @Component({
 	selector: 'app-dashboard-account-block',
 	standalone: true,
-	imports: [CommonModule, DashboardSummaryCardComponent, DashboardHeatmapComponent],
+	imports: [
+		CommonModule,
+		DashboardSummaryCardComponent,
+		DashboardHeatmapComponent,
+		DashboardEloChartComponent,
+	],
 	templateUrl: './dashboard-account-block.component.html',
 	styleUrl: './dashboard-account-block.component.scss',
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -72,6 +81,7 @@ export class DashboardAccountBlockComponent implements OnChanges {
 			block: speedBlock,
 			label: this.speedLabel(speedBlock.speed),
 			subtitle: this.speedSubtitle(speedBlock),
+			eloHistory: speedBlock.eloHistory,
 			dailyActivityPoints: this.buildDailyActivityPoints(speedBlock),
 			dailyResultRatioPoints: this.buildDailyResultRatioPoints(speedBlock),
 		}));

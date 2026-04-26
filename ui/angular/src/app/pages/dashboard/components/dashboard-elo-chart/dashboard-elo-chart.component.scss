@@ -1,0 +1,174 @@
+:host {
+	display: block;
+	min-width: 0;
+}
+
+.dashboard-elo-chart {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+
+	min-width: 0;
+	padding: 14px;
+
+	border-radius: var(--app-main-radius);
+	border: 1px solid var(--app-divider);
+	background: var(--app-bg-plus-1);
+}
+
+.dashboard-elo-chart__header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 12px;
+
+	min-width: 0;
+}
+
+.dashboard-elo-chart__title {
+	margin: 0;
+
+	font-size: 0.94rem;
+	line-height: 1.25;
+	font-weight: 800;
+}
+
+.dashboard-elo-chart__subtitle {
+	margin: 4px 0 0;
+
+	color: var(--app-text-muted);
+	font-size: 0.78rem;
+	line-height: 1.35;
+}
+
+.dashboard-elo-chart__metrics {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 8px;
+
+	min-width: 0;
+}
+
+.dashboard-elo-chart__metric {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+
+	min-width: 0;
+	padding: 8px 10px;
+
+	border-radius: var(--app-main-radius);
+	border: 1px solid var(--app-divider);
+	background: var(--app-bg-plus-2);
+}
+
+.dashboard-elo-chart__metric-label {
+	color: var(--app-text-muted);
+	font-size: 0.72rem;
+	font-weight: 800;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.dashboard-elo-chart__metric-value {
+	min-width: 0;
+	overflow: hidden;
+
+	font-size: 0.86rem;
+	font-weight: 900;
+	text-align: right;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.dashboard-elo-chart__metric-value--positive {
+	color: var(--app-me-win);
+}
+
+.dashboard-elo-chart__metric-value--negative {
+	color: var(--app-me-loss);
+}
+
+.dashboard-elo-chart__metric-value--neutral {
+	color: var(--app-text-muted);
+}
+
+.dashboard-elo-chart__svg-wrap {
+	min-width: 0;
+	overflow: hidden;
+
+	border-radius: var(--app-main-radius);
+	border: 1px solid color-mix(in srgb, var(--app-divider) 82%, transparent);
+	background: var(--app-bg-plus-2);
+}
+
+.dashboard-elo-chart__svg {
+	display: block;
+
+	width: 100%;
+	height: 220px;
+}
+
+.dashboard-elo-chart__grid-line {
+	stroke: color-mix(in srgb, var(--app-divider) 78%, transparent);
+	stroke-width: 1;
+}
+
+.dashboard-elo-chart__grid-label {
+	fill: var(--app-text-muted);
+
+	font-size: 11px;
+	font-weight: 700;
+}
+
+.dashboard-elo-chart__area {
+	fill: color-mix(in srgb, var(--app-primary) 14%, transparent);
+}
+
+.dashboard-elo-chart__line {
+	fill: none;
+	stroke: var(--app-primary);
+	stroke-width: 3;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+.dashboard-elo-chart__marker {
+	fill: var(--app-primary);
+	stroke: var(--app-bg-plus-2);
+	stroke-width: 2;
+}
+
+.dashboard-elo-chart__footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+
+	color: var(--app-text-muted);
+	font-size: 0.76rem;
+	font-weight: 700;
+}
+
+.dashboard-elo-chart__empty {
+	margin: 0;
+	padding: 12px;
+
+	border-radius: var(--app-main-radius);
+	border: 1px dashed var(--app-divider);
+
+	color: var(--app-text-muted);
+	font-size: 0.82rem;
+	line-height: 1.4;
+}
+
+@media (max-width: 720px) {
+	.dashboard-elo-chart__metrics {
+		grid-template-columns: 1fr;
+	}
+
+	.dashboard-elo-chart__svg {
+		height: 180px;
+	}
+}

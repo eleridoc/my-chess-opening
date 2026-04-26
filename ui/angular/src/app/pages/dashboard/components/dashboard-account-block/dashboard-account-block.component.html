@@ -36,30 +36,40 @@
 			</header>
 
 			<div class="dashboard-account-block__speed-layout">
-				<app-dashboard-summary-card
-					[title]="speed.label + ' results'"
-					[subtitle]="speed.subtitle"
-					[summary]="speed.block.summary"
-				/>
+				<div class="dashboard-account-block__speed-summary">
+					<app-dashboard-summary-card
+						[title]="speed.label + ' results'"
+						[subtitle]="speed.subtitle"
+						[summary]="speed.block.summary"
+					/>
+				</div>
 
-				<div class="dashboard-account-block__heatmaps">
-					<app-dashboard-heatmap
-						[title]="speed.label + ' activity'"
-						[subtitle]="'Daily game volume for this account and speed'"
-						[mode]="'activity'"
-						[points]="speed.dailyActivityPoints"
-						[startDate]="startDate"
-						[rangeMonths]="rangeMonths"
+				<div class="dashboard-account-block__speed-visuals">
+					<app-dashboard-elo-chart
+						[title]="speed.label + ' Elo evolution'"
+						[subtitle]="'Rating history for this account and speed'"
+						[points]="speed.eloHistory"
 					/>
 
-					<app-dashboard-heatmap
-						[title]="speed.label + ' result ratio'"
-						[subtitle]="'Positive days have more wins than losses. Draws are neutral.'"
-						[mode]="'ratio'"
-						[points]="speed.dailyResultRatioPoints"
-						[startDate]="startDate"
-						[rangeMonths]="rangeMonths"
-					/>
+					<div class="dashboard-account-block__heatmaps">
+						<app-dashboard-heatmap
+							[title]="speed.label + ' activity'"
+							[subtitle]="'Daily game volume for this account and speed'"
+							[mode]="'activity'"
+							[points]="speed.dailyActivityPoints"
+							[startDate]="startDate"
+							[rangeMonths]="rangeMonths"
+						/>
+
+						<app-dashboard-heatmap
+							[title]="speed.label + ' result ratio'"
+							[subtitle]="'Positive days have more wins than losses. Draws are neutral.'"
+							[mode]="'ratio'"
+							[points]="speed.dailyResultRatioPoints"
+							[startDate]="startDate"
+							[rangeMonths]="rangeMonths"
+						/>
+					</div>
 				</div>
 			</div>
 		</section>
