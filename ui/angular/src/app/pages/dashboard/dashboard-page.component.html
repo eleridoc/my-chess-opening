@@ -137,12 +137,12 @@
 													</span>
 												</header>
 
-												<div class="dashboard-page__accounts-grid">
-													<app-dashboard-summary-card
+												<div class="dashboard-page__accounts-list">
+													<app-dashboard-account-block
 														*ngFor="let account of accountBlocks(); trackBy: trackAccountById"
-														[title]="account.username"
-														[subtitle]="accountSubtitle(account)"
-														[summary]="account.summary"
+														[account]="account"
+														[startDate]="heatmapStartDate()"
+														[rangeMonths]="12"
 													/>
 												</div>
 											</section>

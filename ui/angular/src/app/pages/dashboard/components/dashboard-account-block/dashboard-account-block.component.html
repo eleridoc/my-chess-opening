@@ -1,0 +1,73 @@
+<section class="dashboard-account-block">
+	<header class="dashboard-account-block__header">
+		<div class="dashboard-account-block__identity">
+			<h2 class="dashboard-account-block__title">{{ account.username }}</h2>
+			<p class="dashboard-account-block__subtitle">
+				{{ accountSubtitle() }}
+			</p>
+		</div>
+
+		<span class="dashboard-account-block__pill">
+			{{ speedBlocks.length }}
+			{{ speedBlocks.length === 1 ? 'speed' : 'speeds' }}
+		</span>
+	</header>
+
+	<div class="dashboard-account-block__summary">
+		<app-dashboard-summary-card
+			[title]="'Account results'"
+			[subtitle]="'All included speeds for this account'"
+			[summary]="account.summary"
+		/>
+	</div>
+
+	<div class="dashboard-account-block__speeds" *ngIf="speedBlocks.length > 0; else noSpeedBlocks">
+		<section
+			class="dashboard-account-block__speed-card"
+			*ngFor="let speed of speedBlocks; trackBy: trackSpeedByValue"
+		>
+			<header class="dashboard-account-block__speed-header">
+				<div>
+					<h3 class="dashboard-account-block__speed-title">{{ speed.label }}</h3>
+					<p class="dashboard-account-block__speed-subtitle">
+						{{ speed.subtitle }}
+					</p>
+				</div>
+			</header>
+
+			<div class="dashboard-account-block__speed-layout">
+				<app-dashboard-summary-card
+					[title]="speed.label + ' results'"
+					[subtitle]="speed.subtitle"
+					[summary]="speed.block.summary"
+				/>
+
+				<div class="dashboard-account-block__heatmaps">
+					<app-dashboard-heatmap
+						[title]="speed.label + ' activity'"
+						[subtitle]="'Daily game volume for this account and speed'"
+						[mode]="'activity'"
+						[points]="speed.dailyActivityPoints"
+						[startDate]="startDate"
+						[rangeMonths]="rangeMonths"
+					/>
+
+					<app-dashboard-heatmap
+						[title]="speed.label + ' result ratio'"
+						[subtitle]="'Positive days have more wins than losses. Draws are neutral.'"
+						[mode]="'ratio'"
+						[points]="speed.dailyResultRatioPoints"
+						[startDate]="startDate"
+						[rangeMonths]="rangeMonths"
+					/>
+				</div>
+			</div>
+		</section>
+	</div>
+
+	<ng-template #noSpeedBlocks>
+		<p class="dashboard-account-block__empty">
+			No speed data available for this account in the selected period.
+		</p>
+	</ng-template>
+</section>

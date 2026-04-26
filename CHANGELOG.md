@@ -41,6 +41,8 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 - Added Dashboard heatmap tooltips with date and value details.
 - Added per-account Dashboard summary blocks.
 - Reused the Dashboard summary card component to display account-level games, wins, draws and losses.
+- Added per-account speed sections to the Dashboard.
+- Added speed-level summary, activity heatmap and result-ratio heatmap blocks for each account.
 
 ### Changed
 

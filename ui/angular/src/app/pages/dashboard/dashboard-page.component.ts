@@ -13,7 +13,7 @@ import { SharedGameFilterStorageService } from '../../shared/game-filter/service
 import { SectionLoaderComponent } from '../../shared/loading/section-loader/section-loader.component';
 import { NotificationService } from '../../shared/notifications/notification.service';
 import { DashboardSummaryCardComponent } from './components/dashboard-summary-card/dashboard-summary-card.component';
-
+import { DashboardAccountBlockComponent } from './components/dashboard-account-block/dashboard-account-block.component';
 import {
 	DashboardHeatmapComponent,
 	type DashboardHeatmapPoint,
@@ -39,6 +39,7 @@ import {
 		SectionLoaderComponent,
 		DashboardSummaryCardComponent,
 		DashboardHeatmapComponent,
+		DashboardAccountBlockComponent,
 	],
 	templateUrl: './dashboard-page.component.html',
 	styleUrl: './dashboard-page.component.scss',

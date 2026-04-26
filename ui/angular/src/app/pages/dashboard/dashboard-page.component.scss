@@ -254,9 +254,9 @@
 	white-space: nowrap;
 }
 
-.dashboard-page__accounts-grid {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+.dashboard-page__accounts-list {
+	display: flex;
+	flex-direction: column;
 	gap: 14px;
 
 	min-width: 0;
