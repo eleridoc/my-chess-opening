@@ -118,6 +118,34 @@
 												[startDate]="heatmapStartDate()"
 												[rangeMonths]="12"
 											/>
+
+											<section
+												class="dashboard-page__accounts-section"
+												*ngIf="accountBlocks().length > 0"
+											>
+												<header class="dashboard-page__section-header">
+													<div>
+														<h2 class="dashboard-page__section-title">Accounts</h2>
+														<p class="dashboard-page__section-subtitle">
+															Result summary for each imported account matching the selected period.
+														</p>
+													</div>
+
+													<span class="dashboard-page__section-pill">
+														{{ loadedAccountsCount() }}
+														{{ loadedAccountsCount() === 1 ? 'account' : 'accounts' }}
+													</span>
+												</header>
+
+												<div class="dashboard-page__accounts-grid">
+													<app-dashboard-summary-card
+														*ngFor="let account of accountBlocks(); trackBy: trackAccountById"
+														[title]="account.username"
+														[subtitle]="accountSubtitle(account)"
+														[summary]="account.summary"
+													/>
+												</div>
+											</section>
 										</div>
 									</ng-container>
 								</ng-template>

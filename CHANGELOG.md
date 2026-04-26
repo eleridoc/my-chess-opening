@@ -39,6 +39,8 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 - Added the global Dashboard daily activity heatmap showing games played by day.
 - Added the global Dashboard daily result-ratio heatmap showing positive and negative result trends by day.
 - Added Dashboard heatmap tooltips with date and value details.
+- Added per-account Dashboard summary blocks.
+- Reused the Dashboard summary card component to display account-level games, wins, draws and losses.
 
 ### Changed
 

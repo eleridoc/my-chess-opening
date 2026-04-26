@@ -1,7 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 
-import type { DashboardOverviewResult, SharedGameFilter } from 'my-chess-opening-core';
+import type {
+	DashboardAccountBlock,
+	DashboardOverviewResult,
+	SharedGameFilter,
+} from 'my-chess-opening-core';
 
 import { DashboardService } from '../../services/dashboard/dashboard.service';
 import { SharedGameFilterComponent } from '../../shared/game-filter/components';
@@ -18,13 +22,13 @@ import {
 /**
  * Dashboard page.
  *
- * V1.12.7 scope:
+ * V1.12 scope:
  * - display the Dashboard shared filter inline
  * - use the dedicated "dashboard" localStorage filter context
  * - load the Dashboard overview from Electron IPC
+ * - render global Dashboard blocks
+ * - render per-account summary blocks
  * - manage loading, error and empty states
- *
- * Visual dashboard blocks are intentionally added in later V1.12 tasks.
  */
 @Component({
 	selector: 'app-dashboard-page',
@@ -77,6 +81,8 @@ export class DashboardPageComponent {
 	readonly loadedGamesCount = computed(() => this.overview()?.global.summary.totalGames ?? 0);
 
 	readonly loadedAccountsCount = computed(() => this.overview()?.accounts.length ?? 0);
+
+	readonly accountBlocks = computed<DashboardAccountBlock[]>(() => this.overview()?.accounts ?? []);
 
 	readonly globalDailyActivityPoints = computed<DashboardHeatmapPoint[]>(() => {
 		const overview = this.overview();
@@ -144,6 +150,29 @@ export class DashboardPageComponent {
 
 	onRetry(): void {
 		void this.loadOverview(this.currentFilter());
+	}
+
+	trackAccountById(_index: number, account: DashboardAccountBlock): string {
+		return account.accountId;
+	}
+
+	accountSubtitle(account: DashboardAccountBlock): string {
+		const gamesLabel = account.summary.totalGames === 1 ? 'game' : 'games';
+
+		return `${this.siteLabel(account.site)} · ${account.summary.totalGames} ${gamesLabel}`;
+	}
+
+	private siteLabel(site: DashboardAccountBlock['site']): string {
+		switch (site) {
+			case 'LICHESS':
+				return 'Lichess';
+
+			case 'CHESSCOM':
+				return 'Chess.com';
+
+			default:
+				return String(site);
+		}
 	}
 
 	private async loadOverview(filter: SharedGameFilter): Promise<void> {
