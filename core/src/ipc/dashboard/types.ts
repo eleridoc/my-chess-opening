@@ -93,6 +93,17 @@ export interface DashboardDailyActivityPoint {
 }
 
 /**
+ * Calendar heatmap value used by the Dashboard result-ratio chart.
+ *
+ * Values are intentionally non-linear so they can be mapped explicitly:
+ * - 0 = no games
+ * - 1 = positive result ratio
+ * - 2 = neutral result ratio
+ * - 4 = negative result ratio
+ */
+export type DashboardDailyResultRatioCalValue = 0 | 1 | 2 | 4;
+
+/**
  * One daily result-ratio point for calendar heatmaps.
  *
  * The ratio intentionally ignores draws:
@@ -133,6 +144,16 @@ export interface DashboardDailyResultRatioPoint {
 	 * decisiveGames > 0 ? (wins - losses) / decisiveGames : 0
 	 */
 	ratio: number;
+
+	/**
+	 * Dedicated value for cal-heatmap coloring.
+	 *
+	 * - 0 = no games
+	 * - 1 = positive result ratio
+	 * - 2 = neutral result ratio
+	 * - 4 = negative result ratio
+	 */
+	val: DashboardDailyResultRatioCalValue;
 }
 
 /**

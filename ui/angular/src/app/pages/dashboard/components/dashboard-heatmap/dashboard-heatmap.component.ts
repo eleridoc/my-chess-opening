@@ -30,6 +30,13 @@ export interface DashboardHeatmapPoint {
 	 * Numeric value displayed on the heatmap.
 	 */
 	value: number;
+
+	/**
+	 * Optional tooltip text.
+	 *
+	 * When provided, it is used instead of the generic activity / ratio tooltip.
+	 */
+	tooltipText?: string;
 }
 
 interface DashboardHeatmapTooltipDate {
@@ -89,6 +96,7 @@ export class DashboardHeatmapComponent implements AfterViewInit, OnChanges, OnDe
 	private calendar: CalHeatmap | null = null;
 	private viewReady = false;
 	private latestRenderId = 0;
+	private tooltipTextByDate = new Map<string, string>();
 
 	ngAfterViewInit(): void {
 		this.viewReady = true;
@@ -121,6 +129,12 @@ export class DashboardHeatmapComponent implements AfterViewInit, OnChanges, OnDe
 			return;
 		}
 
+		this.tooltipTextByDate = new Map(
+			this.points
+				.filter((point) => Boolean(point.tooltipText))
+				.map((point) => [point.date, point.tooltipText as string]),
+		);
+
 		const source = this.points
 			.map((point) => {
 				const timestamp = parseCalendarDateToTimestamp(point.date);
@@ -143,57 +157,72 @@ export class DashboardHeatmapComponent implements AfterViewInit, OnChanges, OnDe
 		this.calendar = calendar;
 
 		await this.ngZone.runOutsideAngular(async () => {
-			await calendar.paint(
-				{
-					theme: this.getCalHeatmapTheme(),
-					itemSelector: `#${this.elementId}`,
-					range: Math.max(1, this.rangeMonths),
-					date: {
-						start,
-						locale: {
-							weekStart: 1,
-						},
+			let paintData = {
+				theme: this.getCalHeatmapTheme(),
+				itemSelector: `#${this.elementId}`,
+				range: Math.max(1, this.rangeMonths),
+				date: {
+					start,
+					locale: {
+						weekStart: 1,
 					},
-					domain: {
-						type: 'month',
-						gutter: 8,
-						label: {
-							text: 'MMM',
-							textAlign: 'start',
-							position: 'top',
-						},
-					},
-					subDomain: {
-						type: 'ghDay',
-						width: 11,
-						height: 11,
-						gutter: 2,
-						radius: 2,
-					},
-					data: {
-						source,
-						x: 'date',
-						y: 'value',
-						groupY: 'sum',
-						defaultValue: null,
-					},
-					scale: this.buildScale(maxActivityValue),
-					animationDuration: 120,
 				},
+				domain: {
+					type: 'month',
+					gutter: 8,
+					label: {
+						text: 'MMM',
+						textAlign: 'start',
+						position: 'top',
+					},
+				},
+				subDomain: {
+					type: 'ghDay',
+					width: 11,
+					height: 11,
+					gutter: 2,
+					radius: 2,
+					/**
+					 * Keep the scale-generated color for cells with real values.
+					 * Only override zero-game activity cells.
+					 */
+					color: (_timestamp: number, value: number | null, backgroundColor: string) =>
+						this.resolveCellColor(value, backgroundColor),
+				},
+				data: {
+					source,
+					x: 'date',
+					y: 'value',
+					groupY: 'sum',
+					defaultValue: 0,
+				},
+				scale: this.buildScale(maxActivityValue),
+				animationDuration: 120,
+			};
+
+			console.log('paintData', paintData);
+
+			await calendar.paint(paintData, [
 				[
-					[
-						Tooltip,
-						{
-							text: (
-								_timestamp: number,
-								value: number | null,
-								dayjsDate: DashboardHeatmapTooltipDate,
-							) => this.buildTooltipText(value, dayjsDate),
-						},
-					],
+					Tooltip,
+					{
+						text: (
+							_timestamp: number,
+							value: number | null,
+							dayjsDate: DashboardHeatmapTooltipDate,
+						) => this.buildTooltipText(value, dayjsDate),
+					},
 				],
-			);
+			]);
 		});
+	}
+
+	private resolveCellColor(value: number | null, backgroundColor: string): string {
+		if (this.mode === 'activity' && (value === 0 || value === null || value === undefined)) {
+			return getCssColor('--mco-dashboard-heatmap-activity-zero', '#000000');
+		}
+
+		return backgroundColor;
 	}
 
 	private async destroyCalendar(): Promise<void> {
@@ -213,6 +242,11 @@ export class DashboardHeatmapComponent implements AfterViewInit, OnChanges, OnDe
 
 	private buildTooltipText(value: number | null, dayjsDate: DashboardHeatmapTooltipDate): string {
 		const dateLabel = dayjsDate.format('YYYY-MM-DD');
+		const customTooltipText = this.tooltipTextByDate.get(dateLabel);
+
+		if (customTooltipText) {
+			return customTooltipText;
+		}
 
 		if (value === null || value === undefined) {
 			return `No data on ${dateLabel}`;
@@ -258,19 +292,19 @@ export class DashboardHeatmapComponent implements AfterViewInit, OnChanges, OnDe
 			return {
 				color: {
 					/**
-					 * Ratio heatmaps are categorical on purpose:
-					 * - negative days: more losses than wins
-					 * - neutral days: equal wins/losses or only draws
-					 * - positive days: more wins than losses
-					 *
-					 * Using a threshold scale avoids unreadable continuous gradients.
+					 * Result-ratio heatmaps use explicit categorical values:
+					 * - 0 = no games
+					 * - 1 = positive day
+					 * - 2 = neutral day
+					 * - 4 = negative day
 					 */
 					type: 'threshold',
-					domain: [-0.0001, 0.0001],
+					domain: [1, 2, 4],
 					range: [
-						getCssColor('--app-danger', '#ff6b6b'),
-						getCssColor('--app-bg-plus-2', '#2a2f3a'),
-						getCssColor('--app-success', '#7bd88f'),
+						getCssColor('--mco-dashboard-heatmap-ratio-empty', 'var(--app-bg-plus-5)'),
+						getCssColor('--mco-dashboard-heatmap-ratio-positive', '#7bd88f'),
+						getCssColor('--mco-dashboard-heatmap-ratio-neutral', '#7a7a7a'),
+						getCssColor('--mco-dashboard-heatmap-ratio-negative', '#ff6b6b'),
 					],
 				},
 			};
@@ -278,10 +312,23 @@ export class DashboardHeatmapComponent implements AfterViewInit, OnChanges, OnDe
 
 		return {
 			color: {
-				type: 'linear',
-				domain: [0, maxActivityValue],
-				range: [getCssColor('--app-bg-plus-2', '#2a2f3a'), getCssColor('--app-primary', '#abc7ff')],
-				interpolate: 'hsl',
+				/**
+				 * Activity heatmap buckets:
+				 * - 0 games
+				 * - 1 to 5 games
+				 * - 6 to 10 games
+				 * - 11 to 20 games
+				 * - 21+ games
+				 */
+				type: 'threshold',
+				domain: [1, 6, 11, 21],
+				range: [
+					getCssColor('--mco-dashboard-heatmap-activity-0', 'var(--app-bg-plus-5)'),
+					getCssColor('--mco-dashboard-heatmap-activity-1', '#dbeafe'),
+					getCssColor('--mco-dashboard-heatmap-activity-2', '#93c5fd'),
+					getCssColor('--mco-dashboard-heatmap-activity-3', '#3b82f6'),
+					getCssColor('--mco-dashboard-heatmap-activity-4', '#1d4ed8'),
+				],
 			},
 		};
 	}

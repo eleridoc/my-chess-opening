@@ -1,5 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import type { DashboardSummaryStats } from 'my-chess-opening-core';
 
@@ -14,7 +16,7 @@ import type { DashboardSummaryStats } from 'my-chess-opening-core';
 @Component({
 	selector: 'app-dashboard-summary-card',
 	standalone: true,
-	imports: [CommonModule],
+	imports: [CommonModule, MatIconModule, MatTooltipModule],
 	templateUrl: './dashboard-summary-card.component.html',
 	styleUrl: './dashboard-summary-card.component.scss',
 	changeDetection: ChangeDetectionStrategy.OnPush,

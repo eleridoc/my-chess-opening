@@ -19,6 +19,10 @@ export class DashboardService {
 			throw new Error('Electron dashboard API is not available');
 		}
 
-		return window.electron.dashboard.getOverview(input);
+		let data = window.electron.dashboard.getOverview(input);
+
+		console.log('data', data);
+
+		return data;
 	}
 }

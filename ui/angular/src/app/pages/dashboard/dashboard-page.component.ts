@@ -100,7 +100,8 @@ export class DashboardPageComponent {
 
 		return overview.global.dailyResultRatio.map((point) => ({
 			date: point.date,
-			value: point.ratio,
+			value: point.val,
+			tooltipText: this.buildResultRatioTooltipText(point),
 		}));
 	});
 
@@ -178,5 +179,25 @@ export class DashboardPageComponent {
 				this.isLoading.set(false);
 			}
 		}
+	}
+
+	private buildResultRatioTooltipText(point: {
+		date: string;
+		wins: number;
+		draws: number;
+		losses: number;
+		score: number;
+		decisiveGames: number;
+		ratio: number;
+		val: number;
+	}): string {
+		if (point.val === 0) {
+			return `No games on ${point.date}`;
+		}
+
+		const trend =
+			point.val === 1 ? 'Positive day' : point.val === 4 ? 'Negative day' : 'Neutral day';
+
+		return `${trend} · ratio ${point.ratio} · ${point.wins}W / ${point.draws}D / ${point.losses}L on ${point.date}`;
 	}
 }

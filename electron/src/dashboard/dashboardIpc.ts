@@ -65,7 +65,7 @@ export function registerDashboardIpc(): void {
 				},
 			});
 
-			const overviewBlocks = buildDashboardOverviewBlocks(games);
+			const overviewBlocks = buildDashboardOverviewBlocks(games, playedDateRange);
 
 			return {
 				appliedFilter: payload.filter,

@@ -8,12 +8,14 @@ import { ExternalSite } from 'my-chess-opening-core';
 import type {
 	DashboardAccountBlock,
 	DashboardDailyActivityPoint,
+	DashboardDailyResultRatioCalValue,
 	DashboardDailyResultRatioPoint,
 	DashboardEloPoint,
 	DashboardGameSpeed,
 	DashboardGlobalBlock,
 	DashboardSpeedBlock,
 	DashboardSummaryStats,
+	DashboardPlayedDateRange,
 } from 'my-chess-opening-core';
 
 /**
@@ -81,14 +83,17 @@ interface DashboardAccountAccumulator {
  * - per-speed blocks
  * - Elo history
  */
-export function buildDashboardOverviewBlocks(games: DashboardGameRow[]): DashboardOverviewBlocks {
+export function buildDashboardOverviewBlocks(
+	games: DashboardGameRow[],
+	playedDateRange: DashboardPlayedDateRange,
+): DashboardOverviewBlocks {
 	return {
 		global: {
 			summary: buildSummaryStats(games),
-			dailyActivity: buildDailyActivity(games),
-			dailyResultRatio: buildDailyResultRatio(games),
+			dailyActivity: buildDailyActivity(games, playedDateRange),
+			dailyResultRatio: buildDailyResultRatio(games, playedDateRange),
 		},
-		accounts: buildAccountBlocks(games),
+		accounts: buildAccountBlocks(games, playedDateRange),
 	};
 }
 
@@ -118,8 +123,24 @@ function buildSummaryStats(games: DashboardGameRow[]): DashboardSummaryStats {
  * Only days with at least one game are returned.
  * Empty days are handled by the heatmap component later.
  */
-function buildDailyActivity(games: DashboardGameRow[]): DashboardDailyActivityPoint[] {
+function buildDailyActivity(
+	games: DashboardGameRow[],
+	playedDateRange: DashboardPlayedDateRange,
+): DashboardDailyActivityPoint[] {
 	const counters = new Map<string, number>();
+	const calendarRange = resolveDailyActivityDateRange(games, playedDateRange);
+
+	/**
+	 * Initialize every day from the selected period with zero games.
+	 *
+	 * This makes the frontend receive explicit zero-value days instead of
+	 * relying on cal-heatmap default empty cells.
+	 */
+	if (calendarRange !== null) {
+		for (const date of enumerateCalendarDates(calendarRange.from, calendarRange.to)) {
+			counters.set(date, 0);
+		}
+	}
 
 	for (const game of games) {
 		const date = toLocalCalendarDate(game.playedAt);
@@ -142,7 +163,10 @@ function buildDailyActivity(games: DashboardGameRow[]): DashboardDailyActivityPo
  * - losses decrease the score
  * - draws do not move the score
  */
-function buildDailyResultRatio(games: DashboardGameRow[]): DashboardDailyResultRatioPoint[] {
+function buildDailyResultRatio(
+	games: DashboardGameRow[],
+	playedDateRange: DashboardPlayedDateRange,
+): DashboardDailyResultRatioPoint[] {
 	const counters = new Map<
 		string,
 		{
@@ -151,6 +175,20 @@ function buildDailyResultRatio(games: DashboardGameRow[]): DashboardDailyResultR
 			losses: number;
 		}
 	>();
+
+	const calendarRange = resolveDailyActivityDateRange(games, playedDateRange);
+
+	/**
+	 * Initialize every day from the selected period with zero results.
+	 *
+	 * This makes the frontend receive an explicit "no games" value for the
+	 * result-ratio heatmap instead of relying on cal-heatmap empty cells.
+	 */
+	if (calendarRange !== null) {
+		for (const date of enumerateCalendarDates(calendarRange.from, calendarRange.to)) {
+			counters.set(date, { wins: 0, draws: 0, losses: 0 });
+		}
+	}
 
 	for (const game of games) {
 		const date = toLocalCalendarDate(game.playedAt);
@@ -172,6 +210,8 @@ function buildDailyResultRatio(games: DashboardGameRow[]): DashboardDailyResultR
 		.map(([date, value]) => {
 			const score = value.wins - value.losses;
 			const decisiveGames = value.wins + value.losses;
+			const totalGames = value.wins + value.draws + value.losses;
+			const ratio = decisiveGames > 0 ? roundRatio(score / decisiveGames) : 0;
 
 			return {
 				date,
@@ -180,15 +220,38 @@ function buildDailyResultRatio(games: DashboardGameRow[]): DashboardDailyResultR
 				losses: value.losses,
 				score,
 				decisiveGames,
-				ratio: decisiveGames > 0 ? roundRatio(score / decisiveGames) : 0,
+				ratio,
+				val: buildDailyResultRatioCalValue(totalGames, score),
 			};
 		});
+}
+
+function buildDailyResultRatioCalValue(
+	totalGames: number,
+	score: number,
+): DashboardDailyResultRatioCalValue {
+	if (totalGames <= 0) {
+		return 0;
+	}
+
+	if (score > 0) {
+		return 1;
+	}
+
+	if (score < 0) {
+		return 4;
+	}
+
+	return 2;
 }
 
 /**
  * Build one Dashboard block per account that has games in the selected period.
  */
-function buildAccountBlocks(games: DashboardGameRow[]): DashboardAccountBlock[] {
+function buildAccountBlocks(
+	games: DashboardGameRow[],
+	playedDateRange: DashboardPlayedDateRange,
+): DashboardAccountBlock[] {
 	const accounts = new Map<string, DashboardAccountAccumulator>();
 
 	for (const game of games) {
@@ -221,7 +284,7 @@ function buildAccountBlocks(games: DashboardGameRow[]): DashboardAccountBlock[] 
 			site: account.site,
 			username: account.username,
 			summary: buildSummaryStats(account.games),
-			speeds: buildSpeedBlocks(account.games),
+			speeds: buildSpeedBlocks(account.games, playedDateRange),
 		}));
 }
 
@@ -230,7 +293,10 @@ function buildAccountBlocks(games: DashboardGameRow[]): DashboardAccountBlock[] 
  *
  * Empty speeds are not returned.
  */
-function buildSpeedBlocks(games: DashboardGameRow[]): DashboardSpeedBlock[] {
+function buildSpeedBlocks(
+	games: DashboardGameRow[],
+	playedDateRange: DashboardPlayedDateRange,
+): DashboardSpeedBlock[] {
 	const speedGroups = new Map<DashboardGameSpeed, DashboardGameRow[]>();
 
 	for (const game of games) {
@@ -256,8 +322,8 @@ function buildSpeedBlocks(games: DashboardGameRow[]): DashboardSpeedBlock[] {
 			{
 				speed,
 				summary: buildSummaryStats(speedGames),
-				dailyActivity: buildDailyActivity(speedGames),
-				dailyResultRatio: buildDailyResultRatio(speedGames),
+				dailyActivity: buildDailyActivity(speedGames, playedDateRange),
+				dailyResultRatio: buildDailyResultRatio(speedGames, playedDateRange),
 				eloHistory: buildEloHistory(speedGames),
 			},
 		];
@@ -314,6 +380,110 @@ function toDashboardSpeed(value: PrismaGameSpeed): DashboardGameSpeed | null {
 		default:
 			return null;
 	}
+}
+
+interface DashboardCalendarDateRange {
+	from: string;
+	to: string;
+}
+
+/**
+ * Resolve the date range used to fill daily activity with zero-value days.
+ *
+ * Priority:
+ * - use the backend-resolved filter period when both bounds exist
+ * - fallback to the min/max game dates when the filter is open-ended
+ */
+function resolveDailyActivityDateRange(
+	games: DashboardGameRow[],
+	playedDateRange: DashboardPlayedDateRange,
+): DashboardCalendarDateRange | null {
+	const gameDates = games.map((game) => toLocalCalendarDate(game.playedAt)).sort();
+
+	const from = playedDateRange.from ?? gameDates[0] ?? null;
+	const to = playedDateRange.to ?? gameDates[gameDates.length - 1] ?? null;
+
+	if (!from || !to) {
+		return null;
+	}
+
+	const fromDate = parseCalendarDateToUtcDate(from);
+	const toDate = parseCalendarDateToUtcDate(to);
+
+	if (!fromDate || !toDate || fromDate.getTime() > toDate.getTime()) {
+		return null;
+	}
+
+	return {
+		from,
+		to,
+	};
+}
+
+/**
+ * Enumerate all calendar dates in an inclusive YYYY-MM-DD range.
+ */
+function enumerateCalendarDates(from: string, to: string): string[] {
+	const start = parseCalendarDateToUtcDate(from);
+	const end = parseCalendarDateToUtcDate(to);
+
+	if (!start || !end || start.getTime() > end.getTime()) {
+		return [];
+	}
+
+	const dates: string[] = [];
+	const current = new Date(start);
+
+	/**
+	 * Safety guard to avoid accidental huge loops if a future filter allows
+	 * extremely large open-ended ranges.
+	 */
+	const maxDays = 5000;
+
+	while (current.getTime() <= end.getTime() && dates.length < maxDays) {
+		dates.push(formatUtcCalendarDate(current));
+		current.setUTCDate(current.getUTCDate() + 1);
+	}
+
+	return dates;
+}
+
+/**
+ * Parse YYYY-MM-DD as a UTC calendar date.
+ */
+function parseCalendarDateToUtcDate(value: string): Date | null {
+	const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+
+	if (!match) {
+		return null;
+	}
+
+	const year = Number(match[1]);
+	const month = Number(match[2]);
+	const day = Number(match[3]);
+
+	const date = new Date(Date.UTC(year, month - 1, day));
+
+	if (
+		date.getUTCFullYear() !== year ||
+		date.getUTCMonth() !== month - 1 ||
+		date.getUTCDate() !== day
+	) {
+		return null;
+	}
+
+	return date;
+}
+
+/**
+ * Format a UTC Date as YYYY-MM-DD.
+ */
+function formatUtcCalendarDate(value: Date): string {
+	return [
+		String(value.getUTCFullYear()).padStart(4, '0'),
+		String(value.getUTCMonth() + 1).padStart(2, '0'),
+		String(value.getUTCDate()).padStart(2, '0'),
+	].join('-');
 }
 
 /**

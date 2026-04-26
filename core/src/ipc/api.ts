@@ -81,6 +81,7 @@ export type {
 	DashboardPlayedDateRange,
 	DashboardSummaryStats,
 	DashboardDailyActivityPoint,
+	DashboardDailyResultRatioCalValue,
 	DashboardDailyResultRatioPoint,
 	DashboardEloPoint,
 	DashboardSpeedBlock,

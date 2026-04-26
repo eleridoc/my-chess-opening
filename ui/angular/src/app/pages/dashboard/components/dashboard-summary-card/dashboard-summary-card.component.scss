@@ -37,17 +37,19 @@
 .dashboard-summary-card__total {
 	display: flex;
 	align-items: baseline;
-	justify-content: space-between;
+	//justify-content: space-between;
 	gap: 12px;
-
-	padding: 12px;
-
-	border-radius: var(--app-main-radius);
-	border: 1px solid color-mix(in srgb, var(--app-primary) 35%, var(--app-divider));
-	background: color-mix(in srgb, var(--app-primary) 8%, var(--app-bg-plus-2));
+	//padding: 12px;
+	// border-radius: var(--app-main-radius);
+	// border: 1px solid color-mix(in srgb, var(--app-primary) 35%, var(--app-divider));
+	// background: color-mix(in srgb, var(--app-primary) 8%, var(--app-bg-plus-2));
 }
 
 .dashboard-summary-card__total-label {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+
 	color: var(--app-text-muted);
 	font-size: 0.78rem;
 	font-weight: 700;
@@ -59,6 +61,57 @@
 	font-size: 1.75rem;
 	line-height: 1;
 	font-weight: 800;
+}
+
+.dashboard-summary-card__metric-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 auto;
+
+	width: 24px;
+	height: 24px;
+
+	border-radius: 6px;
+
+	// border-radius: var(--app-radius-pill);
+	// border: 1px solid var(--app-divider);
+	// background: var(--app-bg-plus-3);
+
+	// color: var(--app-text-muted);
+	cursor: help;
+}
+
+.dashboard-summary-card__metric-icon mat-icon {
+	width: 17px;
+	height: 17px;
+
+	//font-size: 32px;
+	line-height: 17px;
+}
+
+.dashboard-summary-card__metric-icon--total {
+	//border-color: color-mix(in srgb, var(--app-primary) 35%, var(--app-divider));
+	background: color-mix(in srgb, var(--app-primary) 12%, var(--app-bg-plus-3));
+	//color: var(--app-text-reverse);
+}
+
+.dashboard-summary-card__metric-icon--wins {
+	//border-color: color-mix(in srgb, var(--app-success, #7bd88f) 42%, var(--app-divider));
+	background: var(--app-me-win);
+	color: var(--app-text-reverse);
+}
+
+.dashboard-summary-card__metric-icon--draws {
+	//border-color: color-mix(in srgb, var(--app-warning, #f7d774) 42%, var(--app-divider));
+	background: var(--app-me-draw);
+	color: var(--app-text-reverse);
+}
+
+.dashboard-summary-card__metric-icon--losses {
+	//border-color: color-mix(in srgb, var(--app-danger, #ff6b6b) 42%, var(--app-divider));
+	background: var(--app-me-loss);
+	color: var(--app-text-reverse);
 }
 
 .dashboard-summary-card__results {
@@ -75,31 +128,45 @@
 	min-width: 0;
 	padding: 10px;
 
-	border-radius: var(--app-main-radius);
-	border: 1px solid var(--app-divider);
-	background: var(--app-bg-plus-2);
+	// border-radius: var(--app-main-radius);
+	// border: 1px solid var(--app-divider);
+	// background: var(--app-bg-plus-2);
 }
 
 .dashboard-summary-card__result--wins {
-	border-color: color-mix(in srgb, var(--app-success, #7bd88f) 38%, var(--app-divider));
 }
 
 .dashboard-summary-card__result--draws {
-	border-color: color-mix(in srgb, var(--app-warning, #f7d774) 38%, var(--app-divider));
+	text-align: center;
 }
 
 .dashboard-summary-card__result--losses {
-	border-color: color-mix(in srgb, var(--app-danger, #ff6b6b) 38%, var(--app-divider));
+	text-align: right;
+	justify-content: flex-end;
+}
+
+.dashboard-summary-card__result--draws .dashboard-summary-card__result-main {
+	justify-content: center;
+}
+
+.dashboard-summary-card__result--losses .dashboard-summary-card__result-main {
+	justify-content: flex-end;
 }
 
 .dashboard-summary-card__result-main {
 	display: flex;
 	align-items: center;
-	justify-content: space-between;
+	//justify-content: space-between;
+	text-align: center;
+	align-items: center;
 	gap: 8px;
 }
 
 .dashboard-summary-card__result-label {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	min-width: 0;
 	overflow: hidden;
 
 	color: var(--app-text-muted);
@@ -111,14 +178,9 @@
 	letter-spacing: 0.04em;
 }
 
-.dashboard-summary-card__result-count {
-	font-size: 1.05rem;
-	font-weight: 800;
-}
-
 .dashboard-summary-card__result-rate {
 	color: var(--app-text-muted);
-	font-size: 0.82rem;
+	font-size: 1.82rem;
 	font-weight: 700;
 }
 
@@ -126,29 +188,39 @@
 	display: flex;
 	overflow: hidden;
 
-	height: 8px;
-	border-radius: 999px;
+	height: 22px;
+	border-radius: 6px;
 	background: var(--app-bg-plus-2);
 }
 
 .dashboard-summary-card__bar-segment {
 	min-width: 0;
+	height: 30px;
 }
 
 .dashboard-summary-card__bar-segment--wins {
-	background: var(--app-success, #7bd88f);
+	background: var(--app-me-win);
 }
 
 .dashboard-summary-card__bar-segment--draws {
-	background: var(--app-warning, #f7d774);
+	background: var(--app-me-draw);
 }
 
 .dashboard-summary-card__bar-segment--losses {
-	background: var(--app-danger, #ff6b6b);
+	background: var(--app-me-loss);
 }
 
 @media (max-width: 720px) {
 	.dashboard-summary-card__results {
 		grid-template-columns: 1fr;
 	}
+}
+
+.dashboard-summary-card__metric-symbol {
+	font-size: 24px;
+}
+
+.dashboard-summary-card__result-count {
+	font-size: 0.85rem;
+	font-weight: 800;
 }

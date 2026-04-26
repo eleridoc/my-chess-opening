@@ -84,7 +84,7 @@ export const SHARED_GAME_FILTER_CONTEXT_CONFIGS: Record<
 		 * filters never accidentally apply speed or rated restrictions later.
 		 */
 		defaultValueOverrides: {
-			periodPreset: 'last12Months',
+			periodPreset: 'all',
 			gameSpeeds: [],
 			ratedMode: 'both',
 		},

@@ -78,6 +78,7 @@ body.theme-dark {
 
 	--app-primary: #abc7ff;
 	--app-primary-nuance: #8aa2c4;
+	--app-text-reverse: #373737;
 
 	--app-card: #272727;
 	--app-divider: #373737;
@@ -255,6 +256,7 @@ body.theme-light {
 	/* Brand */
 	--app-primary: #425e90; /* close to your M3 light primary */
 	--app-primary-nuance: #5f77a3; /* softer primary nuance (borders/scrollbars) */
+	--app-text-reverse: #f2f2f2;
 
 	/* Cards / dividers / borders */
 	--app-card: #f2f2f2; /* avoid pure white cards */
@@ -410,6 +412,4 @@ body.theme-light {
 	--app-field-fill-bg-hover: #fafafa;
 	--app-field-fill-bg-focus: #fbfbfb; /* avoid pure white */
 	--app-field-fill-border: rgba(0, 0, 0, 0.18);
-
-	--mco-dashboard-heatmap-empty: #ffffff;
 }

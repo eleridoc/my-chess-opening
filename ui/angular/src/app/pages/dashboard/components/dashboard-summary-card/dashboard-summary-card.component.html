@@ -9,41 +9,76 @@
 	</header>
 
 	<div class="dashboard-summary-card__total">
-		<div class="dashboard-summary-card__total-label">Total games</div>
-		<div class="dashboard-summary-card__total-value">{{ summary.totalGames }}</div>
+		<div class="dashboard-summary-card__total-value">{{ summary.totalGames }} Games played</div>
 	</div>
 
 	<div class="dashboard-summary-card__results">
 		<div class="dashboard-summary-card__result dashboard-summary-card__result--wins">
 			<div class="dashboard-summary-card__result-main">
-				<span class="dashboard-summary-card__result-label">Wins</span>
-				<span class="dashboard-summary-card__result-count">{{ summary.wins }}</span>
+				<span class="dashboard-summary-card__result-label">
+					<span
+						class="dashboard-summary-card__metric-icon dashboard-summary-card__metric-icon--wins"
+						matTooltip="Games won from the imported account owner's perspective."
+						matTooltipPosition="above"
+					>
+						<span class="dashboard-summary-card__metric-symbol" aria-hidden="true">+</span>
+					</span>
+				</span>
+
+				<span class="dashboard-summary-card__result-rate">
+					{{ formatPercent(summary.winRatePercent) }}
+				</span>
 			</div>
 
-			<div class="dashboard-summary-card__result-rate">
-				{{ formatPercent(summary.winRatePercent) }}
+			<div class="dashboard-summary-card__result-count">
+				{{ summary.wins }}
+				<span>Wins</span>
 			</div>
 		</div>
 
 		<div class="dashboard-summary-card__result dashboard-summary-card__result--draws">
 			<div class="dashboard-summary-card__result-main">
-				<span class="dashboard-summary-card__result-label">Draws</span>
-				<span class="dashboard-summary-card__result-count">{{ summary.draws }}</span>
+				<span class="dashboard-summary-card__result-label">
+					<span
+						class="dashboard-summary-card__metric-icon dashboard-summary-card__metric-icon--draws"
+						matTooltip="Drawn games from the selected Dashboard period."
+						matTooltipPosition="above"
+					>
+						<span class="dashboard-summary-card__metric-symbol" aria-hidden="true">=</span>
+					</span>
+				</span>
+
+				<span class="dashboard-summary-card__result-rate">
+					{{ formatPercent(summary.drawRatePercent) }}
+				</span>
 			</div>
 
-			<div class="dashboard-summary-card__result-rate">
-				{{ formatPercent(summary.drawRatePercent) }}
+			<div class="dashboard-summary-card__result-count">
+				{{ summary.draws }}
+				<span>Draws</span>
 			</div>
 		</div>
 
 		<div class="dashboard-summary-card__result dashboard-summary-card__result--losses">
 			<div class="dashboard-summary-card__result-main">
-				<span class="dashboard-summary-card__result-label">Losses</span>
-				<span class="dashboard-summary-card__result-count">{{ summary.losses }}</span>
+				<span class="dashboard-summary-card__result-label">
+					<span
+						class="dashboard-summary-card__metric-icon dashboard-summary-card__metric-icon--losses"
+						matTooltip="Games lost from the imported account owner's perspective."
+						matTooltipPosition="above"
+					>
+						<span class="dashboard-summary-card__metric-symbol" aria-hidden="true">−</span>
+					</span>
+				</span>
+
+				<span class="dashboard-summary-card__result-rate">{{
+					formatPercent(summary.lossRatePercent)
+				}}</span>
 			</div>
 
-			<div class="dashboard-summary-card__result-rate">
-				{{ formatPercent(summary.lossRatePercent) }}
+			<div class="dashboard-summary-card__result-count">
+				{{ summary.losses }}
+				<span>Losses</span>
 			</div>
 		</div>
 	</div>
