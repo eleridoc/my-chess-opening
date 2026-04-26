@@ -235,6 +235,16 @@
 	line-height: 1.4;
 }
 
+.dashboard-page__section-actions {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 10px;
+	flex: 0 0 auto;
+
+	min-width: 0;
+}
+
 .dashboard-page__section-pill {
 	display: inline-flex;
 	align-items: center;
@@ -254,12 +264,34 @@
 	white-space: nowrap;
 }
 
-.dashboard-page__accounts-list {
-	display: flex;
-	flex-direction: column;
-	gap: 14px;
+.dashboard-page__account-select {
+	width: min(280px, 42vw);
+	min-width: 220px;
+}
 
+.dashboard-page__selected-account {
 	min-width: 0;
+}
+
+/**
+ * Local density override for the account selector.
+ *
+ * Angular Material form fields are taller than the surrounding Dashboard controls by default,
+ * so this keeps the selector visually aligned with the compact Dashboard header.
+ */
+:host ::ng-deep .dashboard-page__account-select .mat-mdc-form-field-infix {
+	min-height: 40px;
+	padding-top: 8px;
+	padding-bottom: 8px;
+}
+
+:host ::ng-deep .dashboard-page__account-select .mat-mdc-text-field-wrapper {
+	height: 40px;
+}
+
+:host ::ng-deep .dashboard-page__account-select .mat-mdc-form-field-flex {
+	height: 40px;
+	align-items: center;
 }
 
 @media (max-width: 980px) {
@@ -280,7 +312,17 @@
 		flex-direction: column;
 	}
 
+	.dashboard-page__section-actions {
+		width: 100%;
+		justify-content: space-between;
+	}
+
 	.dashboard-page__section-pill {
 		align-self: flex-start;
+	}
+
+	.dashboard-page__account-select {
+		width: min(100%, 360px);
+		min-width: 0;
 	}
 }

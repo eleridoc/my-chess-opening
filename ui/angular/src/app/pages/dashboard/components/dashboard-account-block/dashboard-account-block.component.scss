@@ -1,14 +1,14 @@
 .dashboard-account-block {
-	display: flex;
-	flex-direction: column;
-	gap: 14px;
+	// display: flex;
+	// flex-direction: column;
+	// gap: 14px;
 
-	min-width: 0;
-	padding: 16px;
+	// min-width: 0;
+	// padding: 16px;
 
-	border-radius: var(--app-main-radius);
-	border: 1px solid var(--app-divider);
-	background: var(--app-bg-plus-1);
+	// border-radius: var(--app-main-radius);
+	// border: 1px solid var(--app-divider);
+	// background: var(--app-bg-plus-1);
 }
 
 .dashboard-account-block__header {
@@ -65,6 +65,7 @@
 
 .dashboard-account-block__summary {
 	min-width: 0;
+	margin-bottom: 15px;
 }
 
 .dashboard-account-block__speeds {
@@ -114,14 +115,12 @@
 }
 
 .dashboard-account-block__speed-layout {
-	display: grid;
-	grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+	display: flex;
+	flex-direction: column;
 	gap: 14px;
 
 	min-width: 0;
-	align-items: start;
 }
-
 .dashboard-account-block__speed-summary {
 	min-width: 0;
 }
@@ -154,15 +153,11 @@
 	line-height: 1.4;
 }
 
-@media (max-width: 1280px) {
-	.dashboard-account-block__speed-layout {
-		grid-template-columns: 1fr;
-	}
-
-	.dashboard-account-block__heatmaps {
-		grid-template-columns: 1fr;
-	}
-}
+// @media (max-width: 1280px) {
+// 	.dashboard-account-block__heatmaps {
+// 		grid-template-columns: 1fr;
+// 	}
+// }
 
 @media (max-width: 720px) {
 	.dashboard-account-block__header {

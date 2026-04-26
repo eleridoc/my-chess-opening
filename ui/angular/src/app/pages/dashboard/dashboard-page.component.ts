@@ -1,5 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
 
 import type {
 	DashboardAccountBlock,
@@ -12,12 +14,12 @@ import { SharedGameFilterComponent } from '../../shared/game-filter/components';
 import { SharedGameFilterStorageService } from '../../shared/game-filter/services/shared-game-filter-storage.service';
 import { SectionLoaderComponent } from '../../shared/loading/section-loader/section-loader.component';
 import { NotificationService } from '../../shared/notifications/notification.service';
-import { DashboardSummaryCardComponent } from './components/dashboard-summary-card/dashboard-summary-card.component';
 import { DashboardAccountBlockComponent } from './components/dashboard-account-block/dashboard-account-block.component';
 import {
 	DashboardHeatmapComponent,
 	type DashboardHeatmapPoint,
 } from './components/dashboard-heatmap/dashboard-heatmap.component';
+import { DashboardSummaryCardComponent } from './components/dashboard-summary-card/dashboard-summary-card.component';
 
 /**
  * Dashboard page.
@@ -27,7 +29,7 @@ import {
  * - use the dedicated "dashboard" localStorage filter context
  * - load the Dashboard overview from Electron IPC
  * - render global Dashboard blocks
- * - render per-account summary blocks
+ * - render one selected account details block
  * - manage loading, error and empty states
  */
 @Component({
@@ -35,6 +37,8 @@ import {
 	standalone: true,
 	imports: [
 		CommonModule,
+		MatFormFieldModule,
+		MatSelectModule,
 		SharedGameFilterComponent,
 		SectionLoaderComponent,
 		DashboardSummaryCardComponent,
@@ -65,6 +69,14 @@ export class DashboardPageComponent {
 	/** Full Dashboard overview returned by the backend. */
 	readonly overview = signal<DashboardOverviewResult | null>(null);
 
+	/**
+	 * Currently selected account id for the detailed account dashboard.
+	 *
+	 * The value is synchronized after each backend load so it always points
+	 * to an account available in the current filtered result set.
+	 */
+	readonly selectedAccountId = signal<string | null>(null);
+
 	/** Local page loading state for the overview request. */
 	readonly isLoading = signal(false);
 
@@ -84,6 +96,26 @@ export class DashboardPageComponent {
 	readonly loadedAccountsCount = computed(() => this.overview()?.accounts.length ?? 0);
 
 	readonly accountBlocks = computed<DashboardAccountBlock[]>(() => this.overview()?.accounts ?? []);
+
+	/**
+	 * Account currently displayed in the detailed account section.
+	 *
+	 * If the selected account no longer exists after a filter change,
+	 * the first available account is used as a safe fallback.
+	 */
+	readonly selectedAccountBlock = computed<DashboardAccountBlock | null>(() => {
+		const accounts = this.accountBlocks();
+
+		if (accounts.length === 0) {
+			return null;
+		}
+
+		const selectedAccountId = this.selectedAccountId();
+
+		return (
+			accounts.find((account) => account.accountId === selectedAccountId) ?? accounts[0] ?? null
+		);
+	});
 
 	readonly globalDailyActivityPoints = computed<DashboardHeatmapPoint[]>(() => {
 		const overview = this.overview();
@@ -153,27 +185,16 @@ export class DashboardPageComponent {
 		void this.loadOverview(this.currentFilter());
 	}
 
+	selectAccount(accountId: string): void {
+		this.selectedAccountId.set(accountId);
+	}
+
 	trackAccountById(_index: number, account: DashboardAccountBlock): string {
 		return account.accountId;
 	}
 
-	accountSubtitle(account: DashboardAccountBlock): string {
-		const gamesLabel = account.summary.totalGames === 1 ? 'game' : 'games';
-
-		return `${this.siteLabel(account.site)} · ${account.summary.totalGames} ${gamesLabel}`;
-	}
-
-	private siteLabel(site: DashboardAccountBlock['site']): string {
-		switch (site) {
-			case 'LICHESS':
-				return 'Lichess';
-
-			case 'CHESSCOM':
-				return 'Chess.com';
-
-			default:
-				return String(site);
-		}
+	accountOptionLabel(account: DashboardAccountBlock): string {
+		return `${account.username} · ${this.siteLabel(account.site)}`;
 	}
 
 	private async loadOverview(filter: SharedGameFilter): Promise<void> {
@@ -190,6 +211,7 @@ export class DashboardPageComponent {
 			}
 
 			this.overview.set(overview);
+			this.syncSelectedAccount(overview.accounts);
 		} catch (error) {
 			if (requestId !== this.latestRequestId) {
 				return;
@@ -198,6 +220,7 @@ export class DashboardPageComponent {
 			console.error('[DashboardPage] Failed to load dashboard overview:', error);
 
 			this.overview.set(null);
+			this.selectedAccountId.set(null);
 			this.errorMessage.set('Failed to load Dashboard data.');
 
 			this.notify.error('Failed to load Dashboard data.', {
@@ -208,6 +231,41 @@ export class DashboardPageComponent {
 			if (requestId === this.latestRequestId) {
 				this.isLoading.set(false);
 			}
+		}
+	}
+
+	/**
+	 * Keeps the selected account stable across reloads when possible.
+	 *
+	 * If the current account disappears because of a period filter change,
+	 * the first account in the new result set becomes selected.
+	 */
+	private syncSelectedAccount(accounts: DashboardAccountBlock[]): void {
+		if (accounts.length === 0) {
+			this.selectedAccountId.set(null);
+			return;
+		}
+
+		const currentAccountId = this.selectedAccountId();
+		const currentAccountStillExists = accounts.some(
+			(account) => account.accountId === currentAccountId,
+		);
+
+		if (!currentAccountStillExists) {
+			this.selectedAccountId.set(accounts[0].accountId);
+		}
+	}
+
+	private siteLabel(site: DashboardAccountBlock['site']): string {
+		switch (site) {
+			case 'LICHESS':
+				return 'Lichess';
+
+			case 'CHESSCOM':
+				return 'Chess.com';
+
+			default:
+				return String(site);
 		}
 	}
 

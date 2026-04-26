@@ -88,9 +88,9 @@
 
 														<div class="dashboard-page__meta-item">
 															<span class="dashboard-page__meta-label">Accounts</span>
-															<span class="dashboard-page__meta-value">{{
-																loadedAccountsCount()
-															}}</span>
+															<span class="dashboard-page__meta-value">
+																{{ loadedAccountsCount() }}
+															</span>
 														</div>
 
 														<div class="dashboard-page__meta-item">
@@ -127,20 +127,45 @@
 													<div>
 														<h2 class="dashboard-page__section-title">Accounts</h2>
 														<p class="dashboard-page__section-subtitle">
-															Result summary for each imported account matching the selected period.
+															Select one account to display detailed results, Elo evolution and
+															heatmaps.
 														</p>
 													</div>
 
-													<span class="dashboard-page__section-pill">
-														{{ loadedAccountsCount() }}
-														{{ loadedAccountsCount() === 1 ? 'account' : 'accounts' }}
-													</span>
+													<div class="dashboard-page__section-actions">
+														<span class="dashboard-page__section-pill">
+															{{ loadedAccountsCount() }}
+															{{ loadedAccountsCount() === 1 ? 'account' : 'accounts' }}
+														</span>
+
+														<!-- The selector keeps the Dashboard readable when several accounts are loaded. -->
+														<mat-form-field
+															class="dashboard-page__account-select"
+															appearance="outline"
+															subscriptSizing="dynamic"
+														>
+															<mat-select
+																[value]="selectedAccountId()"
+																(selectionChange)="selectAccount($event.value)"
+																aria-label="Selected dashboard account"
+															>
+																<mat-option
+																	*ngFor="let account of accountBlocks(); trackBy: trackAccountById"
+																	[value]="account.accountId"
+																>
+																	{{ accountOptionLabel(account) }}
+																</mat-option>
+															</mat-select>
+														</mat-form-field>
+													</div>
 												</header>
 
-												<div class="dashboard-page__accounts-list">
+												<div
+													class="dashboard-page__selected-account"
+													*ngIf="selectedAccountBlock() as selectedAccount"
+												>
 													<app-dashboard-account-block
-														*ngFor="let account of accountBlocks(); trackBy: trackAccountById"
-														[account]="account"
+														[account]="selectedAccount"
 														[startDate]="heatmapStartDate()"
 														[rangeMonths]="12"
 													/>
