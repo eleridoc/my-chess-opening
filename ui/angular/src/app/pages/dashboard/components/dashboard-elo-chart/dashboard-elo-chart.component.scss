@@ -94,7 +94,7 @@
 	color: var(--app-text-muted);
 }
 
-.dashboard-elo-chart__svg-wrap {
+.dashboard-elo-chart__chart-wrap {
 	min-width: 0;
 	overflow: hidden;
 
@@ -103,52 +103,47 @@
 	background: var(--app-bg-plus-2);
 }
 
-.dashboard-elo-chart__svg {
+/**
+ * ngx-echarts requires an explicit height on the host element.
+ * The directive renders a responsive canvas inside this container.
+ */
+.dashboard-elo-chart__chart {
 	display: block;
 
 	width: 100%;
-	height: 220px;
-}
-
-.dashboard-elo-chart__grid-line {
-	stroke: color-mix(in srgb, var(--app-divider) 78%, transparent);
-	stroke-width: 1;
-}
-
-.dashboard-elo-chart__grid-label {
-	fill: var(--app-text-muted);
-
-	font-size: 11px;
-	font-weight: 700;
-}
-
-.dashboard-elo-chart__area {
-	fill: color-mix(in srgb, var(--app-primary) 14%, transparent);
-}
-
-.dashboard-elo-chart__line {
-	fill: none;
-	stroke: var(--app-primary);
-	stroke-width: 3;
-	stroke-linecap: round;
-	stroke-linejoin: round;
-}
-
-.dashboard-elo-chart__marker {
-	fill: var(--app-primary);
-	stroke: var(--app-bg-plus-2);
-	stroke-width: 2;
+	height: 260px;
 }
 
 .dashboard-elo-chart__footer {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
 	gap: 12px;
+	align-items: center;
 
 	color: var(--app-text-muted);
 	font-size: 0.76rem;
 	font-weight: 700;
+}
+
+.dashboard-elo-chart__footer span:first-child {
+	overflow: hidden;
+
+	text-align: left;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.dashboard-elo-chart__footer span:nth-child(2) {
+	text-align: center;
+	white-space: nowrap;
+}
+
+.dashboard-elo-chart__footer span:last-child {
+	overflow: hidden;
+
+	text-align: right;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .dashboard-elo-chart__empty {
@@ -168,7 +163,19 @@
 		grid-template-columns: 1fr;
 	}
 
-	.dashboard-elo-chart__svg {
-		height: 180px;
+	.dashboard-elo-chart__chart {
+		height: 220px;
+	}
+
+	.dashboard-elo-chart__footer {
+		grid-template-columns: 1fr;
+		gap: 4px;
+	}
+
+	.dashboard-elo-chart__footer span,
+	.dashboard-elo-chart__footer span:first-child,
+	.dashboard-elo-chart__footer span:nth-child(2),
+	.dashboard-elo-chart__footer span:last-child {
+		text-align: left;
 	}
 }

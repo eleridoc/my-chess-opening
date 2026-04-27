@@ -1,6 +1,6 @@
 {
   "name": "my-chess-opening",
-  "version": "1.12.15",
+  "version": "1.12.16",
   "license": "GPL-3.0-only",
   "private": true,
   "workspaces": [

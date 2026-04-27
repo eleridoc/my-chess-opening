@@ -1,87 +1,81 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	Input,
+	OnChanges,
+	SimpleChanges,
+	inject,
+} from '@angular/core';
 
+import { LineChart } from 'echarts/charts';
+import { DataZoomComponent, GridComponent, TooltipComponent } from 'echarts/components';
+import * as echarts from 'echarts/core';
+import type { EChartsCoreOption } from 'echarts/core';
+import { CanvasRenderer } from 'echarts/renderers';
 import type { DashboardEloPoint } from 'my-chess-opening-core';
+import { NgxEchartsDirective, provideEchartsCore } from 'ngx-echarts';
 
+import { DateFormatService } from '../../../../shared/dates/date-format.service';
 import { IsoDatePipe } from '../../../../shared/dates/pipes';
 
-const SVG_WIDTH = 720;
-const SVG_HEIGHT = 240;
-
-const CHART_LEFT = 52;
-const CHART_RIGHT = 18;
-const CHART_TOP = 18;
-const CHART_BOTTOM = 38;
-
-const CHART_WIDTH = SVG_WIDTH - CHART_LEFT - CHART_RIGHT;
-const CHART_HEIGHT = SVG_HEIGHT - CHART_TOP - CHART_BOTTOM;
-const CHART_BOTTOM_Y = SVG_HEIGHT - CHART_BOTTOM;
-
-interface DashboardEloChartPointViewModel extends DashboardEloPoint {
-	x: number;
-	y: number;
-}
-
-interface DashboardEloChartTick {
-	y: number;
-	value: number;
-	label: string;
-}
+echarts.use([LineChart, GridComponent, TooltipComponent, DataZoomComponent, CanvasRenderer]);
 
 interface DashboardEloChartViewModel {
 	hasData: boolean;
-	points: DashboardEloChartPointViewModel[];
-	markerPoints: DashboardEloChartPointViewModel[];
-	yTicks: DashboardEloChartTick[];
-	pathD: string;
-	areaD: string;
-	minElo: number | null;
-	maxElo: number | null;
+	options: EChartsCoreOption;
 	startElo: number | null;
 	endElo: number | null;
 	deltaElo: number | null;
-	firstPoint: DashboardEloChartPointViewModel | null;
-	lastPoint: DashboardEloChartPointViewModel | null;
+	minElo: number | null;
+	maxElo: number | null;
+	firstPlayedAtIso: string | null;
+	lastPlayedAtIso: string | null;
+	gamesCount: number;
+}
+
+interface DashboardEloChartDataPoint {
+	value: [string, number];
+	playedAtIso: string;
+	elo: number;
 }
 
 const EMPTY_CHART: DashboardEloChartViewModel = {
 	hasData: false,
-	points: [],
-	markerPoints: [],
-	yTicks: [],
-	pathD: '',
-	areaD: '',
-	minElo: null,
-	maxElo: null,
+	options: {},
 	startElo: null,
 	endElo: null,
 	deltaElo: null,
-	firstPoint: null,
-	lastPoint: null,
+	minElo: null,
+	maxElo: null,
+	firstPlayedAtIso: null,
+	lastPlayedAtIso: null,
+	gamesCount: 0,
 };
 
 /**
  * Dashboard Elo chart.
  *
- * This component intentionally uses a local SVG implementation instead of a chart dependency.
- * The Dashboard only needs a compact line chart for account + speed Elo history.
+ * Uses Apache ECharts through ngx-echarts instead of a custom SVG implementation.
+ * This provides a cleaner responsive chart, native hover tooltips and future zoom support.
  */
 @Component({
 	selector: 'app-dashboard-elo-chart',
 	standalone: true,
-	imports: [CommonModule, IsoDatePipe],
+	imports: [CommonModule, NgxEchartsDirective, IsoDatePipe],
+	providers: [provideEchartsCore({ echarts })],
 	templateUrl: './dashboard-elo-chart.component.html',
 	styleUrl: './dashboard-elo-chart.component.scss',
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardEloChartComponent implements OnChanges {
+	private readonly dateFormat = inject(DateFormatService);
+
 	@Input() title = 'Elo evolution';
 
 	@Input() subtitle = '';
 
 	@Input() points: DashboardEloPoint[] = [];
-
-	readonly viewBox = `0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`;
 
 	chart: DashboardEloChartViewModel = EMPTY_CHART;
 
@@ -94,11 +88,7 @@ export class DashboardEloChartComponent implements OnChanges {
 			return '—';
 		}
 
-		if (value > 0) {
-			return `+${value}`;
-		}
-
-		return `${value}`;
+		return value > 0 ? `+${value}` : `${value}`;
 	}
 
 	deltaClass(value: number | null): string {
@@ -120,72 +110,37 @@ export class DashboardEloChartComponent implements OnChanges {
 	}
 
 	private buildChart(): DashboardEloChartViewModel {
-		const points = this.normalizePoints();
+		const normalizedPoints = this.normalizePoints();
 
-		if (points.length === 0) {
+		if (normalizedPoints.length === 0) {
 			return EMPTY_CHART;
 		}
 
-		const eloValues = points.map((point) => point.elo);
-		const minElo = Math.min(...eloValues);
-		const maxElo = Math.max(...eloValues);
-
-		const eloRange = maxElo - minElo;
-		const padding = eloRange > 0 ? Math.max(10, Math.ceil(eloRange * 0.12)) : 20;
-
-		const lowerBound = minElo - padding;
-		const upperBound = maxElo + padding;
-		const boundedRange = Math.max(1, upperBound - lowerBound);
-
-		const scaleX = (index: number): number => {
-			if (points.length === 1) {
-				return CHART_LEFT + CHART_WIDTH / 2;
-			}
-
-			return CHART_LEFT + (index / (points.length - 1)) * CHART_WIDTH;
-		};
-
-		const scaleY = (elo: number): number =>
-			CHART_TOP + ((upperBound - elo) / boundedRange) * CHART_HEIGHT;
-
-		const chartPoints = points.map((point, index) => ({
-			...point,
-			x: round(scaleX(index)),
-			y: round(scaleY(point.elo)),
+		const data = normalizedPoints.map<DashboardEloChartDataPoint>((point) => ({
+			value: [point.playedAtIso, point.elo],
+			playedAtIso: point.playedAtIso,
+			elo: point.elo,
 		}));
 
-		const pathD = chartPoints
-			.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`)
-			.join(' ');
+		const eloValues = normalizedPoints.map((point) => point.elo);
+		const minElo = Math.min(...eloValues);
+		const maxElo = Math.max(...eloValues);
+		const bounds = this.buildYAxisBounds(minElo, maxElo);
 
-		const firstPoint = chartPoints[0] ?? null;
-		const lastPoint = chartPoints[chartPoints.length - 1] ?? null;
-
-		const areaD =
-			firstPoint && lastPoint
-				? `${pathD} L ${lastPoint.x} ${CHART_BOTTOM_Y} L ${firstPoint.x} ${CHART_BOTTOM_Y} Z`
-				: '';
-
-		const markerPoints = this.buildMarkerPoints(chartPoints);
-		const yTicks = this.buildYTicks(lowerBound, upperBound, scaleY);
-
-		const startElo = firstPoint?.elo ?? null;
-		const endElo = lastPoint?.elo ?? null;
+		const firstPoint = normalizedPoints[0];
+		const lastPoint = normalizedPoints[normalizedPoints.length - 1];
 
 		return {
 			hasData: true,
-			points: chartPoints,
-			markerPoints,
-			yTicks,
-			pathD,
-			areaD,
+			options: this.buildChartOptions(data, bounds.min, bounds.max),
+			startElo: firstPoint.elo,
+			endElo: lastPoint.elo,
+			deltaElo: lastPoint.elo - firstPoint.elo,
 			minElo,
 			maxElo,
-			startElo,
-			endElo,
-			deltaElo: startElo !== null && endElo !== null ? endElo - startElo : null,
-			firstPoint,
-			lastPoint,
+			firstPlayedAtIso: firstPoint.playedAtIso,
+			lastPlayedAtIso: lastPoint.playedAtIso,
+			gamesCount: normalizedPoints.length,
 		};
 	}
 
@@ -206,37 +161,207 @@ export class DashboardEloChartComponent implements OnChanges {
 			.map((item) => item.point);
 	}
 
-	private buildMarkerPoints(
-		points: DashboardEloChartPointViewModel[],
-	): DashboardEloChartPointViewModel[] {
-		if (points.length <= 120) {
-			return points;
+	private buildYAxisBounds(minElo: number, maxElo: number): { min: number; max: number } {
+		const range = maxElo - minElo;
+		const padding = range > 0 ? Math.max(10, Math.ceil(range * 0.12)) : 20;
+
+		return {
+			min: Math.floor(minElo - padding),
+			max: Math.ceil(maxElo + padding),
+		};
+	}
+
+	private buildChartOptions(
+		data: DashboardEloChartDataPoint[],
+		yMin: number,
+		yMax: number,
+	): EChartsCoreOption {
+		const primaryColor = this.cssVar('--app-primary', '#abc7ff');
+		const textColor = this.cssVar('--app-text', '#f5f7fb');
+		const mutedTextColor = this.cssVar('--app-text-muted', '#9ca3af');
+		const dividerColor = this.cssVar('--app-divider', '#2f3542');
+		const surfaceColor = this.cssVar('--app-bg-plus-1', '#171b24');
+
+		return {
+			backgroundColor: 'transparent',
+			animation: true,
+			animationDuration: 350,
+			grid: {
+				left: 44,
+				right: 18,
+				top: 18,
+				bottom: 34,
+				containLabel: true,
+			},
+			tooltip: {
+				trigger: 'axis',
+				confine: true,
+				backgroundColor: surfaceColor,
+				borderColor: dividerColor,
+				borderWidth: 1,
+				padding: 10,
+				textStyle: {
+					color: textColor,
+					fontFamily:
+						'Ubuntu, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+					fontSize: 12,
+				},
+				axisPointer: {
+					type: 'line',
+					lineStyle: {
+						color: primaryColor,
+						width: 1,
+						type: 'dashed',
+					},
+				},
+				formatter: (params: unknown) => this.formatTooltip(params),
+			},
+			xAxis: {
+				type: 'time',
+				boundaryGap: false,
+				axisLine: {
+					lineStyle: {
+						color: dividerColor,
+					},
+				},
+				axisTick: {
+					show: false,
+				},
+				axisLabel: {
+					color: mutedTextColor,
+					hideOverlap: true,
+					formatter: (value: string | number) => this.formatAxisDate(value),
+				},
+				splitLine: {
+					show: false,
+				},
+			},
+			yAxis: {
+				type: 'value',
+				min: yMin,
+				max: yMax,
+				scale: true,
+				splitNumber: 3,
+				axisLine: {
+					show: false,
+				},
+				axisTick: {
+					show: false,
+				},
+				axisLabel: {
+					color: mutedTextColor,
+					formatter: (value: number) => `${Math.round(value)}`,
+				},
+				splitLine: {
+					lineStyle: {
+						color: dividerColor,
+						width: 1,
+					},
+				},
+			},
+			dataZoom: [
+				{
+					type: 'inside',
+					filterMode: 'none',
+					throttle: 50,
+				},
+			],
+			series: [
+				{
+					name: 'Elo',
+					type: 'line',
+					data,
+					showSymbol: data.length <= 120,
+					symbol: 'circle',
+					symbolSize: 5,
+					sampling: 'lttb',
+					connectNulls: true,
+					lineStyle: {
+						color: primaryColor,
+						width: 3,
+					},
+					itemStyle: {
+						color: primaryColor,
+						borderColor: surfaceColor,
+						borderWidth: 2,
+					},
+					areaStyle: {
+						color: primaryColor,
+						opacity: 0.12,
+					},
+					emphasis: {
+						focus: 'series',
+					},
+				},
+			],
+		};
+	}
+
+	private formatTooltip(params: unknown): string {
+		const item = Array.isArray(params) ? params[0] : params;
+		const point = this.extractTooltipPoint(item);
+
+		if (!point) {
+			return '';
 		}
 
-		const step = Math.ceil(points.length / 80);
-		const lastIndex = points.length - 1;
+		const formattedDate = this.escapeHtml(this.dateFormat.formatDate(point.playedAtIso));
+		const elo = this.escapeHtml(`${point.elo}`);
 
-		return points.filter(
-			(_point, index) => index === 0 || index === lastIndex || index % step === 0,
-		);
+		return `
+			<div class="dashboard-elo-chart-tooltip">
+				<div><strong>${formattedDate}</strong></div>
+				<div>Elo: <strong>${elo}</strong></div>
+			</div>
+		`;
 	}
 
-	private buildYTicks(
-		lowerBound: number,
-		upperBound: number,
-		scaleY: (elo: number) => number,
-	): DashboardEloChartTick[] {
-		const middle = Math.round((lowerBound + upperBound) / 2);
-		const values = [Math.round(upperBound), middle, Math.round(lowerBound)];
+	private extractTooltipPoint(value: unknown): DashboardEloChartDataPoint | null {
+		if (!value || typeof value !== 'object') {
+			return null;
+		}
 
-		return [...new Set(values)].map((value) => ({
-			value,
-			label: `${value}`,
-			y: round(scaleY(value)),
-		}));
+		const data = (value as { data?: unknown }).data;
+
+		if (!data || typeof data !== 'object') {
+			return null;
+		}
+
+		const maybePoint = data as Partial<DashboardEloChartDataPoint>;
+
+		if (
+			typeof maybePoint.playedAtIso !== 'string' ||
+			typeof maybePoint.elo !== 'number' ||
+			!Number.isFinite(maybePoint.elo)
+		) {
+			return null;
+		}
+
+		return {
+			value: maybePoint.value ?? [maybePoint.playedAtIso, maybePoint.elo],
+			playedAtIso: maybePoint.playedAtIso,
+			elo: maybePoint.elo,
+		};
 	}
-}
 
-function round(value: number): number {
-	return Math.round(value * 100) / 100;
+	private formatAxisDate(value: string | number): string {
+		const date = typeof value === 'number' ? new Date(value).toISOString() : value;
+
+		return this.dateFormat.formatDate(date);
+	}
+
+	private cssVar(name: string, fallback: string): string {
+		const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+		return value || fallback;
+	}
+
+	private escapeHtml(value: string): string {
+		return value
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/"/g, '&quot;')
+			.replace(/'/g, '&#039;');
+	}
 }

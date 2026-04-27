@@ -28,51 +28,24 @@
 			</div>
 		</div>
 
-		<div class="dashboard-elo-chart__svg-wrap">
-			<svg
-				class="dashboard-elo-chart__svg"
-				[attr.viewBox]="viewBox"
+		<!-- ECharts owns the canvas rendering. The parent wrapper provides the required height. -->
+		<div class="dashboard-elo-chart__chart-wrap">
+			<div
+				echarts
+				class="dashboard-elo-chart__chart"
 				role="img"
 				[attr.aria-label]="ariaLabel()"
-				preserveAspectRatio="none"
-			>
-				<g class="dashboard-elo-chart__grid">
-					<g *ngFor="let tick of chart.yTicks">
-						<line
-							class="dashboard-elo-chart__grid-line"
-							x1="52"
-							x2="702"
-							[attr.y1]="tick.y"
-							[attr.y2]="tick.y"
-						/>
-
-						<text class="dashboard-elo-chart__grid-label" x="8" [attr.y]="tick.y + 4">
-							{{ tick.label }}
-						</text>
-					</g>
-				</g>
-
-				<path class="dashboard-elo-chart__area" [attr.d]="chart.areaD" *ngIf="chart.areaD" />
-
-				<path class="dashboard-elo-chart__line" [attr.d]="chart.pathD" />
-
-				<g class="dashboard-elo-chart__markers">
-					<circle
-						*ngFor="let point of chart.markerPoints"
-						class="dashboard-elo-chart__marker"
-						[attr.cx]="point.x"
-						[attr.cy]="point.y"
-						r="3.5"
-					>
-						<title>{{ point.elo }} Elo · {{ point.playedAtIso | appIsoDate }}</title>
-					</circle>
-				</g>
-			</svg>
+				[options]="chart.options"
+			></div>
 		</div>
 
-		<footer class="dashboard-elo-chart__footer" *ngIf="chart.firstPoint && chart.lastPoint">
-			<span>{{ chart.firstPoint.playedAtIso | appIsoDate }}</span>
-			<span>{{ chart.lastPoint.playedAtIso | appIsoDate }}</span>
+		<footer
+			class="dashboard-elo-chart__footer"
+			*ngIf="chart.firstPlayedAtIso && chart.lastPlayedAtIso"
+		>
+			<span>{{ chart.firstPlayedAtIso | appIsoDate }}</span>
+			<span>{{ chart.gamesCount }} {{ chart.gamesCount === 1 ? 'game' : 'games' }}</span>
+			<span>{{ chart.lastPlayedAtIso | appIsoDate }}</span>
 		</footer>
 	</ng-container>
 
