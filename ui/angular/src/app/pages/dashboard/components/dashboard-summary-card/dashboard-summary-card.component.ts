@@ -5,13 +5,15 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 
 import type { DashboardSummaryStats } from 'my-chess-opening-core';
 
+export type DashboardSummaryCardVariant = 'primary' | 'account' | 'speed';
+
 /**
  * Reusable Dashboard summary card.
  *
- * Used for:
- * - global summary
- * - future account summaries
- * - future speed summaries
+ * Variants:
+ * - primary: main global Dashboard summary
+ * - account: selected account summary
+ * - speed: compact speed-level summary inside an account block
  */
 @Component({
 	selector: 'app-dashboard-summary-card',
@@ -25,6 +27,8 @@ export class DashboardSummaryCardComponent {
 	@Input({ required: true }) title = '';
 
 	@Input() subtitle = '';
+
+	@Input() variant: DashboardSummaryCardVariant = 'account';
 
 	@Input({ required: true }) summary!: DashboardSummaryStats;
 

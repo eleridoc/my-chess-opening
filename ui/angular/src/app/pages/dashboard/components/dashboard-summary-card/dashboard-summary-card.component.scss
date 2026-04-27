@@ -16,14 +16,24 @@
 	align-items: flex-start;
 	justify-content: space-between;
 	gap: 12px;
+
+	min-width: 0;
+}
+
+.dashboard-summary-card__heading {
+	min-width: 0;
 }
 
 .dashboard-summary-card__title {
 	margin: 0;
 
+	overflow: hidden;
+
 	font-size: 1rem;
 	line-height: 1.25;
 	font-weight: 700;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .dashboard-summary-card__subtitle {
@@ -37,81 +47,23 @@
 .dashboard-summary-card__total {
 	display: flex;
 	align-items: baseline;
-	//justify-content: space-between;
-	gap: 12px;
-	//padding: 12px;
-	// border-radius: var(--app-main-radius);
-	// border: 1px solid color-mix(in srgb, var(--app-primary) 35%, var(--app-divider));
-	// background: color-mix(in srgb, var(--app-primary) 8%, var(--app-bg-plus-2));
-}
+	gap: 10px;
 
-.dashboard-summary-card__total-label {
-	display: inline-flex;
-	align-items: center;
-	gap: 8px;
-
-	color: var(--app-text-muted);
-	font-size: 0.78rem;
-	font-weight: 700;
-	text-transform: uppercase;
-	letter-spacing: 0.04em;
+	min-width: 0;
 }
 
 .dashboard-summary-card__total-value {
 	font-size: 1.75rem;
 	line-height: 1;
+	font-weight: 900;
+}
+
+.dashboard-summary-card__total-label {
+	color: var(--app-text-muted);
+	font-size: 0.78rem;
 	font-weight: 800;
-}
-
-.dashboard-summary-card__metric-icon {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	flex: 0 0 auto;
-
-	width: 24px;
-	height: 24px;
-
-	border-radius: 6px;
-
-	// border-radius: var(--app-radius-pill);
-	// border: 1px solid var(--app-divider);
-	// background: var(--app-bg-plus-3);
-
-	// color: var(--app-text-muted);
-	cursor: help;
-}
-
-.dashboard-summary-card__metric-icon mat-icon {
-	width: 17px;
-	height: 17px;
-
-	//font-size: 32px;
-	line-height: 17px;
-}
-
-.dashboard-summary-card__metric-icon--total {
-	//border-color: color-mix(in srgb, var(--app-primary) 35%, var(--app-divider));
-	background: color-mix(in srgb, var(--app-primary) 12%, var(--app-bg-plus-3));
-	//color: var(--app-text-reverse);
-}
-
-.dashboard-summary-card__metric-icon--wins {
-	//border-color: color-mix(in srgb, var(--app-success, #7bd88f) 42%, var(--app-divider));
-	background: var(--app-me-win);
-	color: var(--app-text-reverse);
-}
-
-.dashboard-summary-card__metric-icon--draws {
-	//border-color: color-mix(in srgb, var(--app-warning, #f7d774) 42%, var(--app-divider));
-	background: var(--app-me-draw);
-	color: var(--app-text-reverse);
-}
-
-.dashboard-summary-card__metric-icon--losses {
-	//border-color: color-mix(in srgb, var(--app-danger, #ff6b6b) 42%, var(--app-divider));
-	background: var(--app-me-loss);
-	color: var(--app-text-reverse);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
 }
 
 .dashboard-summary-card__results {
@@ -127,13 +79,6 @@
 
 	min-width: 0;
 	padding: 10px;
-
-	// border-radius: var(--app-main-radius);
-	// border: 1px solid var(--app-divider);
-	// background: var(--app-bg-plus-2);
-}
-
-.dashboard-summary-card__result--wins {
 }
 
 .dashboard-summary-card__result--draws {
@@ -156,9 +101,6 @@
 .dashboard-summary-card__result-main {
 	display: flex;
 	align-items: center;
-	//justify-content: space-between;
-	text-align: center;
-	align-items: center;
 	gap: 8px;
 }
 
@@ -166,6 +108,7 @@
 	display: inline-flex;
 	align-items: center;
 	gap: 7px;
+
 	min-width: 0;
 	overflow: hidden;
 
@@ -178,9 +121,54 @@
 	letter-spacing: 0.04em;
 }
 
+.dashboard-summary-card__metric-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 auto;
+
+	width: 24px;
+	height: 24px;
+
+	border-radius: 6px;
+	cursor: help;
+}
+
+.dashboard-summary-card__metric-icon--wins {
+	background: var(--app-me-win);
+	color: var(--app-text-reverse);
+}
+
+.dashboard-summary-card__metric-icon--draws {
+	background: var(--app-me-draw);
+	color: var(--app-text-reverse);
+}
+
+.dashboard-summary-card__metric-icon--losses {
+	background: var(--app-me-loss);
+	color: var(--app-text-reverse);
+}
+
+.dashboard-summary-card__metric-symbol {
+	font-size: 24px;
+	line-height: 1;
+}
+
 .dashboard-summary-card__result-rate {
 	color: var(--app-text-muted);
 	font-size: 1.82rem;
+	line-height: 1;
+	font-weight: 800;
+}
+
+.dashboard-summary-card__result-count {
+	color: var(--app-text);
+	font-size: 0.85rem;
+	font-weight: 800;
+}
+
+.dashboard-summary-card__result-count span {
+	color: var(--app-text-muted);
 	font-weight: 700;
 }
 
@@ -195,7 +183,7 @@
 
 .dashboard-summary-card__bar-segment {
 	min-width: 0;
-	height: 30px;
+	height: 100%;
 }
 
 .dashboard-summary-card__bar-segment--wins {
@@ -210,17 +198,201 @@
 	background: var(--app-me-loss);
 }
 
+/**
+ * Main Dashboard summary.
+ *
+ * This variant is intentionally larger because it is the primary overview block.
+ */
+.dashboard-summary-card--primary {
+	gap: 18px;
+
+	padding: 20px;
+
+	border-color: color-mix(in srgb, var(--app-primary) 38%, var(--app-divider));
+	background:
+		linear-gradient(
+			135deg,
+			color-mix(in srgb, var(--app-primary) 10%, transparent),
+			transparent 42%
+		),
+		var(--app-bg-plus-1);
+}
+
+.dashboard-summary-card--primary .dashboard-summary-card__title {
+	font-size: 1.12rem;
+	font-weight: 800;
+}
+
+.dashboard-summary-card--primary .dashboard-summary-card__subtitle {
+	font-size: 0.88rem;
+}
+
+.dashboard-summary-card--primary .dashboard-summary-card__total {
+	align-items: flex-end;
+	gap: 12px;
+}
+
+.dashboard-summary-card--primary .dashboard-summary-card__total-value {
+	font-size: clamp(2.35rem, 4vw, 3.25rem);
+	letter-spacing: -0.04em;
+}
+
+.dashboard-summary-card--primary .dashboard-summary-card__total-label {
+	padding-bottom: 4px;
+
+	font-size: 0.82rem;
+}
+
+.dashboard-summary-card--primary .dashboard-summary-card__results {
+	gap: 14px;
+}
+
+.dashboard-summary-card--primary .dashboard-summary-card__result {
+	padding: 12px;
+
+	border-radius: var(--app-main-radius);
+	border: 1px solid color-mix(in srgb, var(--app-divider) 78%, transparent);
+	background: color-mix(in srgb, var(--app-bg-plus-2) 82%, transparent);
+}
+
+.dashboard-summary-card--primary .dashboard-summary-card__metric-icon {
+	width: 30px;
+	height: 30px;
+
+	border-radius: 8px;
+}
+
+.dashboard-summary-card--primary .dashboard-summary-card__metric-symbol {
+	font-size: 28px;
+}
+
+.dashboard-summary-card--primary .dashboard-summary-card__result-rate {
+	font-size: clamp(1.85rem, 2.8vw, 2.45rem);
+}
+
+.dashboard-summary-card--primary .dashboard-summary-card__result-count {
+	font-size: 0.94rem;
+}
+
+.dashboard-summary-card--primary .dashboard-summary-card__bar {
+	height: 28px;
+	border-radius: 8px;
+}
+
+/**
+ * Selected account summary.
+ *
+ * Medium density: visible enough to identify the account result profile,
+ * but less dominant than the global Dashboard summary.
+ */
+.dashboard-summary-card--account {
+	border: 0px;
+	//border-color: color-mix(in srgb, var(--app-primary) 18%, var(--app-divider));
+	background-color: var(--app-bg-plus-3);
+}
+
+.dashboard-summary-card--account .dashboard-summary-card__total-value {
+	font-size: 1.9rem;
+}
+
+.dashboard-summary-card--account .dashboard-summary-card__result-rate {
+	font-size: 1.7rem;
+}
+
+.dashboard-summary-card--account .dashboard-summary-card__bar {
+	height: 20px;
+}
+
+/**
+ * Speed summary.
+ *
+ * Compact variant used inside bullet / blitz / rapid sections.
+ */
+.dashboard-summary-card--speed {
+	gap: 10px;
+
+	padding: 12px;
+
+	background: var(--app-bg-plus-1);
+}
+
+.dashboard-summary-card--speed .dashboard-summary-card__title {
+	font-size: 0.92rem;
+}
+
+.dashboard-summary-card--speed .dashboard-summary-card__subtitle {
+	font-size: 0.74rem;
+}
+
+.dashboard-summary-card--speed .dashboard-summary-card__total {
+	gap: 8px;
+}
+
+.dashboard-summary-card--speed .dashboard-summary-card__total-value {
+	font-size: 1.38rem;
+}
+
+.dashboard-summary-card--speed .dashboard-summary-card__total-label {
+	font-size: 0.68rem;
+}
+
+.dashboard-summary-card--speed .dashboard-summary-card__results {
+	gap: 6px;
+}
+
+.dashboard-summary-card--speed .dashboard-summary-card__result {
+	gap: 4px;
+	padding: 6px;
+}
+
+.dashboard-summary-card--speed .dashboard-summary-card__metric-icon {
+	width: 20px;
+	height: 20px;
+
+	border-radius: 5px;
+}
+
+.dashboard-summary-card--speed .dashboard-summary-card__metric-symbol {
+	font-size: 19px;
+}
+
+.dashboard-summary-card--speed .dashboard-summary-card__result-main {
+	gap: 6px;
+}
+
+.dashboard-summary-card--speed .dashboard-summary-card__result-rate {
+	font-size: 1.2rem;
+}
+
+.dashboard-summary-card--speed .dashboard-summary-card__result-count {
+	font-size: 0.76rem;
+}
+
+.dashboard-summary-card--speed .dashboard-summary-card__bar {
+	height: 14px;
+	border-radius: 5px;
+}
+
 @media (max-width: 720px) {
 	.dashboard-summary-card__results {
 		grid-template-columns: 1fr;
 	}
-}
 
-.dashboard-summary-card__metric-symbol {
-	font-size: 24px;
-}
+	.dashboard-summary-card__result,
+	.dashboard-summary-card__result--draws,
+	.dashboard-summary-card__result--losses {
+		text-align: left;
+	}
 
-.dashboard-summary-card__result-count {
-	font-size: 0.85rem;
-	font-weight: 800;
+	.dashboard-summary-card__result-main,
+	.dashboard-summary-card__result--draws .dashboard-summary-card__result-main,
+	.dashboard-summary-card__result--losses .dashboard-summary-card__result-main {
+		justify-content: flex-start;
+	}
+
+	.dashboard-summary-card--primary .dashboard-summary-card__total {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 4px;
+	}
 }

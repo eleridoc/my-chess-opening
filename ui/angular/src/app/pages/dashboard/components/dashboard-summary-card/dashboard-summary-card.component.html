@@ -1,6 +1,6 @@
-<section class="dashboard-summary-card">
+<section class="dashboard-summary-card" [ngClass]="'dashboard-summary-card--' + variant">
 	<header class="dashboard-summary-card__header">
-		<div>
+		<div class="dashboard-summary-card__heading">
 			<h2 class="dashboard-summary-card__title">{{ title }}</h2>
 			<p class="dashboard-summary-card__subtitle" *ngIf="subtitle">
 				{{ subtitle }}
@@ -9,7 +9,8 @@
 	</header>
 
 	<div class="dashboard-summary-card__total">
-		<div class="dashboard-summary-card__total-value">{{ summary.totalGames }} Games played</div>
+		<span class="dashboard-summary-card__total-value">{{ summary.totalGames }}</span>
+		<span class="dashboard-summary-card__total-label">Games played</span>
 	</div>
 
 	<div class="dashboard-summary-card__results">
@@ -71,9 +72,9 @@
 					</span>
 				</span>
 
-				<span class="dashboard-summary-card__result-rate">{{
-					formatPercent(summary.lossRatePercent)
-				}}</span>
+				<span class="dashboard-summary-card__result-rate">
+					{{ formatPercent(summary.lossRatePercent) }}
+				</span>
 			</div>
 
 			<div class="dashboard-summary-card__result-count">

@@ -73,6 +73,7 @@
 													[title]="'Global results'"
 													[subtitle]="'Bullet, blitz and rapid games from the selected period'"
 													[summary]="currentOverview.global.summary"
+													[variant]="'primary'"
 												/>
 
 												<section class="dashboard-page__meta-card">
@@ -103,6 +104,7 @@
 												[title]="'Games played by day'"
 												[subtitle]="'Daily volume of imported bullet, blitz and rapid games'"
 												[mode]="'activity'"
+												[size]="'large'"
 												[points]="globalDailyActivityPoints()"
 												[startDate]="heatmapStartDate()"
 												[rangeMonths]="12"
@@ -112,6 +114,7 @@
 												[title]="'Daily result ratio'"
 												[subtitle]="'Positive days have more wins than losses. Draws are neutral.'"
 												[mode]="'ratio'"
+												[size]="'large'"
 												[points]="globalDailyResultRatioPoints()"
 												[startDate]="heatmapStartDate()"
 												[rangeMonths]="12"

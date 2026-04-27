@@ -20,6 +20,8 @@ let dashboardHeatmapId = 0;
 
 export type DashboardHeatmapMode = 'activity' | 'ratio';
 
+export type DashboardHeatmapSize = 'default' | 'large';
+
 export interface DashboardHeatmapPoint {
 	/**
 	 * Calendar date in YYYY-MM-DD format.
@@ -41,6 +43,14 @@ export interface DashboardHeatmapPoint {
 
 interface DashboardHeatmapTooltipDate {
 	format: (format: string) => string;
+}
+
+interface DashboardHeatmapDimensions {
+	domainGutter: number;
+	subDomainWidth: number;
+	subDomainHeight: number;
+	subDomainGutter: number;
+	subDomainRadius: number;
 }
 
 /**
@@ -74,9 +84,17 @@ export class DashboardHeatmapComponent implements AfterViewInit, OnChanges, OnDe
 
 	/**
 	 * Activity mode is used for positive count-like values.
-	 * Ratio mode is used for values in the -1..1 range.
+	 * Ratio mode is used for categorical daily result-ratio values.
 	 */
 	@Input() mode: DashboardHeatmapMode = 'activity';
+
+	/**
+	 * Visual size of the heatmap.
+	 *
+	 * - default: compact charts used inside account / speed sections
+	 * - large: main Dashboard heatmaps with larger cells and spacing
+	 */
+	@Input() size: DashboardHeatmapSize = 'default';
 
 	/**
 	 * First visible month.
@@ -116,6 +134,7 @@ export class DashboardHeatmapComponent implements AfterViewInit, OnChanges, OnDe
 
 		void this.destroyCalendar();
 	}
+
 	private async render(): Promise<void> {
 		if (!this.viewReady) {
 			return;
@@ -152,12 +171,13 @@ export class DashboardHeatmapComponent implements AfterViewInit, OnChanges, OnDe
 
 		const maxActivityValue = Math.max(1, ...source.map((point) => Math.abs(point.value)));
 		const start = parseCalendarDateToDate(this.startDate) ?? getDefaultStartDate();
+		const dimensions = this.getDimensions();
 
 		const calendar = new CalHeatmap();
 		this.calendar = calendar;
 
 		await this.ngZone.runOutsideAngular(async () => {
-			let paintData = {
+			const paintData = {
 				theme: this.getCalHeatmapTheme(),
 				itemSelector: `#${this.elementId}`,
 				range: Math.max(1, this.rangeMonths),
@@ -169,7 +189,7 @@ export class DashboardHeatmapComponent implements AfterViewInit, OnChanges, OnDe
 				},
 				domain: {
 					type: 'month',
-					gutter: 8,
+					gutter: dimensions.domainGutter,
 					label: {
 						text: 'MMM',
 						textAlign: 'start',
@@ -178,10 +198,10 @@ export class DashboardHeatmapComponent implements AfterViewInit, OnChanges, OnDe
 				},
 				subDomain: {
 					type: 'ghDay',
-					width: 11,
-					height: 11,
-					gutter: 2,
-					radius: 2,
+					width: dimensions.subDomainWidth,
+					height: dimensions.subDomainHeight,
+					gutter: dimensions.subDomainGutter,
+					radius: dimensions.subDomainRadius,
 					/**
 					 * Keep the scale-generated color for cells with real values.
 					 * Only override zero-game activity cells.
@@ -200,8 +220,6 @@ export class DashboardHeatmapComponent implements AfterViewInit, OnChanges, OnDe
 				animationDuration: 120,
 			};
 
-			console.log('paintData', paintData);
-
 			await calendar.paint(paintData, [
 				[
 					Tooltip,
@@ -215,6 +233,26 @@ export class DashboardHeatmapComponent implements AfterViewInit, OnChanges, OnDe
 				],
 			]);
 		});
+	}
+
+	private getDimensions(): DashboardHeatmapDimensions {
+		if (this.size === 'large') {
+			return {
+				domainGutter: 12,
+				subDomainWidth: 16,
+				subDomainHeight: 16,
+				subDomainGutter: 4,
+				subDomainRadius: 4,
+			};
+		}
+
+		return {
+			domainGutter: 8,
+			subDomainWidth: 11,
+			subDomainHeight: 11,
+			subDomainGutter: 2,
+			subDomainRadius: 2,
+		};
 	}
 
 	private resolveCellColor(value: number | null, backgroundColor: string): string {

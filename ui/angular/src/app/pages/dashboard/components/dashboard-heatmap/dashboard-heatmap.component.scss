@@ -18,6 +18,12 @@
 	gap: 12px;
 }
 
+.dashboard-heatmap--large .dashboard-heatmap__header {
+	justify-content: center;
+
+	text-align: center;
+}
+
 .dashboard-heatmap__title {
 	margin: 0;
 
@@ -43,6 +49,7 @@
 }
 
 .dashboard-heatmap__container {
+	width: max-content;
 	min-width: max-content;
 }
 
@@ -55,14 +62,36 @@
 }
 
 /**
+ * Large variant used for the main Dashboard heatmaps.
+ *
+ * The generated cal-heatmap SVG keeps its natural width, while the wrapper centers it
+ * when there is enough horizontal space.
+ */
+.dashboard-heatmap--large {
+	padding: 18px;
+}
+
+.dashboard-heatmap--large .dashboard-heatmap__title {
+	font-size: 1.05rem;
+}
+
+.dashboard-heatmap--large .dashboard-heatmap__subtitle {
+	font-size: 0.86rem;
+}
+
+.dashboard-heatmap--large .dashboard-heatmap__container {
+	margin-inline: auto;
+}
+
+/**
  * cal-heatmap renders its SVG content dynamically.
  * ::ng-deep is used here only to style third-party generated nodes.
  */
 :host ::ng-deep .ch-domain-text,
 :host ::ng-deep .ch-subdomain-text,
 :host ::ng-deep .ch-legend text {
-	fill: var(--app-text-muted) !important;
-	color: var(--app-text-muted);
+	fill: var(--app-on-surface-variant) !important;
+	color: var(--app-on-surface-variant);
 	font-family: inherit;
 	font-size: 0.68rem;
 	font-weight: 700;
@@ -79,4 +108,18 @@
 :host ::ng-deep .ch-subdomain-bg:hover {
 	stroke: var(--app-primary);
 	stroke-width: 1.5px;
+}
+
+@media (max-width: 720px) {
+	.dashboard-heatmap {
+		padding: 14px;
+	}
+
+	.dashboard-heatmap--large {
+		padding: 14px;
+	}
+
+	.dashboard-heatmap--large .dashboard-heatmap__container {
+		margin-inline: 0;
+	}
 }
