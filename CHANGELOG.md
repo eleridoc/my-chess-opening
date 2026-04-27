@@ -19,7 +19,7 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 
 - (placeholder)
 
-## [1.12]
+## [1.12.17]
 
 ### Added
 
