@@ -1,31 +1,29 @@
 <div class="dashboard-page app-density--5">
 	<header class="dashboard-page__header">
-		<div>
+		<div class="dashboard-page__heading">
 			<h1 class="dashboard-page__title">Dashboard</h1>
 			<p class="dashboard-page__subtitle">
 				Track your imported games activity, results and rating evolution from your local database.
 			</p>
 		</div>
+
+		<div class="dashboard-page__header-actions">
+			<!-- The Dashboard filter is opened in popup mode to keep the main screen focused on stats. -->
+			<button
+				type="button"
+				mat-stroked-button
+				class="mat-stroked-button-d-5 dashboard-page__filter-button"
+				(click)="openFilterDialog()"
+				[disabled]="isLoading()"
+				[matTooltip]="'Open Dashboard period filter'"
+			>
+				<mat-icon aria-hidden="true">filter_list</mat-icon>
+				{{ filterButtonLabel() }}
+			</button>
+		</div>
 	</header>
 
 	<div class="dashboard-page__layout">
-		<section class="dashboard-page__filter-panel">
-			<div class="app-card-flat">
-				<div class="app-card-flat-top">Filter</div>
-
-				<div class="app-card-flat-fit-content dashboard-page__card-content">
-					<app-shared-game-filter
-						[context]="'dashboard'"
-						[persistInStorage]="true"
-						[showActions]="true"
-						[resetButtonLabel]="'Reset period'"
-						[disabled]="isLoading()"
-						(filterChanged)="onInlineFilterChanged($event)"
-					/>
-				</div>
-			</div>
-		</section>
-
 		<section class="dashboard-page__content-panel">
 			<app-section-loader
 				[loading]="isLoading()"

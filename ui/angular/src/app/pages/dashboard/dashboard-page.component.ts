@@ -1,16 +1,20 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
-import type {
-	DashboardAccountBlock,
-	DashboardOverviewResult,
-	SharedGameFilter,
-} from 'my-chess-opening-core';
+import type { DashboardAccountBlock, DashboardOverviewResult } from 'my-chess-opening-core';
+import {
+	countActiveSharedGameFilterFields,
+	type SharedGameFilter,
+} from 'my-chess-opening-core/filters';
 
 import { DashboardService } from '../../services/dashboard/dashboard.service';
-import { SharedGameFilterComponent } from '../../shared/game-filter/components';
+import { SharedGameFilterContextService } from '../../shared/game-filter/services/shared-game-filter-context.service';
+import { SharedGameFilterDialogService } from '../../shared/game-filter/services/shared-game-filter-dialog.service';
 import { SharedGameFilterStorageService } from '../../shared/game-filter/services/shared-game-filter-storage.service';
 import { SectionLoaderComponent } from '../../shared/loading/section-loader/section-loader.component';
 import { NotificationService } from '../../shared/notifications/notification.service';
@@ -25,8 +29,8 @@ import { DashboardSummaryCardComponent } from './components/dashboard-summary-ca
  * Dashboard page.
  *
  * V1.12 scope:
- * - display the Dashboard shared filter inline
  * - use the dedicated "dashboard" localStorage filter context
+ * - open the Dashboard shared filter in popup mode from the page header
  * - load the Dashboard overview from Electron IPC
  * - render global Dashboard blocks
  * - render one selected account details block
@@ -37,9 +41,11 @@ import { DashboardSummaryCardComponent } from './components/dashboard-summary-ca
 	standalone: true,
 	imports: [
 		CommonModule,
+		MatButtonModule,
 		MatFormFieldModule,
+		MatIconModule,
 		MatSelectModule,
-		SharedGameFilterComponent,
+		MatTooltipModule,
 		SectionLoaderComponent,
 		DashboardSummaryCardComponent,
 		DashboardHeatmapComponent,
@@ -52,12 +58,20 @@ import { DashboardSummaryCardComponent } from './components/dashboard-summary-ca
 export class DashboardPageComponent {
 	private readonly dashboardService = inject(DashboardService);
 	private readonly sharedGameFilterStorage = inject(SharedGameFilterStorageService);
+	private readonly sharedGameFilterContext = inject(SharedGameFilterContextService);
+	private readonly sharedGameFilterDialog = inject(SharedGameFilterDialogService);
 	private readonly notify = inject(NotificationService);
+
+	/**
+	 * Resolved once and reused for active-filter counting.
+	 */
+	private readonly dashboardFilterContextConfig =
+		this.sharedGameFilterContext.getSharedGameFilterContextConfig('dashboard');
 
 	private latestRequestId = 0;
 
 	/**
-	 * Current live filter shown in the inline Dashboard filter.
+	 * Current live filter used by the Dashboard.
 	 *
 	 * It is initialized from the dedicated "dashboard" shared filter context,
 	 * which means it has its own localStorage lifecycle.
@@ -96,6 +110,22 @@ export class DashboardPageComponent {
 	readonly loadedAccountsCount = computed(() => this.overview()?.accounts.length ?? 0);
 
 	readonly accountBlocks = computed<DashboardAccountBlock[]>(() => this.overview()?.accounts ?? []);
+
+	/**
+	 * Number of active visible Dashboard filter fields.
+	 *
+	 * Dashboard currently only exposes period fields, so this gives a compact
+	 * indicator on the header filter button.
+	 */
+	readonly activeFilterCount = computed(() =>
+		countActiveSharedGameFilterFields(this.currentFilter(), this.dashboardFilterContextConfig),
+	);
+
+	readonly filterButtonLabel = computed(() => {
+		const activeCount = this.activeFilterCount();
+
+		return activeCount > 0 ? `Filter (${activeCount})` : 'Filter';
+	});
 
 	/**
 	 * Account currently displayed in the detailed account section.
@@ -176,7 +206,20 @@ export class DashboardPageComponent {
 		void this.loadOverview(this.currentFilter());
 	}
 
-	onInlineFilterChanged(filter: SharedGameFilter): void {
+	openFilterDialog(): void {
+		this.sharedGameFilterDialog.openSharedGameFilterDialog({
+			title: 'Dashboard filters',
+			context: 'dashboard',
+			initialValue: this.currentFilter(),
+			persistInStorage: true,
+			resetButtonLabel: 'Reset period',
+			onFilterChanged: (filter) => {
+				this.onDashboardFilterChanged(filter);
+			},
+		});
+	}
+
+	onDashboardFilterChanged(filter: SharedGameFilter): void {
 		this.currentFilter.set(filter);
 		void this.loadOverview(filter);
 	}
