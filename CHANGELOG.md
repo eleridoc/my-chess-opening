@@ -19,6 +19,21 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 
 - (placeholder)
 
+## [1.14] Unreleased
+
+### Added
+
+- Added shared Opening Book IPC contracts in `core` for the upcoming Explorer external opening book integration.
+- Added Electron-side Lichess Opening Explorer HTTP client for the upcoming external Opening Book feature.
+
+### Changed
+
+- (placeholder)
+
+### Fixed
+
+- (placeholder)
+
 ## [1.13.6] - 2026-04-28
 
 ### Added
