@@ -11,12 +11,11 @@ import type {
  * Important:
  * - The backend must not trust the renderer to hide fields correctly.
  * - Hidden fields are stripped again here before any DB query is built.
- * - Rating difference is intentionally excluded for now because the current DB
- *   only stores per-game rating changes, not playerRating - opponentRating.
+ * - Rating difference is intentionally excluded from the Games page.
  *
- * V1.13 scope:
- * - support the full shared filter except ratingDiffMin / ratingDiffMax
- * - rating difference will be handled separately if we add a dedicated DB field
+ * Reason:
+ * ratingDiffMin / ratingDiffMax mean playerRating - opponentRating.
+ * The current Games query deliberately does not filter on this computed value.
  */
 const GAMES_UNSUPPORTED_FIELDS = new Set<SharedGameFilterFieldKey>([
 	'ratingDiffMin',

@@ -19,9 +19,9 @@ import { SHARED_GAME_FILTER_FIELD_KEYS } from 'my-chess-opening-core/filters';
  * - "dashboard" only keeps period fields in V1.12
  *
  * V1.13 games rules:
- * - hide rating difference fields for now
- * - the current DB can provide both player ratings, but the Games list query
- *   does not yet filter on the computed playerRating - opponentRating value
+ * - hide rating difference fields intentionally
+ * - ratingDiffMin / ratingDiffMax mean playerRating - opponentRating
+ * - the Games page deliberately does not filter on this computed value
  */
 const GAMES_HIDDEN_FIELDS = new Set<SharedGameFilterFieldKey>(['ratingDiffMin', 'ratingDiffMax']);
 

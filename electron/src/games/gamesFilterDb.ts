@@ -54,7 +54,7 @@ export function buildGamesFilterDbPayload(
 /**
  * Build the Prisma `where` clause for the Games page.
  *
- * Supported shared-filter fields in V1.13.2:
+ * Supported shared-filter fields:
  * - playedDateFromIso
  * - playedDateToIso
  * - playedColor
@@ -71,13 +71,13 @@ export function buildGamesFilterDbPayload(
  * - opponentRatingMax
  * - playerTextSearch
  *
- * Intentionally not supported yet:
+ * Intentionally not supported:
  * - ratingDiffMin
  * - ratingDiffMax
  *
  * Reason:
- * the current DB stores `myRatingDiff` and `opponentRatingDiff`, which are
- * rating changes after the game, not playerRating - opponentRating.
+ * these fields mean playerRating - opponentRating, and the Games page
+ * deliberately does not filter on this computed value.
  */
 export function buildGamesWhere(query: SharedGameFilterQuery): Prisma.GameWhereInput {
 	const and: Prisma.GameWhereInput[] = [];
