@@ -1,7 +1,16 @@
 import { ipcMain } from 'electron';
+import type { Prisma } from '@prisma/client';
+
+import type { GamesListInput, GamesListResult, SharedGameFilter } from 'my-chess-opening-core';
+
 import { prisma } from '../db/prisma';
-import type { GamesListInput, GamesListResult } from 'my-chess-opening-core';
 import { clamp } from '../shared/math';
+import { buildGamesFilterDbPayload } from './gamesFilterDb';
+
+interface GamesListWherePayload {
+	where: Prisma.GameWhereInput;
+	appliedFilter: SharedGameFilter | null;
+}
 
 function parseIsoDateStart(iso: string): Date | null {
 	const s = iso.trim();
@@ -31,19 +40,57 @@ function parseIsoDateEnd(iso: string): Date | null {
 	return Number.isNaN(d.getTime()) ? null : d;
 }
 
-function buildWhere(filters: NonNullable<GamesListInput['filters']>) {
-	const and: any[] = [];
+/**
+ * Build the Games list `where` payload.
+ *
+ * V1.13 transition rule:
+ * - when `input.filter` is provided, use the new shared filter mapping
+ * - otherwise, keep the legacy `input.filters` behavior until the UI migration is done
+ */
+function buildGamesListWherePayload(input?: GamesListInput): GamesListWherePayload {
+	if (input && Object.prototype.hasOwnProperty.call(input, 'filter')) {
+		const payload = buildGamesFilterDbPayload(input.filter ?? {});
+
+		return {
+			where: payload.where,
+			appliedFilter: payload.filter,
+		};
+	}
+
+	return {
+		where: buildLegacyWhere(input?.filters ?? {}),
+		appliedFilter: null,
+	};
+}
+
+/**
+ * Legacy Games page filters.
+ *
+ * @deprecated V1.13 introduces the shared game filter through
+ * `GamesListInput.filter`. Keep this function only until the Games page UI has
+ * fully migrated to the shared filter.
+ */
+function buildLegacyWhere(filters: NonNullable<GamesListInput['filters']>): Prisma.GameWhereInput {
+	const and: Prisma.GameWhereInput[] = [];
 
 	if (filters.sites?.length) {
 		and.push({ site: { in: filters.sites } });
 	}
 
 	if (filters.myColor?.length) {
-		and.push({ myColor: { in: filters.myColor } });
+		and.push({
+			myColor: {
+				in: filters.myColor.map((value) => (value === 'white' ? 'WHITE' : 'BLACK')),
+			},
+		});
 	}
 
 	if (filters.resultKeys?.length) {
 		and.push({ resultKey: { in: filters.resultKeys } });
+	}
+
+	if (filters.myResultKeys?.length) {
+		and.push({ myResultKey: { in: filters.myResultKeys } });
 	}
 
 	if (filters.playedAtGteIso) {
@@ -58,6 +105,7 @@ function buildWhere(filters: NonNullable<GamesListInput['filters']>) {
 
 	if (filters.search && filters.search.trim().length > 0) {
 		const q = filters.search.trim();
+
 		and.push({
 			OR: [
 				{ myUsername: { contains: q } },
@@ -67,7 +115,7 @@ function buildWhere(filters: NonNullable<GamesListInput['filters']>) {
 				{ opening: { contains: q } },
 				{ ecoOpeningName: { contains: q } },
 				{ eco: { contains: q } },
-				{ ecoDetermined: { contains: q } }, // NEW
+				{ ecoDetermined: { contains: q } },
 				{ externalId: { contains: q } },
 			],
 		});
@@ -95,8 +143,7 @@ export function registerGamesIpc() {
 		async (_event, input?: GamesListInput): Promise<GamesListResult> => {
 			const page = clamp(Number(input?.page ?? 1), 1, 10_000);
 			const pageSize = clamp(Number(input?.pageSize ?? 50), 1, 200);
-			const filters = input?.filters ?? {};
-			const where = buildWhere(filters);
+			const { where, appliedFilter } = buildGamesListWherePayload(input);
 			const playedAtOrder = input?.playedAtOrder === 'asc' ? 'asc' : 'desc';
 			const skip = (page - 1) * pageSize;
 
@@ -130,7 +177,7 @@ export function registerGamesIpc() {
 						blackElo: true,
 
 						eco: true,
-						ecoDetermined: true, // NEW
+						ecoDetermined: true,
 						opening: true,
 
 						ecoOpeningName: true,
@@ -167,7 +214,7 @@ export function registerGamesIpc() {
 					blackElo: g.blackElo ?? null,
 
 					eco: g.eco ?? null,
-					ecoDetermined: g.ecoDetermined ?? null, // NEW
+					ecoDetermined: g.ecoDetermined ?? null,
 
 					opening: g.opening ?? null,
 					ecoOpeningName: g.ecoOpeningName ?? null,
@@ -180,6 +227,7 @@ export function registerGamesIpc() {
 				total,
 				page,
 				pageSize,
+				appliedFilter,
 			};
 		},
 	);
