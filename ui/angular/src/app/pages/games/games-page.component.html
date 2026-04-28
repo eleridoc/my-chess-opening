@@ -1,26 +1,37 @@
-<div class="app-page">
-	<h1 class="page-title">My games played</h1>
-	<p class="page-subtitle">The list of all the games you have played and imported.</p>
+<div class="app-page games-page app-density--5">
+	<header class="games-page__header">
+		<div class="games-page__heading">
+			<h1 class="games-page__title">My games played</h1>
+			<p class="games-page__subtitle">The list of all the games you have played and imported.</p>
+		</div>
 
-	<!-- Filters row (kept compact via app-density wrapper) -->
-	<div class="app-filters app-density--5">
-		<div class="app-filters__main">
-			<mat-form-field appearance="fill" subscriptSizing="dynamic" class="games-search">
-				<input
-					matInput
-					aria-label="Search"
-					[ngModel]="search()"
-					(ngModelChange)="onSearch($event)"
-					placeholder="Search…"
-				/>
-			</mat-form-field>
+		<div class="games-page__header-actions">
+			<!-- The Games filter is opened in popup mode to keep the table layout compact. -->
+			<button
+				type="button"
+				mat-stroked-button
+				class="mat-stroked-button-d-5 games-page__filter-button"
+				(click)="openFilterDialog()"
+				[disabled]="loading()"
+				[matTooltip]="'Open Games filters'"
+			>
+				<mat-icon aria-hidden="true">filter_list</mat-icon>
+				{{ filterButtonLabel() }}
+			</button>
 
-			<button mat-stroked-button class="mat-stroked-button-d-5" type="button" (click)="reloadNow()">
-				<mat-icon>refresh</mat-icon>
+			<button
+				mat-stroked-button
+				class="mat-stroked-button-d-5 games-page__reload-button"
+				type="button"
+				(click)="reloadNow()"
+				[disabled]="loading()"
+				matTooltip="Reload games"
+			>
+				<mat-icon aria-hidden="true">refresh</mat-icon>
 				Reload
 			</button>
 		</div>
-	</div>
+	</header>
 
 	<app-section-loader
 		[loading]="loading()"
@@ -55,9 +66,9 @@
 						<th mat-header-cell *matHeaderCellDef>Site</th>
 						<td mat-cell *matCellDef="let g">
 							<!--
-							We keep a real <a> element for semantics, but we prevent default navigation
-							and open it via Electron (system browser) in openExternal().
-						-->
+								We keep a real <a> element for semantics, but we prevent default navigation
+								and open it via Electron (system browser) in openExternal().
+							-->
 							<a
 								class="games-site-link"
 								[class.games-site-link--disabled]="!g.externalUrl"
@@ -193,7 +204,6 @@
 						</td>
 					</ng-container>
 
-					<!-- Sticky header is applied to the header row (one single place) -->
 					<tr
 						mat-header-row
 						*matHeaderRowDef="displayedColumns"
@@ -202,7 +212,9 @@
 					<tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
 				</table>
 
-				<div *ngIf="!loading() && items().length === 0" class="games-empty">No games.</div>
+				<div *ngIf="!loading() && items().length === 0" class="games-empty">
+					{{ emptyMessage() }}
+				</div>
 			</div>
 
 			<!-- Paginator is outside scroll area: always visible -->

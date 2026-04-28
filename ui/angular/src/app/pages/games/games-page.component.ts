@@ -1,26 +1,29 @@
 import { CommonModule } from '@angular/common';
-import { Component, effect, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select';
 import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 import type { GamesListItem, PlayerColor } from 'my-chess-opening-core';
+import {
+	countActiveSharedGameFilterFields,
+	type SharedGameFilter,
+} from 'my-chess-opening-core/filters';
+
 import { GamesService } from '../../services/games/games.service';
+import { IsoDateTimePipe } from '../../shared/dates/pipes';
+import { ratedLabel, timeLabel, openingLabel, myResultLabel } from '../../shared/games/game-format';
+import { SharedGameFilterContextService } from '../../shared/game-filter/services/shared-game-filter-context.service';
+import { SharedGameFilterDialogService } from '../../shared/game-filter/services/shared-game-filter-dialog.service';
+import { SharedGameFilterStorageService } from '../../shared/game-filter/services/shared-game-filter-storage.service';
+import { SectionLoaderComponent } from '../../shared/loading/section-loader/section-loader.component';
 import { NotificationService } from '../../shared/notifications/notification.service';
 import { ExternalLinkService } from '../../shared/system/external-link.service';
-import { ratedLabel, timeLabel, openingLabel, myResultLabel } from '../../shared/games/game-format';
-
-import { IsoDateTimePipe } from '../../shared/dates/pipes';
-import { SectionLoaderComponent } from '../../shared/loading/section-loader/section-loader.component';
 
 type Outcome = 'win' | 'loss' | 'draw' | 'unknown';
 
@@ -29,15 +32,11 @@ type Outcome = 'win' | 'loss' | 'draw' | 'unknown';
 	selector: 'app-games-page',
 	imports: [
 		CommonModule,
-		FormsModule,
 		IsoDateTimePipe,
 		MatTableModule,
 		MatPaginatorModule,
-		MatFormFieldModule,
-		MatInputModule,
 		MatButtonModule,
 		MatIconModule,
-		MatSelectModule,
 		MatSortModule,
 		MatTooltipModule,
 		SectionLoaderComponent,
@@ -66,57 +65,102 @@ export class GamesPageComponent {
 	readonly myResultLabel = myResultLabel;
 
 	private readonly externalLink = inject(ExternalLinkService);
+	private readonly sharedGameFilterStorage = inject(SharedGameFilterStorageService);
+	private readonly sharedGameFilterContext = inject(SharedGameFilterContextService);
+	private readonly sharedGameFilterDialog = inject(SharedGameFilterDialogService);
+
 	private readonly COLOR_WHITE: PlayerColor = 'white';
 	private readonly COLOR_BLACK: PlayerColor = 'black';
 
-	// Data
-	items = signal<GamesListItem[]>([]);
-	total = signal(0);
-	loading = signal(false);
+	/**
+	 * Resolved once and reused for active-filter counting.
+	 *
+	 * The Games context hides filters that are not supported by the current
+	 * Games backend query mapping.
+	 */
+	private readonly gamesFilterContextConfig =
+		this.sharedGameFilterContext.getSharedGameFilterContextConfig('games');
 
-	// Filters (minimal for now)
-	search = signal('');
+	private reloadTimer: ReturnType<typeof setTimeout> | null = null;
+
+	// Data
+	readonly items = signal<GamesListItem[]>([]);
+	readonly total = signal(0);
+	readonly loading = signal(false);
+
+	/**
+	 * Current live shared filter used by the Games page.
+	 *
+	 * It is initialized from the dedicated "games" shared filter context,
+	 * which means it has its own localStorage lifecycle.
+	 */
+	readonly currentFilter = signal<SharedGameFilter>(
+		this.sharedGameFilterStorage.loadSharedGameFilter('games', this.gamesFilterContextConfig),
+	);
+
+	readonly activeFilterCount = computed(() =>
+		countActiveSharedGameFilterFields(this.currentFilter(), this.gamesFilterContextConfig),
+	);
+
+	readonly hasActiveFilters = computed(() => this.activeFilterCount() > 0);
+
+	readonly filterButtonLabel = computed(() => {
+		const activeCount = this.activeFilterCount();
+
+		return activeCount > 0 ? `Filter (${activeCount})` : 'Filter';
+	});
+
+	readonly emptyMessage = computed(() =>
+		this.hasActiveFilters() ? 'No games match the selected filters.' : 'No games imported yet.',
+	);
 
 	// Paging
-	page = signal(1); // 1-based
-	pageSize = signal(50);
+	readonly page = signal(1); // 1-based
+	readonly pageSize = signal(50);
 
-	playedAtOrder = signal<'desc' | 'asc'>('desc');
-
-	private reloadTimer: any = null;
+	readonly playedAtOrder = signal<'desc' | 'asc'>('desc');
 
 	constructor(
 		private readonly games: GamesService,
 		private readonly router: Router,
 		private readonly notify: NotificationService,
 	) {
-		// Auto-load on state changes (with small debounce)
+		// Auto-load on state changes with a small debounce.
 		effect(() => {
 			void this.page();
 			void this.pageSize();
-			void this.search();
+			void this.currentFilter();
 			void this.playedAtOrder();
+
 			this.queueReload();
 		});
 	}
 
-	private queueReload(): void {
-		if (this.reloadTimer) clearTimeout(this.reloadTimer);
+	openFilterDialog(): void {
+		this.sharedGameFilterDialog.openSharedGameFilterDialog({
+			title: 'Games filters',
+			context: 'games',
+			initialValue: this.currentFilter(),
+			persistInStorage: true,
+			resetButtonLabel: 'Reset filters',
+			onFilterChanged: (filter) => {
+				this.onGamesFilterChanged(filter);
+			},
+		});
+	}
 
-		// Optional UX: show loader immediately while debounce is pending
-		this.loading.set(true);
-
-		this.reloadTimer = setTimeout(() => void this.loadPage(), 200);
+	onGamesFilterChanged(filter: SharedGameFilter): void {
+		this.currentFilter.set(filter);
+		this.page.set(1);
 	}
 
 	reloadNow(): void {
-		if (this.reloadTimer) clearTimeout(this.reloadTimer);
-		void this.loadPage();
-	}
+		if (this.reloadTimer) {
+			clearTimeout(this.reloadTimer);
+			this.reloadTimer = null;
+		}
 
-	onSearch(value: string): void {
-		this.search.set(value ?? '');
-		this.page.set(1);
+		void this.loadPage();
 	}
 
 	onPage(event: PageEvent): void {
@@ -134,7 +178,7 @@ export class GamesPageComponent {
 	onSortChange(sort: Sort): void {
 		if (sort.active !== 'playedAt') return;
 
-		const dir = sort.direction === 'asc' ? 'asc' : 'desc'; // fallback desc
+		const dir = sort.direction === 'asc' ? 'asc' : 'desc';
 		this.playedAtOrder.set(dir);
 		this.page.set(1);
 	}
@@ -173,23 +217,31 @@ export class GamesPageComponent {
 		};
 	}
 
+	private queueReload(): void {
+		if (this.reloadTimer) {
+			clearTimeout(this.reloadTimer);
+		}
+
+		// Optional UX: show loader immediately while debounce is pending.
+		this.loading.set(true);
+
+		this.reloadTimer = setTimeout(() => void this.loadPage(), 200);
+	}
+
 	private async loadPage(): Promise<void> {
 		this.loading.set(true);
-		try {
-			const q = this.search().trim();
 
+		try {
 			const res = await this.games.list({
 				page: this.page(),
 				pageSize: this.pageSize(),
 				playedAtOrder: this.playedAtOrder(),
-				filters: {
-					search: q.length ? q : null,
-				},
+				filter: this.currentFilter(),
 			});
 
 			this.items.set(res.items);
 			this.total.set(res.total);
-		} catch (e) {
+		} catch {
 			this.notify.error('Failed to load games.', {
 				actionLabel: 'Retry',
 				onAction: () => this.reloadNow(),

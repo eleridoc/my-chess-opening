@@ -16,15 +16,24 @@ import { SHARED_GAME_FILTER_FIELD_KEYS } from 'my-chess-opening-core/filters';
  * - "export" hides fields not used by the export feature
  * - "my-next-moves" only keeps fields that are meaningful for
  *   position-based move statistics
+ * - "dashboard" only keeps period fields in V1.12
  *
+ * V1.13 games rules:
+ * - hide rating difference fields for now
+ * - the current DB can provide both player ratings, but the Games list query
+ *   does not yet filter on the computed playerRating - opponentRating value
+ */
+const GAMES_HIDDEN_FIELDS = new Set<SharedGameFilterFieldKey>(['ratingDiffMin', 'ratingDiffMax']);
+
+const GAMES_VISIBLE_FIELDS = SHARED_GAME_FILTER_FIELD_KEYS.filter(
+	(fieldKey) => !GAMES_HIDDEN_FIELDS.has(fieldKey),
+);
+
+/**
  * V1.8 export rules:
  * - hide rated mode
  * - hide opponent rating fields
  * - hide rating difference fields
- *
- * V1.9 my-next-moves rules:
- * - only keep fields that actually affect the position-based stats query
- * - all other fields stay hidden and must not be applied
  */
 const EXPORT_HIDDEN_FIELDS = new Set<SharedGameFilterFieldKey>([
 	'ratedMode',
@@ -38,6 +47,11 @@ const EXPORT_VISIBLE_FIELDS = SHARED_GAME_FILTER_FIELD_KEYS.filter(
 	(fieldKey) => !EXPORT_HIDDEN_FIELDS.has(fieldKey),
 );
 
+/**
+ * V1.9 my-next-moves rules:
+ * - only keep fields that actually affect the position-based stats query
+ * - all other fields stay hidden and must not be applied
+ */
 const MY_NEXT_MOVES_VISIBLE_FIELDS: SharedGameFilterFieldKey[] = [
 	'periodPreset',
 	'datePlayedFrom',
@@ -66,6 +80,7 @@ export const SHARED_GAME_FILTER_CONTEXT_CONFIGS: Record<
 			gameSpeeds: [],
 			ratedMode: 'both',
 		},
+		visibleFields: GAMES_VISIBLE_FIELDS,
 	},
 	export: {
 		defaultValueOverrides: {
