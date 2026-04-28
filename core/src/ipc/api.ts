@@ -100,6 +100,20 @@ export type {
 	MyNextMovesApi,
 } from './my-next-moves/types';
 
+export type {
+	OpeningBookSource,
+	OpeningBookGetMovesInput,
+	OpeningBookOutcomeStats,
+	OpeningBookOpeningInfo,
+	OpeningBookMove,
+	OpeningBookSummary,
+	OpeningBookGetMovesSuccess,
+	OpeningBookErrorCode,
+	OpeningBookError,
+	OpeningBookGetMovesResult,
+	OpeningBookApi,
+} from './opening-book/types';
+
 // -----------------------------------------------------------------------------
 // Compose ElectronApi from domain APIs
 // -----------------------------------------------------------------------------
