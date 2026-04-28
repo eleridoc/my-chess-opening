@@ -25,6 +25,7 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 
 - Added shared Opening Book IPC contracts in `core` for the upcoming Explorer external opening book integration.
 - Added Electron-side Lichess Opening Explorer HTTP client for the upcoming external Opening Book feature.
+- Added Electron-side mapper from raw Lichess Opening Explorer responses to the internal Opening Book IPC contract.
 
 ### Changed
 
