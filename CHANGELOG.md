@@ -19,17 +19,48 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 
 - (placeholder)
 
-## [1.13.x]
+## [1.13.6] - 2026-04-28
 
 ### Added
 
-- (placeholder)
+- Added shared game filter support to the Games IPC contract through `GamesListInput.filter`.
+- Added optional `appliedFilter` metadata to Games list results for shared-filter consistency.
+- Added a dedicated backend shared filter context for the Games page.
+- Added backend Games filter-to-Prisma mapping for:
+    - played date range
+    - played color
+    - player result
+    - game speeds
+    - rated / casual mode
+    - platforms
+    - exact ECO code
+    - opening name search
+    - exact game id
+    - player rating range
+    - opponent rating range
+    - player text search
+- Added a dedicated `gamesFilterDb` backend helper to keep Games shared-filter query mapping isolated.
+- Added a shared filter popup entrypoint to the Games page.
+- Added a Games page filter button with active filter count.
+- Added dedicated Games shared-filter persistence using the `games` filter context.
+- Added contextual empty state messaging when no games match the selected filters.
 
 ### Changed
 
-- (placeholder)
+- Replaced the Games page simple search field with the reusable shared game filter.
+- Updated the Games page to send the full shared filter snapshot to the backend.
+- Updated Games list loading so filter changes reset pagination to the first page.
+- Updated the Games page header layout to align filter and reload actions with the Dashboard pattern.
+- Updated the Games backend to prefer the new shared filter input while keeping the legacy `filters` input temporarily available during migration.
+- Updated Games shared filter defaults so the Games context includes all speeds and both rated and casual games by default.
+- Kept `ratingDiffMin` and `ratingDiffMax` intentionally disabled for the Games context because the page does not currently filter on computed `playerRating - opponentRating` values.
+- Clarified backend and UI filter-context comments around intentionally unsupported rating difference filters.
 
 ### Fixed
+
+- Fixed the Games page filter scope being limited to a simple text search.
+- Fixed Games filtering inconsistencies by applying the same shared filter model used by other features.
+- Fixed Games empty state wording when filters are active.
 
 - (placeholder)
 
