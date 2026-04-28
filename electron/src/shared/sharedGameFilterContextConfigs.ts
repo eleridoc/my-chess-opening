@@ -1,4 +1,31 @@
-import type { SharedGameFilterContextConfig } from 'my-chess-opening-core';
+import { SHARED_GAME_FILTER_FIELD_KEYS } from 'my-chess-opening-core';
+
+import type {
+	SharedGameFilterContextConfig,
+	SharedGameFilterFieldKey,
+} from 'my-chess-opening-core';
+
+/**
+ * Backend shared filter configuration for the Games page.
+ *
+ * Important:
+ * - The backend must not trust the renderer to hide fields correctly.
+ * - Hidden fields are stripped again here before any DB query is built.
+ * - Rating difference is intentionally excluded for now because the current DB
+ *   only stores per-game rating changes, not playerRating - opponentRating.
+ *
+ * V1.13 scope:
+ * - support the full shared filter except ratingDiffMin / ratingDiffMax
+ * - rating difference will be handled separately if we add a dedicated DB field
+ */
+const GAMES_UNSUPPORTED_FIELDS = new Set<SharedGameFilterFieldKey>([
+	'ratingDiffMin',
+	'ratingDiffMax',
+]);
+
+const GAMES_VISIBLE_FIELDS = SHARED_GAME_FILTER_FIELD_KEYS.filter(
+	(fieldKey) => !GAMES_UNSUPPORTED_FIELDS.has(fieldKey),
+);
 
 /**
  * Backend shared filter configuration for the "my next moves" feature.
@@ -20,6 +47,21 @@ export const MY_NEXT_MOVES_SHARED_GAME_FILTER_CONTEXT_CONFIG: SharedGameFilterCo
 		'playerRatingMin',
 		'playerRatingMax',
 	],
+};
+
+/**
+ * Backend shared filter configuration for the Games page.
+ *
+ * Defaults are aligned with the Angular "games" context:
+ * - no speed restriction by default
+ * - rated and casual games included by default
+ */
+export const GAMES_SHARED_GAME_FILTER_CONTEXT_CONFIG: SharedGameFilterContextConfig = {
+	defaultValueOverrides: {
+		gameSpeeds: [],
+		ratedMode: 'both',
+	},
+	visibleFields: GAMES_VISIBLE_FIELDS,
 };
 
 /**
