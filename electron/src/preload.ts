@@ -27,6 +27,8 @@ import type {
 	ImportEventSubscriptionId,
 	MyNextMovesInput,
 	MyNextMovesResult,
+	OpeningBookGetMovesInput,
+	OpeningBookGetMovesResult,
 } from 'my-chess-opening-core';
 
 /**
@@ -58,6 +60,7 @@ const CHANNELS = {
 	EXPORT_BUILD_PGN_FILE: 'export:buildPgnFile',
 	DASHBOARD_GET_OVERVIEW: 'dashboard:getOverview',
 	MY_NEXT_MOVES_GET_MOVES: 'myNextMoves:getMoves',
+	OPENING_BOOK_GET_MOVES: 'opening-book:getMoves',
 	SYSTEM_OPEN_EXTERNAL: 'system:openExternal',
 	ACCOUNTS_LIST: 'accounts:list',
 	ACCOUNTS_SET_ENABLED: 'accounts:setEnabled',
@@ -177,6 +180,11 @@ const api: ElectronApi = {
 	myNextMoves: {
 		getMoves: (input: MyNextMovesInput) =>
 			invoke<MyNextMovesResult>(CHANNELS.MY_NEXT_MOVES_GET_MOVES, input),
+	},
+
+	openingBook: {
+		getMoves: (input: OpeningBookGetMovesInput) =>
+			invoke<OpeningBookGetMovesResult>(CHANNELS.OPENING_BOOK_GET_MOVES, input),
 	},
 };
 

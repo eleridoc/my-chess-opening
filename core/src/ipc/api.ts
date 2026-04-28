@@ -126,6 +126,7 @@ import type { AccountsApi } from './accounts/types';
 import type { ExportApi } from './export/types';
 import type { DashboardApi } from './dashboard/types';
 import type { MyNextMovesApi } from './my-next-moves/types';
+import type { OpeningBookApi } from './opening-book/types';
 
 /**
  * Small system-level IPC helpers that are not tied to a single domain.
@@ -183,6 +184,9 @@ export interface ElectronApi {
 
 	/** Explorer "My next moves" APIs (position-based move statistics). */
 	myNextMoves: MyNextMovesApi;
+
+	/** Explorer external Opening Book APIs (Lichess database / Masters). */
+	openingBook: OpeningBookApi;
 
 	/** Miscellaneous system-level helpers. */
 	system: SystemApi;
