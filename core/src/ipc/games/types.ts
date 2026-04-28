@@ -1,9 +1,18 @@
-import type { ExternalSite, GameSpeed, PlayerColor } from '../../import/types';
-import type { ResultKey } from '../../import/types';
+import type { SharedGameFilter } from '../../filters';
+import type { ExternalSite, GameSpeed, PlayerColor, ResultKey } from '../../import/types';
 
-// Add near other exported types (e.g. after ResultKey)
+/**
+ * Sort order used by paginated game list queries.
+ */
 export type SortOrder = 'asc' | 'desc';
 
+/**
+ * Legacy Games page filters.
+ *
+ * @deprecated V1.13 introduces the shared game filter through
+ * `GamesListInput.filter`. Keep this type temporarily to preserve the current
+ * Games page behavior while the backend and UI are migrated step by step.
+ */
 export interface GamesListFilters {
 	/** Limit to specific sources (e.g. CHESSCOM, LICHESS). */
 	sites?: ExternalSite[] | null;
@@ -47,6 +56,25 @@ export interface GamesListInput {
 	/** Sort order for playedAt (default: 'desc' = newest first). */
 	playedAtOrder?: SortOrder;
 
+	/**
+	 * Shared reusable game filter snapshot coming from the Games page.
+	 *
+	 * The backend is responsible for:
+	 * - normalizing it
+	 * - stripping fields that are not supported by the Games context
+	 * - mapping it to the database query
+	 *
+	 * This is the V1.13 target input and should replace `filters`.
+	 */
+	filter?: SharedGameFilter | null;
+
+	/**
+	 * Legacy Games filters.
+	 *
+	 * @deprecated Use `filter` instead. This field is kept temporarily so the
+	 * current Games page can continue to compile and behave exactly as before
+	 * until the V1.13 backend and UI migration is complete.
+	 */
 	filters?: GamesListFilters;
 }
 
@@ -117,6 +145,15 @@ export interface GamesListResult {
 	total: number;
 	page: number;
 	pageSize: number;
+
+	/**
+	 * Canonical shared filter snapshot actually applied by the backend.
+	 *
+	 * This is optional during the V1.13 migration because the current backend
+	 * still supports the legacy `filters` input. It should become the reference
+	 * once the Games page fully uses `GamesListInput.filter`.
+	 */
+	appliedFilter?: SharedGameFilter | null;
 }
 
 export interface GamesApi {
