@@ -3,6 +3,27 @@
 		<span>Opening book</span>
 
 		<div class="explorer-opening-book-panel__header-actions">
+			<div class="explorer-opening-book-panel__arrows app-density--5">
+				<span class="explorer-opening-book-panel__arrows-label">Arrows</span>
+
+				<mat-form-field
+					appearance="outline"
+					subscriptSizing="dynamic"
+					class="explorer-opening-book-panel__arrow-select-field"
+				>
+					<mat-select
+						[value]="currentArrowMode()"
+						(selectionChange)="setArrowMode($event.value)"
+						aria-label="Opening book arrow mode"
+					>
+						<mat-option value="off">Off</mat-option>
+						<mat-option value="top3">3</mat-option>
+						<mat-option value="top5">5</mat-option>
+						<mat-option value="all">10</mat-option>
+					</mat-select>
+				</mat-form-field>
+			</div>
+
 			<div class="app-density--5">
 				<mat-form-field
 					appearance="outline"
@@ -84,6 +105,10 @@
 										tabindex="0"
 										*ngFor="let move of book.moves; trackBy: trackByMove"
 										(click)="onMoveSelected(move)"
+										(mouseenter)="onMoveHovered(move)"
+										(mouseleave)="onMoveHovered(null)"
+										(focus)="onMoveHovered(move)"
+										(blur)="onMoveHovered(null)"
 										(keydown.enter)="onMoveSelected(move)"
 										(keydown.space)="onMoveSelected(move); $event.preventDefault()"
 										[attr.aria-label]="'Play book move ' + move.san"

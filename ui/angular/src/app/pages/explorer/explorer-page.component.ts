@@ -159,6 +159,11 @@ export class ExplorerPageComponent implements AfterViewInit {
 		this.facade.goToPly(ply);
 	}
 
+	/** Switch board arrows to the feature represented by the selected left tab. */
+	onLeftTabIndexChanged(index: number): void {
+		this.boardArrows.setActiveSource(index === 1 ? 'opening-book' : 'my-next-moves');
+	}
+
 	// --- Controls actions (delegated from BoardControlsComponent) ---
 
 	/**

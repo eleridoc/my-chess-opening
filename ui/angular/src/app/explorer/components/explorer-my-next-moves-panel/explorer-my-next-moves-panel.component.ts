@@ -203,6 +203,8 @@ export class ExplorerMyNextMovesPanelComponent implements OnDestroy {
 	}
 
 	onMoveSelected(row: MyNextMoveRow): void {
+		this.boardArrows.setActiveSource('my-next-moves');
+
 		const parsed = this.parseMoveAttemptFromUci(row.moveUci);
 		if (!parsed) {
 			return;

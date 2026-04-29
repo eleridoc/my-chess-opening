@@ -28,6 +28,38 @@
 	justify-content: flex-end;
 }
 
+.explorer-opening-book-panel__arrows {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.explorer-opening-book-panel__arrows-label {
+	font-size: 12px;
+	opacity: 0.72;
+	white-space: nowrap;
+}
+
+.explorer-opening-book-panel__arrow-select-field {
+	width: 84px;
+	margin: 0;
+}
+
+.explorer-opening-book-panel__arrow-select-field .mat-mdc-form-field-infix {
+	min-height: 0;
+	padding-top: 8px;
+	padding-bottom: 8px;
+}
+
+.explorer-opening-book-panel__arrow-select-field .mat-mdc-text-field-wrapper {
+	padding-left: 10px;
+	padding-right: 10px;
+}
+
+.explorer-opening-book-panel__arrow-select-field .mat-mdc-form-field-subscript-wrapper {
+	display: none;
+}
+
 .explorer-opening-book-panel__source-field {
 	width: 180px;
 	margin: 0;

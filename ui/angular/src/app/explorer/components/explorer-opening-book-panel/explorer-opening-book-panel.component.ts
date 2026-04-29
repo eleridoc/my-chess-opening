@@ -21,9 +21,11 @@ import type {
 	PromotionPiece,
 } from 'my-chess-opening-core';
 
-import { ExplorerFacade } from '../../facade/explorer.facade';
 import { OpeningBookService } from '../../../services/opening-book/opening-book.service';
 import { SectionLoaderComponent } from '../../../shared/loading/section-loader/section-loader.component';
+import type { ExplorerBoardArrow } from '../../board/board-arrows.types';
+import { ExplorerFacade } from '../../facade/explorer.facade';
+import { ExplorerBoardArrowsService } from '../../services/explorer-board-arrows.service';
 
 interface OpeningBookSourceOption {
 	value: OpeningBookSource;
@@ -40,7 +42,7 @@ interface OpeningBookSourceOption {
  * - keep errors inline because this feature depends on an external service
  *
  * Notes:
- * - Board arrows are intentionally not handled here yet.
+ * - Board arrows use the shared ExplorerBoardArrowsService, like "My next moves".
  * - The current-position summary is rendered as a fixed footer row, matching
  *   the "My next moves" visual pattern.
  */
@@ -61,6 +63,7 @@ interface OpeningBookSourceOption {
 export class ExplorerOpeningBookPanelComponent implements OnDestroy {
 	private readonly facade = inject(ExplorerFacade);
 	private readonly openingBookService = inject(OpeningBookService);
+	private readonly boardArrows = inject(ExplorerBoardArrowsService);
 
 	private readonly numberFormatter = new Intl.NumberFormat();
 
@@ -92,12 +95,26 @@ export class ExplorerOpeningBookPanelComponent implements OnDestroy {
 
 	readonly currentFen = computed(() => (this.facade.fen() ?? '').trim());
 
+	readonly currentArrowMode = computed(() => this.boardArrows.getArrowMode('opening-book'));
+
 	constructor() {
 		effect(() => {
 			const source = this.selectedSource();
 			const fen = this.currentFen();
 
 			this.scheduleAutoRefresh(source, fen);
+		});
+
+		effect(() => {
+			const book = this.result();
+
+			if (!book) {
+				this.boardArrows.clearSourceArrows('opening-book');
+				this.boardArrows.clearHoveredArrow('opening-book');
+				return;
+			}
+
+			this.boardArrows.setSourceArrows('opening-book', this.buildBoardArrows(book.moves));
 		});
 	}
 
@@ -106,6 +123,10 @@ export class ExplorerOpeningBookPanelComponent implements OnDestroy {
 
 		// Invalidate any pending async response.
 		this.loadSeq++;
+
+		this.boardArrows.clearSourceArrows('opening-book');
+		this.boardArrows.clearHoveredArrow('opening-book');
+		this.boardArrows.clearActiveSource('opening-book');
 	}
 
 	setSource(source: string): void {
@@ -117,10 +138,21 @@ export class ExplorerOpeningBookPanelComponent implements OnDestroy {
 			return;
 		}
 
+		this.boardArrows.setActiveSource('opening-book');
 		this.selectedSource.set(source);
 	}
 
+	setArrowMode(mode: string): void {
+		if (!this.isArrowMode(mode)) {
+			return;
+		}
+
+		this.boardArrows.setArrowMode('opening-book', mode);
+	}
+
 	onMoveSelected(move: OpeningBookMove): void {
+		this.boardArrows.setActiveSource('opening-book');
+
 		const attempt = this.parseMoveAttemptFromUci(move.uci);
 
 		if (!attempt) {
@@ -128,6 +160,10 @@ export class ExplorerOpeningBookPanelComponent implements OnDestroy {
 		}
 
 		this.facade.attemptMove(attempt);
+	}
+
+	onMoveHovered(move: OpeningBookMove | null): void {
+		this.boardArrows.setHoveredArrow('opening-book', move?.uci ?? null);
 	}
 
 	trackByMove(_index: number, move: OpeningBookMove): string {
@@ -286,6 +322,52 @@ export class ExplorerOpeningBookPanelComponent implements OnDestroy {
 			default:
 				return `Opening book unavailable.${details}`;
 		}
+	}
+
+	private buildBoardArrows(moves: OpeningBookMove[]): ExplorerBoardArrow[] {
+		const arrows: ExplorerBoardArrow[] = [];
+
+		const totalGames = moves.reduce((sum, move) => sum + move.outcomes.total, 0);
+
+		for (let index = 0; index < moves.length; index++) {
+			const move = moves[index];
+			const parsed = this.parseArrowSquaresFromUci(move.uci);
+
+			if (!parsed) {
+				continue;
+			}
+
+			const weight = totalGames > 0 ? (move.outcomes.total / totalGames) * 100 : 0;
+
+			arrows.push({
+				source: 'opening-book',
+				from: parsed.from,
+				to: parsed.to,
+				uci: move.uci,
+				label: move.san,
+				rank: index + 1,
+				weight,
+			});
+		}
+
+		return arrows;
+	}
+
+	private parseArrowSquaresFromUci(uci: string): { from: string; to: string } | null {
+		const normalized = typeof uci === 'string' ? uci.trim().toLowerCase() : '';
+
+		if (!/^[a-h][1-8][a-h][1-8][qrbn]?$/.test(normalized)) {
+			return null;
+		}
+
+		return {
+			from: normalized.slice(0, 2),
+			to: normalized.slice(2, 4),
+		};
+	}
+
+	private isArrowMode(mode: string): mode is 'off' | 'top3' | 'top5' | 'all' {
+		return mode === 'off' || mode === 'top3' || mode === 'top5' || mode === 'all';
 	}
 
 	/**

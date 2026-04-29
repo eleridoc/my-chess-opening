@@ -35,6 +35,7 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 - Added Opening Book move statistics with games count, White / Draw / Black ratio bar, average rating and opening name.
 - Added clickable Opening Book moves to play a suggested move directly from the Explorer tab.
 - Added `.env.example` documentation for local Lichess token configuration.
+- Added Opening Book board arrows in the Explorer with persisted `off / 3 / 5 / 10` display modes, row hover highlighting, and automatic source switching between Opening Book and My next moves arrows.
 
 ### Changed
 
@@ -42,12 +43,15 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 - Updated Lichess database requests to use default speed and rating filters.
 - Improved Opening Book request diagnostics with Electron-side fetch logs.
 - Kept the Opening Book tab directly inside the existing Explorer tab layout.
+- Updated the Explorer Opening Book tab to refresh automatically when the current Explorer position or source changes.
+- Moved the Opening Book current-position summary into a fixed footer row matching the My next moves table pattern.
 
 ### Fixed
 
 - Fixed Opening Book requests failing with HTTP `401` by sending a Bearer token when configured.
 - Fixed generic remote error handling by mapping authentication failures to a dedicated `AUTH_REQUIRED` error code.
 - Prevented local environment files and secrets from being committed.
+- Removed the stale-position manual refresh message from the Opening Book tab.
 
 ## [1.13.6] - 2026-04-28
 

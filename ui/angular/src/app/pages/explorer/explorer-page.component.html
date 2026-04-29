@@ -5,7 +5,11 @@
 			<app-explorer-game-info-panel [facade]="facade"></app-explorer-game-info-panel>
 
 			<div class="explorer-left-tabs">
-				<mat-tab-group mat-stretch-tabs="false" mat-align-tabs="end">
+				<mat-tab-group
+					mat-stretch-tabs="false"
+					mat-align-tabs="end"
+					(selectedIndexChange)="onLeftTabIndexChanged($event)"
+				>
 					<mat-tab>
 						<ng-template mat-tab-label>
 							<span

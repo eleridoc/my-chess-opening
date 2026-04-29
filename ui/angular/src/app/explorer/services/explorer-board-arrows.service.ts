@@ -18,7 +18,7 @@ function loadStoredArrowMode(source: ExplorerBoardArrowSource): ExplorerBoardArr
 		// Ignore storage errors.
 	}
 
-	return source === 'my-next-moves' ? 'top3' : 'off';
+	return source === 'stockfish' ? 'off' : 'top3';
 }
 
 @Injectable({ providedIn: 'root' })
@@ -104,6 +104,10 @@ export class ExplorerBoardArrowsService {
 			[source]: mode,
 		}));
 
+		if (mode !== 'off') {
+			this.setActiveSource(source);
+		}
+
 		try {
 			localStorage.setItem(`${STORAGE_KEY_PREFIX}${source}`, mode);
 		} catch {
@@ -138,6 +142,10 @@ export class ExplorerBoardArrowsService {
 	}
 
 	setHoveredArrow(source: ExplorerBoardArrowSource, uci: string | null): void {
+		if (uci) {
+			this.setActiveSource(source);
+		}
+
 		this.hoveredArrowUciState.update((current) => ({
 			...current,
 			[source]: uci,
