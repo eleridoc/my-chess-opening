@@ -185,7 +185,8 @@ function mapClientErrorCode(code: string): OpeningBookErrorCode {
 
 		case 'RATE_LIMITED':
 			return 'RATE_LIMITED';
-
+		case 'AUTH_REQUIRED':
+			return 'AUTH_REQUIRED';
 		case 'REMOTE_ERROR':
 		case 'UNEXPECTED_RESPONSE':
 			return 'REMOTE_ERROR';

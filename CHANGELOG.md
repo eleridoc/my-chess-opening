@@ -27,14 +27,27 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 - Added Electron-side Lichess Opening Explorer HTTP client for the upcoming external Opening Book feature.
 - Added Electron-side mapper from raw Lichess Opening Explorer responses to the internal Opening Book IPC contract.
 - Added Opening Book IPC handler, preload bridge and Angular service for external Explorer book requests.
+- Added the first Explorer Opening Book tab UI with Lichess database / Masters source selection and inline move statistics.
+- Added the first Explorer Opening Book tab UI with Lichess database and Masters source selection.
+- Added authenticated Lichess Opening Explorer requests through a local development token.
+- Added local development `.env.local` support for `LICHESS_OAUTH_TOKEN` / `LICHESS_API_TOKEN`.
+- Added Opening Book inline states for loading, empty results, stale position and remote errors.
+- Added Opening Book move statistics with games count, White / Draw / Black ratio bar, average rating and opening name.
+- Added clickable Opening Book moves to play a suggested move directly from the Explorer tab.
+- Added `.env.example` documentation for local Lichess token configuration.
 
 ### Changed
 
-- (placeholder)
+- Switched the Opening Book client to the official `https://explorer.lichess.org` host.
+- Updated Lichess database requests to use default speed and rating filters.
+- Improved Opening Book request diagnostics with Electron-side fetch logs.
+- Kept the Opening Book tab directly inside the existing Explorer tab layout.
 
 ### Fixed
 
-- (placeholder)
+- Fixed Opening Book requests failing with HTTP `401` by sending a Bearer token when configured.
+- Fixed generic remote error handling by mapping authentication failures to a dedicated `AUTH_REQUIRED` error code.
+- Prevented local environment files and secrets from being committed.
 
 ## [1.13.6] - 2026-04-28
 

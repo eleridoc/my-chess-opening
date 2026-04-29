@@ -138,6 +138,7 @@ export interface OpeningBookGetMovesSuccess {
  */
 export type OpeningBookErrorCode =
 	| 'INVALID_INPUT'
+	| 'AUTH_REQUIRED'
 	| 'NETWORK_ERROR'
 	| 'TIMEOUT'
 	| 'RATE_LIMITED'

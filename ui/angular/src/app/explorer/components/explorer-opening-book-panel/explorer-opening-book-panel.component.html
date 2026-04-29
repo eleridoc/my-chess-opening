@@ -1,0 +1,202 @@
+<div class="app-card-flat explorer-opening-book-panel">
+	<div class="app-card-flat-top explorer-opening-book-panel__header">
+		<span>Opening book</span>
+
+		<div class="explorer-opening-book-panel__header-actions">
+			<div class="app-density--5">
+				<mat-form-field
+					appearance="outline"
+					subscriptSizing="dynamic"
+					class="explorer-opening-book-panel__source-field"
+				>
+					<mat-select
+						[value]="selectedSource()"
+						(selectionChange)="setSource($event.value)"
+						aria-label="Opening book source"
+					>
+						<mat-option *ngFor="let option of sourceOptions" [value]="option.value">
+							{{ option.label }}
+						</mat-option>
+					</mat-select>
+				</mat-form-field>
+			</div>
+
+			<button
+				type="button"
+				mat-stroked-button
+				class="mat-stroked-button-d-5 explorer-opening-book-panel__refresh-button"
+				(click)="refreshCurrentPosition()"
+				[disabled]="isLoading()"
+				matTooltip="Reload opening book for the current position"
+			>
+				<mat-icon aria-hidden="true">refresh</mat-icon>
+			</button>
+		</div>
+	</div>
+
+	<div class="app-card-flat-content-fit explorer-opening-book-panel__content">
+		<app-section-loader [loading]="isLoading()" label="Loading opening book…" [mask]="true">
+			<div class="explorer-opening-book-panel__body">
+				<div class="explorer-opening-book-panel__stale" *ngIf="isStale()">
+					Position changed. Click refresh to load the book for the current position.
+				</div>
+
+				<ng-container *ngIf="loadError() as error; else openingBookContent">
+					<div class="explorer-opening-book-panel__error">
+						{{ error }}
+					</div>
+				</ng-container>
+
+				<ng-template #openingBookContent>
+					<ng-container *ngIf="result() as book; else emptyState">
+						<div class="explorer-opening-book-panel__summary">
+							<div class="explorer-opening-book-panel__summary-main">
+								<span class="explorer-opening-book-panel__summary-label">Current position</span>
+								<span class="explorer-opening-book-panel__summary-value">
+									{{ formatNumber(book.summary.outcomes.total) }} games
+								</span>
+							</div>
+
+							<div class="explorer-opening-book-panel__summary-opening">
+								{{ formatOpening(book.summary.opening) }}
+							</div>
+						</div>
+
+						<div
+							class="explorer-opening-book-panel__table"
+							role="table"
+							aria-label="Opening book moves"
+						>
+							<div class="explorer-opening-book-panel__head" role="row">
+								<div
+									class="explorer-opening-book-panel__cell explorer-opening-book-panel__cell--move"
+									role="columnheader"
+								>
+									Move
+								</div>
+
+								<div
+									class="explorer-opening-book-panel__cell explorer-opening-book-panel__cell--games"
+									role="columnheader"
+								>
+									Games
+								</div>
+
+								<div
+									class="explorer-opening-book-panel__cell explorer-opening-book-panel__cell--outcomes"
+									role="columnheader"
+								>
+									W / D / B
+								</div>
+
+								<div
+									class="explorer-opening-book-panel__cell explorer-opening-book-panel__cell--rating"
+									role="columnheader"
+								>
+									Avg
+								</div>
+
+								<div
+									class="explorer-opening-book-panel__cell explorer-opening-book-panel__cell--opening"
+									role="columnheader"
+								>
+									Opening
+								</div>
+							</div>
+
+							<div class="explorer-opening-book-panel__rows" role="rowgroup">
+								<ng-container *ngIf="book.moves.length > 0; else noMoves">
+									<div
+										class="explorer-opening-book-panel__row"
+										role="button"
+										tabindex="0"
+										*ngFor="let move of book.moves; trackBy: trackByMove"
+										(click)="onMoveSelected(move)"
+										(keydown.enter)="onMoveSelected(move)"
+										(keydown.space)="onMoveSelected(move); $event.preventDefault()"
+										[attr.aria-label]="'Play book move ' + move.san"
+									>
+										<div
+											class="explorer-opening-book-panel__cell explorer-opening-book-panel__cell--move explorer-opening-book-panel__move"
+											role="cell"
+										>
+											{{ move.san }}
+										</div>
+
+										<div
+											class="explorer-opening-book-panel__cell explorer-opening-book-panel__cell--games explorer-opening-book-panel__games"
+											role="cell"
+										>
+											{{ formatNumber(move.outcomes.total) }}
+										</div>
+
+										<div
+											class="explorer-opening-book-panel__cell explorer-opening-book-panel__cell--outcomes"
+											role="cell"
+										>
+											<div class="explorer-opening-book-panel__outcomes-bar" aria-hidden="true">
+												<div
+													class="explorer-opening-book-panel__outcomes-segment explorer-opening-book-panel__outcomes-segment--white"
+													[style.width.%]="clampPercent(move.outcomes.whitePercent)"
+												>
+													<span *ngIf="shouldShowOutcomeLabel(move.outcomes.whitePercent)">
+														{{ formatPercent(move.outcomes.whitePercent) }}
+													</span>
+												</div>
+
+												<div
+													class="explorer-opening-book-panel__outcomes-segment explorer-opening-book-panel__outcomes-segment--draw"
+													[style.width.%]="clampPercent(move.outcomes.drawPercent)"
+												>
+													<span *ngIf="shouldShowOutcomeLabel(move.outcomes.drawPercent)">
+														{{ formatPercent(move.outcomes.drawPercent) }}
+													</span>
+												</div>
+
+												<div
+													class="explorer-opening-book-panel__outcomes-segment explorer-opening-book-panel__outcomes-segment--black"
+													[style.width.%]="clampPercent(move.outcomes.blackPercent)"
+												>
+													<span *ngIf="shouldShowOutcomeLabel(move.outcomes.blackPercent)">
+														{{ formatPercent(move.outcomes.blackPercent) }}
+													</span>
+												</div>
+											</div>
+										</div>
+
+										<div
+											class="explorer-opening-book-panel__cell explorer-opening-book-panel__cell--rating explorer-opening-book-panel__rating"
+											role="cell"
+										>
+											{{ formatAverageRating(move.averageRating) }}
+										</div>
+
+										<div
+											class="explorer-opening-book-panel__cell explorer-opening-book-panel__cell--opening explorer-opening-book-panel__opening"
+											role="cell"
+											[matTooltip]="formatOpening(move.opening)"
+										>
+											{{ formatOpening(move.opening) }}
+										</div>
+									</div>
+								</ng-container>
+
+								<ng-template #noMoves>
+									<div class="explorer-opening-book-panel__empty">
+										No book moves found for this position.
+									</div>
+								</ng-template>
+							</div>
+						</div>
+					</ng-container>
+				</ng-template>
+
+				<ng-template #emptyState>
+					<div class="explorer-opening-book-panel__placeholder">
+						Opening book moves will appear here for the current position.
+					</div>
+				</ng-template>
+			</div>
+		</app-section-loader>
+	</div>
+</div>

@@ -36,6 +36,7 @@ import {
 } from '../../shared/dialogs/confirm-dialog/confirm-dialog.component';
 import { ExplorerNavigationShortcutsDirective } from './explorer-navigation-shortcuts.directive';
 import { ExplorerMyNextMovesPanelComponent } from '../../explorer/components/explorer-my-next-moves-panel/explorer-my-next-moves-panel.component';
+import { ExplorerOpeningBookPanelComponent } from '../../explorer/components/explorer-opening-book-panel/explorer-opening-book-panel.component';
 import { ExplorerBoardArrowsService } from '../../explorer/services/explorer-board-arrows.service';
 import { ExplorerPositionExportDialogService } from '../../explorer/services/explorer-position-export-dialog.service';
 
@@ -59,6 +60,7 @@ type ResetReason = 'DB_LOAD' | 'PGN_IMPORT' | 'FEN_IMPORT';
 		MatDialogModule,
 		MatTooltipModule,
 		ExplorerMyNextMovesPanelComponent,
+		ExplorerOpeningBookPanelComponent,
 	],
 	templateUrl: './explorer-page.component.html',
 	styleUrl: './explorer-page.component.scss',

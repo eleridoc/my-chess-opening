@@ -215,6 +215,11 @@
 	display: flex;
 }
 
+:host ::ng-deep .explorer-left-tabs .mat-mdc-tab-body-content > app-explorer-opening-book-panel {
+	flex: 1 1 auto;
+	min-height: 0;
+	display: flex;
+}
 /* ---------------------------------------------------------------------------
    Board centering / sizing
    --------------------------------------------------------------------------- */

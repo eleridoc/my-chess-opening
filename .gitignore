@@ -44,12 +44,6 @@ __screenshots__/
 # --- Prisma / SQLite ---
 electron/prisma/dev.db
 
-
-# --- Environments ---
-.env
-*.env
-electron/.env
-
 # --- IDEs / Editors ---
 .vscode/
 .idea/
@@ -80,3 +74,16 @@ release/
 
 # --- Generated release notes ---
 RELEASE_NOTES.md
+
+
+# --- Environments / local secrets ---
+.env
+.env.*
+*.env
+*.local.env
+*.secret
+*.secrets
+electron/.env
+electron/.env.*
+!.env.example
+!electron/.env.example
