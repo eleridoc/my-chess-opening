@@ -4,13 +4,12 @@ import {
 	Component,
 	OnDestroy,
 	computed,
+	effect,
 	inject,
 	signal,
 } from '@angular/core';
 
-import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
@@ -34,25 +33,23 @@ interface OpeningBookSourceOption {
 /**
  * Explorer panel dedicated to the external Opening Book feature.
  *
- * V1.14.5 scope:
- * - render inside the Explorer left tab group
- * - load the current Explorer FEN on demand
- * - allow switching between Lichess database and Masters database
- * - render move statistics in a compact table
+ * Responsibilities:
+ * - react to the current Explorer position
+ * - load external opening book data with a small debounce
+ * - render candidate moves and current-position summary
+ * - keep errors inline because this feature depends on an external service
  *
  * Notes:
  * - Board arrows are intentionally not handled here yet.
- * - Automatic debounced synchronization is planned in a later task.
- * - Errors stay inline because this feature depends on an external service.
+ * - The current-position summary is rendered as a fixed footer row, matching
+ *   the "My next moves" visual pattern.
  */
 @Component({
 	selector: 'app-explorer-opening-book-panel',
 	standalone: true,
 	imports: [
 		CommonModule,
-		MatButtonModule,
 		MatFormFieldModule,
-		MatIconModule,
 		MatSelectModule,
 		MatTooltipModule,
 		SectionLoaderComponent,
@@ -68,9 +65,17 @@ export class ExplorerOpeningBookPanelComponent implements OnDestroy {
 	private readonly numberFormatter = new Intl.NumberFormat();
 
 	/**
+	 * Keep external calls slightly delayed while the user navigates quickly
+	 * through moves.
+	 */
+	private readonly autoRefreshDebounceMs = 400;
+
+	/**
 	 * Last-wins token used to ignore obsolete async responses.
 	 */
 	private loadSeq = 0;
+
+	private refreshTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
 	readonly sourceOptions: OpeningBookSourceOption[] = [
 		{ value: 'lichess', label: 'Lichess database' },
@@ -85,23 +90,20 @@ export class ExplorerOpeningBookPanelComponent implements OnDestroy {
 
 	readonly loadError = signal<string | null>(null);
 
-	readonly lastLoadedFen = signal<string | null>(null);
-
 	readonly currentFen = computed(() => (this.facade.fen() ?? '').trim());
 
-	readonly isStale = computed(() => {
-		const loadedFen = this.lastLoadedFen();
-		const currentFen = this.currentFen();
-
-		return Boolean(loadedFen && currentFen && loadedFen !== currentFen);
-	});
-
 	constructor() {
-		// Initial load for the current Explorer position.
-		void this.refreshCurrentPosition();
+		effect(() => {
+			const source = this.selectedSource();
+			const fen = this.currentFen();
+
+			this.scheduleAutoRefresh(source, fen);
+		});
 	}
 
 	ngOnDestroy(): void {
+		this.cancelScheduledRefresh();
+
 		// Invalidate any pending async response.
 		this.loadSeq++;
 	}
@@ -111,21 +113,11 @@ export class ExplorerOpeningBookPanelComponent implements OnDestroy {
 			return;
 		}
 
-		this.selectedSource.set(source);
-		void this.refreshCurrentPosition();
-	}
-
-	refreshCurrentPosition(): void {
-		const fen = this.currentFen();
-
-		if (!fen) {
-			this.result.set(null);
-			this.lastLoadedFen.set(null);
-			this.loadError.set('No position is currently available.');
+		if (this.selectedSource() === source) {
 			return;
 		}
 
-		void this.loadOpeningBook(this.selectedSource(), fen);
+		this.selectedSource.set(source);
 	}
 
 	onMoveSelected(move: OpeningBookMove): void {
@@ -186,9 +178,43 @@ export class ExplorerOpeningBookPanelComponent implements OnDestroy {
 		return this.clampPercent(value) >= 14;
 	}
 
-	private async loadOpeningBook(source: OpeningBookSource, fen: string): Promise<void> {
-		const seq = ++this.loadSeq;
+	/**
+	 * Schedule automatic refresh when the Explorer position or book source
+	 * changes.
+	 *
+	 * Signal writes are intentionally performed inside the timer callback, not
+	 * directly inside the Angular effect.
+	 */
+	private scheduleAutoRefresh(source: OpeningBookSource, fen: string): void {
+		this.cancelScheduledRefresh();
 
+		const seq = ++this.loadSeq;
+		const normalizedFen = fen.trim();
+		const delayMs = normalizedFen ? this.autoRefreshDebounceMs : 0;
+
+		this.refreshTimeoutId = setTimeout(() => {
+			this.refreshTimeoutId = null;
+
+			if (seq !== this.loadSeq) {
+				return;
+			}
+
+			if (!normalizedFen) {
+				this.result.set(null);
+				this.isLoading.set(false);
+				this.loadError.set('No position is currently available.');
+				return;
+			}
+
+			void this.loadOpeningBook(source, normalizedFen, seq);
+		}, delayMs);
+	}
+
+	private async loadOpeningBook(
+		source: OpeningBookSource,
+		fen: string,
+		seq: number,
+	): Promise<void> {
 		this.isLoading.set(true);
 		this.loadError.set(null);
 
@@ -205,13 +231,11 @@ export class ExplorerOpeningBookPanelComponent implements OnDestroy {
 
 			if (!response.ok) {
 				this.result.set(null);
-				this.lastLoadedFen.set(fen);
 				this.loadError.set(this.getErrorLabel(response.error.code, response.error.message));
 				return;
 			}
 
 			this.result.set(response);
-			this.lastLoadedFen.set(response.fen);
 		} catch (error) {
 			if (seq !== this.loadSeq) {
 				return;
@@ -220,7 +244,6 @@ export class ExplorerOpeningBookPanelComponent implements OnDestroy {
 			console.error('[ExplorerOpeningBookPanel] Failed to load opening book:', error);
 
 			this.result.set(null);
-			this.lastLoadedFen.set(fen);
 			this.loadError.set('Opening book unavailable.');
 		} finally {
 			if (seq === this.loadSeq) {
@@ -229,12 +252,24 @@ export class ExplorerOpeningBookPanelComponent implements OnDestroy {
 		}
 	}
 
+	private cancelScheduledRefresh(): void {
+		if (!this.refreshTimeoutId) {
+			return;
+		}
+
+		clearTimeout(this.refreshTimeoutId);
+		this.refreshTimeoutId = null;
+	}
+
 	private getErrorLabel(code: string, message?: string): string {
 		const details = message ? ` ${message}` : '';
 
 		switch (code) {
 			case 'INVALID_INPUT':
 				return `Invalid opening book request.${details}`;
+
+			case 'AUTH_REQUIRED':
+				return `Lichess authentication is required to use the Opening Explorer.${details}`;
 
 			case 'RATE_LIMITED':
 				return `Too many requests to Lichess. Try again later.${details}`;
@@ -247,9 +282,6 @@ export class ExplorerOpeningBookPanelComponent implements OnDestroy {
 
 			case 'REMOTE_ERROR':
 				return `Opening book remote service returned an error.${details}`;
-
-			case 'AUTH_REQUIRED':
-				return `Lichess authentication is required to use the Opening Explorer.${details}`;
 
 			default:
 				return `Opening book unavailable.${details}`;
