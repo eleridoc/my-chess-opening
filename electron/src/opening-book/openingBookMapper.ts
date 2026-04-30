@@ -20,6 +20,8 @@ import type {
 	LichessOpeningExplorerResponse,
 } from './lichessOpeningExplorerClient';
 
+type OpeningBookSideToMove = 'w' | 'b';
+
 /**
  * Map the raw Lichess Opening Explorer response to the stable internal IPC contract.
  */
@@ -37,7 +39,7 @@ export function mapLichessOpeningExplorerResponseToOpeningBookResult(
 		fen,
 		maxMoves,
 		summary: mapSummary(response),
-		moves: mapMoves(response.moves),
+		moves: mapMoves(fen, response.moves),
 	};
 }
 
@@ -73,20 +75,25 @@ function mapSummary(response: LichessOpeningExplorerResponse): OpeningBookSummar
 	};
 }
 
-function mapMoves(moves: LichessOpeningExplorerMove[] | undefined): OpeningBookMove[] {
+function mapMoves(fen: string, moves: LichessOpeningExplorerMove[] | undefined): OpeningBookMove[] {
 	if (!Array.isArray(moves)) {
 		return [];
 	}
 
+	const sideToMove = getSideToMoveFromFen(fen);
+
 	return moves
-		.map(mapMove)
+		.map((move) => mapMove(move, sideToMove))
 		.filter((move): move is OpeningBookMove => move !== null)
 		.sort(compareOpeningBookMoves);
 }
 
-function mapMove(move: LichessOpeningExplorerMove): OpeningBookMove | null {
-	const uci = normalizeText(move.uci);
+function mapMove(
+	move: LichessOpeningExplorerMove,
+	sideToMove: OpeningBookSideToMove | null,
+): OpeningBookMove | null {
 	const san = normalizeText(move.san);
+	const uci = normalizeOpeningBookMoveUci(move.uci, san, sideToMove);
 
 	if (uci.length === 0 || san.length === 0) {
 		return null;
@@ -99,6 +106,42 @@ function mapMove(move: LichessOpeningExplorerMove): OpeningBookMove | null {
 		averageRating: normalizeNullableNumber(move.averageRating),
 		opening: mapOpening(move.opening),
 	};
+}
+
+function normalizeOpeningBookMoveUci(
+	rawUci: unknown,
+	san: string,
+	sideToMove: OpeningBookSideToMove | null,
+): string {
+	const normalizedSan = normalizeCastleSan(san);
+
+	if (sideToMove && normalizedSan === 'O-O') {
+		return sideToMove === 'w' ? 'e1g1' : 'e8g8';
+	}
+
+	if (sideToMove && normalizedSan === 'O-O-O') {
+		return sideToMove === 'w' ? 'e1c1' : 'e8c8';
+	}
+
+	return normalizeText(rawUci).toLowerCase();
+}
+
+function normalizeCastleSan(san: string): string {
+	return san
+		.trim()
+		.replace(/0/g, 'O')
+		.replace(/[+#?!]+$/g, '');
+}
+
+function getSideToMoveFromFen(fen: string): OpeningBookSideToMove | null {
+	const parts = normalizeText(fen).split(/\s+/);
+	const side = parts[1];
+
+	if (side === 'w' || side === 'b') {
+		return side;
+	}
+
+	return null;
 }
 
 function mapOpening(

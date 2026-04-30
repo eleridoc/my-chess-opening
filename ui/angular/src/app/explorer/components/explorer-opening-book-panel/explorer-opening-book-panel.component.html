@@ -51,16 +51,29 @@
 					<div class="explorer-opening-book-panel__error">
 						<p>{{ error }}</p>
 
-						<button
-							*ngIf="isLichessAuthError()"
-							mat-stroked-button
-							class="mat-stroked-button-d-5"
-							type="button"
-							(click)="openLichessSettings()"
-						>
-							<mat-icon aria-hidden="true">settings</mat-icon>
-							<span>Configure Lichess token</span>
-						</button>
+						<div class="explorer-opening-book-panel__error-actions">
+							<button
+								*ngIf="isLichessAuthError()"
+								mat-stroked-button
+								class="mat-stroked-button-d-5"
+								type="button"
+								(click)="openLichessSettings()"
+							>
+								<mat-icon aria-hidden="true">settings</mat-icon>
+								<span>Configure Lichess token</span>
+							</button>
+
+							<button
+								*ngIf="isTransientOpeningBookError()"
+								mat-stroked-button
+								class="mat-stroked-button-d-5"
+								type="button"
+								(click)="retryLoadOpeningBook()"
+							>
+								<mat-icon aria-hidden="true">refresh</mat-icon>
+								<span>Retry</span>
+							</button>
+						</div>
 					</div>
 				</ng-container>
 

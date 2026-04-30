@@ -37,6 +37,8 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 - Added `.env.example` documentation for local Lichess token configuration.
 - Added Opening Book board arrows in the Explorer with persisted `off / 3 / 5 / 10` display modes, row hover highlighting, and automatic source switching between Opening Book and My next moves arrows.
 - Added Electron-side Opening Book cache and rate-limit protection with in-flight request reuse, short-lived successful-result caching, serialized remote calls, and local cooldown after Lichess `429` responses.
+- Added a Settings > Lichess integration screen to configure a personal Lichess token for the Explorer Opening Book, with external browser links, secure Electron-side storage, token testing, token removal, and inline Opening Book guidance when authentication is missing.
+- Polished Explorer Opening Book final UX by improving transient error actions, cleaning development-only token fallback/logs, and using shared date formatting for Lichess token status.
 
 ### Changed
 
@@ -53,6 +55,8 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 - Fixed generic remote error handling by mapping authentication failures to a dedicated `AUTH_REQUIRED` error code.
 - Prevented local environment files and secrets from being committed.
 - Removed the stale-position manual refresh message from the Opening Book tab.
+- Fixed light-theme zebra rows and hover states for Explorer move tables.
+- Fixed Opening Book castling moves from Lichess by normalizing `O-O` and `O-O-O` to the Explorer internal king-move UCI format.
 
 ## [1.13.6] - 2026-04-28
 

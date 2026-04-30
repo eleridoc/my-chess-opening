@@ -1,6 +1,3 @@
-import { existsSync, readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
-
 import type { OpeningBookSource } from 'my-chess-opening-core';
 
 export const LICHESS_OPENING_EXPLORER_BASE_URL = 'https://explorer.lichess.org';
@@ -11,11 +8,6 @@ export const LICHESS_OPENING_EXPLORER_MAX_MAX_MOVES = 50;
 
 const LICHESS_OPENING_EXPLORER_DEFAULT_SPEEDS = ['blitz', 'rapid', 'classical'] as const;
 const LICHESS_OPENING_EXPLORER_DEFAULT_RATINGS = [1600, 1800, 2000, 2200, 2500] as const;
-
-const LICHESS_OPENING_EXPLORER_TOKEN_ENV_NAMES = [
-	'LICHESS_OAUTH_TOKEN',
-	'LICHESS_API_TOKEN',
-] as const;
 
 export interface LichessOpeningExplorerClientInput {
 	source: OpeningBookSource;
@@ -30,12 +22,10 @@ export interface LichessOpeningExplorerClientOptions {
 	/**
 	 * Optional Lichess OAuth/API token.
 	 *
-	 * In development, this can be provided through:
-	 * - LICHESS_OAUTH_TOKEN
-	 * - LICHESS_API_TOKEN
-	 * - a local .env.local file
-	 *
-	 * A proper user-facing OAuth flow can be added later.
+	 * Security:
+	 * - the token must be resolved by Electron-side auth/storage services
+	 * - this client does not read environment files or renderer storage
+	 * - the token must never be exposed back to Angular
 	 */
 	accessToken?: string | null;
 }
@@ -102,10 +92,6 @@ export async function fetchLichessOpeningExplorer(
 	const url = buildLichessOpeningExplorerUrl(input, options);
 	const timeoutMs = normalizeTimeoutMs(options.timeoutMs);
 	const accessToken = normalizeAccessToken(options.accessToken);
-
-	console.debug(
-		`[OpeningBook] Fetching ${url} (${accessToken ? 'token configured' : 'no token configured'})`,
-	);
 
 	const controller = new AbortController();
 	const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -338,127 +324,6 @@ function buildRequestHeaders(accessToken: string | null): Headers {
 	}
 
 	return headers;
-}
-
-function resolveLichessOpeningExplorerAccessToken(): string | null {
-	for (const envName of LICHESS_OPENING_EXPLORER_TOKEN_ENV_NAMES) {
-		const fromProcessEnv = normalizeAccessToken(process.env[envName]);
-
-		if (fromProcessEnv) {
-			return fromProcessEnv;
-		}
-	}
-
-	for (const envName of LICHESS_OPENING_EXPLORER_TOKEN_ENV_NAMES) {
-		const fromLocalEnvFile = readLocalEnvValue(envName);
-
-		if (fromLocalEnvFile) {
-			return fromLocalEnvFile;
-		}
-	}
-
-	return null;
-}
-
-/**
- * Read a development-only .env file without adding a runtime dependency.
- *
- * Supported locations:
- * - project root: .env.local / .env
- * - electron workspace: electron/.env.local / electron/.env
- *
- * Environment variables already present in process.env always have priority.
- */
-function readLocalEnvValue(name: string): string | null {
-	for (const filePath of getLocalEnvFilePaths()) {
-		const value = readEnvFileValue(filePath, name);
-
-		if (value) {
-			return value;
-		}
-	}
-
-	return null;
-}
-
-function getLocalEnvFilePaths(): string[] {
-	const candidates = [
-		resolve(process.cwd(), '.env.local'),
-		resolve(process.cwd(), '.env'),
-		resolve(process.cwd(), 'electron/.env.local'),
-		resolve(process.cwd(), 'electron/.env'),
-		resolve(process.cwd(), '../.env.local'),
-		resolve(process.cwd(), '../.env'),
-	];
-
-	return Array.from(new Set(candidates));
-}
-
-function readEnvFileValue(filePath: string, name: string): string | null {
-	if (!existsSync(filePath)) {
-		return null;
-	}
-
-	try {
-		const content = readFileSync(filePath, 'utf8');
-
-		for (const line of content.split(/\r?\n/)) {
-			const parsed = parseEnvLine(line);
-
-			if (parsed?.name === name) {
-				return normalizeAccessToken(parsed.value);
-			}
-		}
-	} catch (error) {
-		console.warn(`[OpeningBook] Failed to read local env file ${filePath}:`, error);
-	}
-
-	return null;
-}
-
-function parseEnvLine(line: string): { name: string; value: string } | null {
-	const trimmed = line.trim();
-
-	if (!trimmed || trimmed.startsWith('#')) {
-		return null;
-	}
-
-	const normalized = trimmed.startsWith('export ')
-		? trimmed.slice('export '.length).trim()
-		: trimmed;
-	const separatorIndex = normalized.indexOf('=');
-
-	if (separatorIndex <= 0) {
-		return null;
-	}
-
-	const name = normalized.slice(0, separatorIndex).trim();
-	const value = parseEnvValue(normalized.slice(separatorIndex + 1));
-
-	if (!name) {
-		return null;
-	}
-
-	return { name, value };
-}
-
-function parseEnvValue(rawValue: string): string {
-	let value = rawValue.trim();
-
-	if (
-		(value.startsWith('"') && value.endsWith('"')) ||
-		(value.startsWith("'") && value.endsWith("'"))
-	) {
-		value = value.slice(1, -1);
-	} else {
-		const commentIndex = value.search(/\s+#/);
-
-		if (commentIndex >= 0) {
-			value = value.slice(0, commentIndex).trim();
-		}
-	}
-
-	return value;
 }
 
 function normalizeAccessToken(value: unknown): string | null {

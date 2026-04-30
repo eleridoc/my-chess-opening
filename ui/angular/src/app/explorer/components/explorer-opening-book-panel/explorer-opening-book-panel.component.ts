@@ -14,6 +14,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 import type {
+	OpeningBookErrorCode,
 	OpeningBookGetMovesSuccess,
 	OpeningBookMove,
 	OpeningBookOpeningInfo,
@@ -100,9 +101,21 @@ export class ExplorerOpeningBookPanelComponent implements OnDestroy {
 
 	readonly loadError = signal<string | null>(null);
 
-	readonly loadErrorCode = signal<string | null>(null);
+	readonly loadErrorCode = signal<OpeningBookErrorCode | null>(null);
 
 	readonly isLichessAuthError = computed(() => this.loadErrorCode() === 'AUTH_REQUIRED');
+
+	readonly isTransientOpeningBookError = computed(() => {
+		const code = this.loadErrorCode();
+
+		return (
+			code === 'NETWORK_ERROR' ||
+			code === 'TIMEOUT' ||
+			code === 'RATE_LIMITED' ||
+			code === 'REMOTE_ERROR' ||
+			code === 'UNEXPECTED_ERROR'
+		);
+	});
 
 	readonly currentFen = computed(() => (this.facade.fen() ?? '').trim());
 
@@ -219,6 +232,25 @@ export class ExplorerOpeningBookPanelComponent implements OnDestroy {
 		}
 
 		return Math.max(0, Math.min(100, value));
+	}
+
+	retryLoadOpeningBook(): void {
+		this.cancelScheduledRefresh();
+
+		const source = this.selectedSource();
+		const fen = this.currentFen().trim();
+
+		if (!fen) {
+			this.result.set(null);
+			this.isLoading.set(false);
+			this.loadErrorCode.set(null);
+			this.loadError.set('No position is currently available.');
+			return;
+		}
+
+		const seq = ++this.loadSeq;
+
+		void this.loadOpeningBook(source, fen, seq);
 	}
 
 	/**

@@ -96,6 +96,17 @@ body.theme-dark {
 	--app-surface-3: rgba(0, 0, 0, 0.18);
 	--app-surface-4: rgba(0, 0, 0, 0.22);
 
+	/* Explorer compact tables */
+	--app-explorer-table-border: rgba(255, 255, 255, 0.08);
+	--app-explorer-table-row-border: rgba(255, 255, 255, 0.05);
+	--app-explorer-table-row-odd-bg: rgba(255, 255, 255, 0.015);
+	--app-explorer-table-row-even-bg: rgba(255, 255, 255, 0.035);
+	--app-explorer-table-row-hover-bg: rgba(255, 255, 255, 0.05);
+	--app-explorer-table-row-focus-bg: rgba(255, 255, 255, 0.07);
+	--app-explorer-table-row-focus-ring: rgba(255, 255, 255, 0.18);
+	--app-explorer-table-footer-bg: rgba(255, 255, 255, 0.06);
+	--app-explorer-table-outcomes-bg: rgba(255, 255, 255, 0.08);
+
 	--app-primary-container: #2c3c52;
 	--app-on-primary-container: #c7dcff;
 
@@ -282,6 +293,25 @@ body.theme-light {
 	--app-surface-2: rgba(0, 0, 0, 0.05);
 	--app-surface-3: rgba(0, 0, 0, 0.08);
 	--app-surface-4: rgba(0, 0, 0, 0.1);
+
+	/* Explorer compact tables */
+	--app-explorer-table-border: var(--app-border);
+	--app-explorer-table-row-border: var(--app-sep);
+	--app-explorer-table-row-odd-bg: var(--app-card-bg);
+	--app-explorer-table-row-even-bg: var(--app-bg-plus-2);
+	--app-explorer-table-row-hover-bg: color-mix(
+		in oklab,
+		var(--app-primary) 13%,
+		var(--app-bg-less-2) 87%
+	);
+	--app-explorer-table-row-focus-bg: color-mix(
+		in oklab,
+		var(--app-primary) 17%,
+		var(--app-bg-less-2) 83%
+	);
+	--app-explorer-table-row-focus-ring: color-mix(in oklab, var(--app-primary) 45%, transparent);
+	--app-explorer-table-footer-bg: var(--app-panel-top-bg);
+	--app-explorer-table-outcomes-bg: rgba(0, 0, 0, 0.08);
 
 	/* Primary container (used for emphasis panels) */
 	--app-primary-container: #d7e2ff;

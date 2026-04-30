@@ -14,6 +14,23 @@
 						<ng-template mat-tab-label>
 							<span
 								class="app-tab-label-icon"
+								matTooltip="Opening book"
+								[matTooltipDisabled]="false"
+								aria-label="Opening book"
+							>
+								<mat-icon class="app-tab-icon" aria-hidden="true">menu_book</mat-icon>
+							</span>
+
+							<span class="app-sr-only">Opening book</span>
+						</ng-template>
+
+						<app-explorer-opening-book-panel />
+					</mat-tab>
+
+					<mat-tab>
+						<ng-template mat-tab-label>
+							<span
+								class="app-tab-label-icon"
 								matTooltip="Import"
 								[matTooltipDisabled]="false"
 								aria-label="Import"
@@ -33,23 +50,6 @@
 							(clearFenError)="facade.clearImportFenError()"
 							(clearPgnError)="facade.clearImportPgnError()"
 						/>
-					</mat-tab>
-
-					<mat-tab>
-						<ng-template mat-tab-label>
-							<span
-								class="app-tab-label-icon"
-								matTooltip="Opening book"
-								[matTooltipDisabled]="false"
-								aria-label="Opening book"
-							>
-								<mat-icon class="app-tab-icon" aria-hidden="true">menu_book</mat-icon>
-							</span>
-
-							<span class="app-sr-only">Opening book</span>
-						</ng-template>
-
-						<app-explorer-opening-book-panel />
 					</mat-tab>
 
 					<!-- <mat-tab disabled>
