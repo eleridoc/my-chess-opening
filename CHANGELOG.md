@@ -19,35 +19,33 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 
 - (placeholder)
 
-## [1.14] Unreleased
+## [1.14.11] 2026-04-30
 
 ### Added
 
-- Added shared Opening Book IPC contracts in `core` for the upcoming Explorer external opening book integration.
-- Added Electron-side Lichess Opening Explorer HTTP client for the upcoming external Opening Book feature.
+- Added shared Opening Book IPC contracts in `core` for the Explorer external opening book integration.
+- Added Electron-side Lichess Opening Explorer HTTP client for external Opening Book requests.
 - Added Electron-side mapper from raw Lichess Opening Explorer responses to the internal Opening Book IPC contract.
 - Added Opening Book IPC handler, preload bridge and Angular service for external Explorer book requests.
-- Added the first Explorer Opening Book tab UI with Lichess database / Masters source selection and inline move statistics.
-- Added the first Explorer Opening Book tab UI with Lichess database and Masters source selection.
-- Added authenticated Lichess Opening Explorer requests through a local development token.
-- Added local development `.env.local` support for `LICHESS_OAUTH_TOKEN` / `LICHESS_API_TOKEN`.
-- Added Opening Book inline states for loading, empty results, stale position and remote errors.
+- Added the Explorer Opening Book tab UI with Lichess database / Masters source selection and inline move statistics.
+- Added Opening Book inline states for loading, empty results, authentication errors and remote errors.
 - Added Opening Book move statistics with games count, White / Draw / Black ratio bar, average rating and opening name.
 - Added clickable Opening Book moves to play a suggested move directly from the Explorer tab.
-- Added `.env.example` documentation for local Lichess token configuration.
-- Added Opening Book board arrows in the Explorer with persisted `off / 3 / 5 / 10` display modes, row hover highlighting, and automatic source switching between Opening Book and My next moves arrows.
-- Added Electron-side Opening Book cache and rate-limit protection with in-flight request reuse, short-lived successful-result caching, serialized remote calls, and local cooldown after Lichess `429` responses.
-- Added a Settings > Lichess integration screen to configure a personal Lichess token for the Explorer Opening Book, with external browser links, secure Electron-side storage, token testing, token removal, and inline Opening Book guidance when authentication is missing.
-- Polished Explorer Opening Book final UX by improving transient error actions, cleaning development-only token fallback/logs, and using shared date formatting for Lichess token status.
+- Added automatic Opening Book refresh when the current Explorer position or source changes.
+- Added a fixed Opening Book current-position summary row matching the My next moves table pattern.
+- Added Opening Book board arrows in the Explorer with persisted `off / 3 / 5 / 10` display modes, row hover highlighting and automatic source switching between Opening Book and My next moves arrows.
+- Added Electron-side Opening Book cache and rate-limit protection with in-flight request reuse, short-lived successful-result caching, serialized remote calls and local cooldown after Lichess `429` responses.
+- Added a Settings > Lichess integration screen to configure a personal Lichess token for the Explorer Opening Book, with external browser links, secure Electron-side storage, token testing, token removal and inline Opening Book guidance when authentication is missing.
 
 ### Changed
 
 - Switched the Opening Book client to the official `https://explorer.lichess.org` host.
 - Updated Lichess database requests to use default speed and rating filters.
-- Improved Opening Book request diagnostics with Electron-side fetch logs.
 - Kept the Opening Book tab directly inside the existing Explorer tab layout.
-- Updated the Explorer Opening Book tab to refresh automatically when the current Explorer position or source changes.
-- Moved the Opening Book current-position summary into a fixed footer row matching the My next moves table pattern.
+- Replaced the temporary development-token setup with user-configurable secure Lichess token storage.
+- Improved Opening Book error UX with contextual authentication guidance and retry actions for transient remote errors.
+- Cleaned development-only Opening Book token fallback and temporary fetch/cache logs.
+- Updated Lichess token status display to use the shared date formatting pipe.
 
 ### Fixed
 
