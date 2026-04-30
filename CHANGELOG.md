@@ -36,6 +36,7 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 - Added clickable Opening Book moves to play a suggested move directly from the Explorer tab.
 - Added `.env.example` documentation for local Lichess token configuration.
 - Added Opening Book board arrows in the Explorer with persisted `off / 3 / 5 / 10` display modes, row hover highlighting, and automatic source switching between Opening Book and My next moves arrows.
+- Added Electron-side Opening Book cache and rate-limit protection with in-flight request reuse, short-lived successful-result caching, serialized remote calls, and local cooldown after Lichess `429` responses.
 
 ### Changed
 

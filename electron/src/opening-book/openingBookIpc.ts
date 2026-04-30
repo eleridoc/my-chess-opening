@@ -6,23 +6,17 @@ import type {
 	OpeningBookSource,
 } from 'my-chess-opening-core';
 
-import {
-	fetchLichessOpeningExplorer,
-	LichessOpeningExplorerClientError,
-} from './lichessOpeningExplorerClient';
-
-import {
-	mapLichessOpeningExplorerErrorToOpeningBookResult,
-	mapLichessOpeningExplorerResponseToOpeningBookResult,
-} from './openingBookMapper';
+import { LichessOpeningExplorerClientError } from './lichessOpeningExplorerClient';
+import { getOpeningBookMovesWithCache } from './openingBookQueryService';
+import { mapLichessOpeningExplorerErrorToOpeningBookResult } from './openingBookMapper';
 
 /**
  * Register IPC handlers for the Explorer external Opening Book feature.
  *
- * V1.14.4 scope:
- * - expose a first `opening-book:getMoves` endpoint
- * - call the Lichess Opening Explorer client
- * - map the raw external response to the stable internal IPC contract
+ * V1.14.8 scope:
+ * - expose `opening-book:getMoves`
+ * - normalize and validate renderer input
+ * - delegate remote calls to the cached Opening Book query service
  * - return structured `ok: false` results for expected failures
  */
 export function registerOpeningBookIpc(): void {
@@ -31,12 +25,8 @@ export function registerOpeningBookIpc(): void {
 		async (_event, input?: OpeningBookGetMovesInput): Promise<OpeningBookGetMovesResult> => {
 			try {
 				const normalizedInput = normalizeOpeningBookGetMovesInput(input);
-				const response = await fetchLichessOpeningExplorer(normalizedInput);
 
-				return mapLichessOpeningExplorerResponseToOpeningBookResult(
-					normalizedInput,
-					response,
-				);
+				return await getOpeningBookMovesWithCache(normalizedInput);
 			} catch (error) {
 				return mapLichessOpeningExplorerErrorToOpeningBookResult(error);
 			}

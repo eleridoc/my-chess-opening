@@ -81,6 +81,7 @@ export class LichessOpeningExplorerClientError extends Error {
 		public readonly code: LichessOpeningExplorerClientErrorCode,
 		message: string,
 		public readonly statusCode: number | null = null,
+		public readonly retryAfterMs: number | null = null,
 	) {
 		super(message);
 		this.name = 'LichessOpeningExplorerClientError';
@@ -103,7 +104,7 @@ export async function fetchLichessOpeningExplorer(
 		options.accessToken ?? resolveLichessOpeningExplorerAccessToken(),
 	);
 
-	console.info(
+	console.debug(
 		`[OpeningBook] Fetching ${url} (${accessToken ? 'token configured' : 'no token configured'})`,
 	);
 
@@ -249,6 +250,7 @@ async function buildHttpError(
 ): Promise<LichessOpeningExplorerClientError> {
 	const bodyPreview = await readBodyPreview(response);
 	const suffix = bodyPreview ? ` Body: ${bodyPreview}` : '';
+	const retryAfterMs = parseRetryAfterMs(response.headers.get('Retry-After'));
 
 	console.warn(
 		`[OpeningBook] Lichess Opening Explorer returned HTTP ${response.status} for ${url}.${suffix}`,
@@ -263,10 +265,13 @@ async function buildHttpError(
 	}
 
 	if (response.status === 429) {
+		const retrySuffix = retryAfterMs ? ` Retry after ${formatRetryAfter(retryAfterMs)}.` : '';
+
 		return new LichessOpeningExplorerClientError(
 			'RATE_LIMITED',
-			`Lichess Opening Explorer rate limit exceeded. HTTP ${response.status}.${suffix}`,
+			`Lichess Opening Explorer rate limit exceeded. HTTP ${response.status}.${retrySuffix}${suffix}`,
 			response.status,
+			retryAfterMs,
 		);
 	}
 
@@ -275,6 +280,33 @@ async function buildHttpError(
 		`Lichess Opening Explorer returned HTTP ${response.status}.${suffix}`,
 		response.status,
 	);
+}
+
+function parseRetryAfterMs(value: string | null): number | null {
+	if (!value) {
+		return null;
+	}
+
+	const trimmed = value.trim();
+	const seconds = Number(trimmed);
+
+	if (Number.isFinite(seconds) && seconds >= 0) {
+		return Math.trunc(seconds * 1000);
+	}
+
+	const retryAt = Date.parse(trimmed);
+
+	if (!Number.isFinite(retryAt)) {
+		return null;
+	}
+
+	return Math.max(0, retryAt - Date.now());
+}
+
+function formatRetryAfter(ms: number): string {
+	const seconds = Math.max(1, Math.ceil(ms / 1000));
+
+	return seconds === 1 ? '1 second' : `${seconds} seconds`;
 }
 
 async function readJsonResponse(response: Response): Promise<LichessOpeningExplorerResponse> {
