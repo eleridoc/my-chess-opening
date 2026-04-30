@@ -125,6 +125,13 @@
 			}
 
 			@if (hasAccounts()) {
+				<button mat-menu-item routerLink="/settings">
+					<mat-icon aria-hidden="true">settings</mat-icon>
+					<span>Settings</span>
+				</button>
+			}
+
+			@if (hasAccounts()) {
 				<button mat-menu-item routerLink="/logs">
 					<mat-icon aria-hidden="true">receipt_long</mat-icon>
 					<span>Logs</span>

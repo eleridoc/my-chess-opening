@@ -27,6 +27,10 @@ import type { ExplorerBoardArrow } from '../../board/board-arrows.types';
 import { ExplorerFacade } from '../../facade/explorer.facade';
 import { ExplorerBoardArrowsService } from '../../services/explorer-board-arrows.service';
 
+import { Router } from '@angular/router';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+
 interface OpeningBookSourceOption {
 	value: OpeningBookSource;
 	label: string;
@@ -55,12 +59,15 @@ interface OpeningBookSourceOption {
 		MatSelectModule,
 		MatTooltipModule,
 		SectionLoaderComponent,
+		MatButtonModule,
+		MatIconModule,
 	],
 	templateUrl: './explorer-opening-book-panel.component.html',
 	styleUrl: './explorer-opening-book-panel.component.scss',
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ExplorerOpeningBookPanelComponent implements OnDestroy {
+	private readonly router = inject(Router);
 	private readonly facade = inject(ExplorerFacade);
 	private readonly openingBookService = inject(OpeningBookService);
 	private readonly boardArrows = inject(ExplorerBoardArrowsService);
@@ -93,6 +100,10 @@ export class ExplorerOpeningBookPanelComponent implements OnDestroy {
 
 	readonly loadError = signal<string | null>(null);
 
+	readonly loadErrorCode = signal<string | null>(null);
+
+	readonly isLichessAuthError = computed(() => this.loadErrorCode() === 'AUTH_REQUIRED');
+
 	readonly currentFen = computed(() => (this.facade.fen() ?? '').trim());
 
 	readonly currentArrowMode = computed(() => this.boardArrows.getArrowMode('opening-book'));
@@ -116,6 +127,10 @@ export class ExplorerOpeningBookPanelComponent implements OnDestroy {
 
 			this.boardArrows.setSourceArrows('opening-book', this.buildBoardArrows(book.moves));
 		});
+	}
+
+	async openLichessSettings(): Promise<void> {
+		await this.router.navigate(['/settings'], { fragment: 'lichess' });
 	}
 
 	ngOnDestroy(): void {
@@ -238,6 +253,7 @@ export class ExplorerOpeningBookPanelComponent implements OnDestroy {
 			if (!normalizedFen) {
 				this.result.set(null);
 				this.isLoading.set(false);
+				this.loadErrorCode.set(null);
 				this.loadError.set('No position is currently available.');
 				return;
 			}
@@ -253,6 +269,7 @@ export class ExplorerOpeningBookPanelComponent implements OnDestroy {
 	): Promise<void> {
 		this.isLoading.set(true);
 		this.loadError.set(null);
+		this.loadErrorCode.set(null);
 
 		try {
 			const response = await this.openingBookService.getMoves({
@@ -267,10 +284,12 @@ export class ExplorerOpeningBookPanelComponent implements OnDestroy {
 
 			if (!response.ok) {
 				this.result.set(null);
+				this.loadErrorCode.set(response.error.code);
 				this.loadError.set(this.getErrorLabel(response.error.code, response.error.message));
 				return;
 			}
 
+			this.loadErrorCode.set(null);
 			this.result.set(response);
 		} catch (error) {
 			if (seq !== this.loadSeq) {
@@ -279,6 +298,7 @@ export class ExplorerOpeningBookPanelComponent implements OnDestroy {
 
 			console.error('[ExplorerOpeningBookPanel] Failed to load opening book:', error);
 
+			this.loadErrorCode.set(null);
 			this.result.set(null);
 			this.loadError.set('Opening book unavailable.');
 		} finally {
@@ -305,7 +325,7 @@ export class ExplorerOpeningBookPanelComponent implements OnDestroy {
 				return `Invalid opening book request.${details}`;
 
 			case 'AUTH_REQUIRED':
-				return `Lichess authentication is required to use the Opening Explorer.${details}`;
+				return `A Lichess token is required to use the Opening Book.${details}`;
 
 			case 'RATE_LIMITED':
 				return `Too many requests to Lichess. Try again later.${details}`;
@@ -318,6 +338,9 @@ export class ExplorerOpeningBookPanelComponent implements OnDestroy {
 
 			case 'REMOTE_ERROR':
 				return `Opening book remote service returned an error.${details}`;
+
+			case 'SECURE_STORAGE_UNAVAILABLE':
+				return `Secure token storage is not available on this system.${details}`;
 
 			default:
 				return `Opening book unavailable.${details}`;

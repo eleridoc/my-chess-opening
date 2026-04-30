@@ -29,6 +29,11 @@ import type {
 	MyNextMovesResult,
 	OpeningBookGetMovesInput,
 	OpeningBookGetMovesResult,
+	OpeningBookLichessAuthStatusResult,
+	OpeningBookSaveLichessTokenInput,
+	OpeningBookSaveLichessTokenResult,
+	OpeningBookClearLichessTokenResult,
+	OpeningBookTestLichessTokenResult,
 } from 'my-chess-opening-core';
 
 /**
@@ -66,6 +71,10 @@ const CHANNELS = {
 	ACCOUNTS_SET_ENABLED: 'accounts:setEnabled',
 	ACCOUNTS_DELETE: 'accounts:delete',
 	ACCOUNTS_CREATE: 'accounts:create',
+	OPENING_BOOK_GET_LICHESS_AUTH_STATUS: 'opening-book:getLichessAuthStatus',
+	OPENING_BOOK_SAVE_LICHESS_TOKEN: 'opening-book:saveLichessToken',
+	OPENING_BOOK_CLEAR_LICHESS_TOKEN: 'opening-book:clearLichessToken',
+	OPENING_BOOK_TEST_LICHESS_TOKEN: 'opening-book:testLichessToken',
 } as const;
 
 /**
@@ -185,6 +194,23 @@ const api: ElectronApi = {
 	openingBook: {
 		getMoves: (input: OpeningBookGetMovesInput) =>
 			invoke<OpeningBookGetMovesResult>(CHANNELS.OPENING_BOOK_GET_MOVES, input),
+
+		getLichessAuthStatus: () =>
+			invoke<OpeningBookLichessAuthStatusResult>(
+				CHANNELS.OPENING_BOOK_GET_LICHESS_AUTH_STATUS,
+			),
+
+		saveLichessToken: (input: OpeningBookSaveLichessTokenInput) =>
+			invoke<OpeningBookSaveLichessTokenResult>(
+				CHANNELS.OPENING_BOOK_SAVE_LICHESS_TOKEN,
+				input,
+			),
+
+		clearLichessToken: () =>
+			invoke<OpeningBookClearLichessTokenResult>(CHANNELS.OPENING_BOOK_CLEAR_LICHESS_TOKEN),
+
+		testLichessToken: () =>
+			invoke<OpeningBookTestLichessTokenResult>(CHANNELS.OPENING_BOOK_TEST_LICHESS_TOKEN),
 	},
 };
 

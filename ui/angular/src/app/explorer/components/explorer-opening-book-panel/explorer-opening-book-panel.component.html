@@ -49,7 +49,18 @@
 			<div class="explorer-opening-book-panel__body">
 				<ng-container *ngIf="loadError() as error; else openingBookContent">
 					<div class="explorer-opening-book-panel__error">
-						{{ error }}
+						<p>{{ error }}</p>
+
+						<button
+							*ngIf="isLichessAuthError()"
+							mat-stroked-button
+							class="mat-stroked-button-d-5"
+							type="button"
+							(click)="openLichessSettings()"
+						>
+							<mat-icon aria-hidden="true">settings</mat-icon>
+							<span>Configure Lichess token</span>
+						</button>
 					</div>
 				</ng-container>
 

@@ -16,6 +16,8 @@ import {
 	mapLichessOpeningExplorerResponseToOpeningBookResult,
 } from './openingBookMapper';
 
+import { resolveLichessOpeningBookAccessToken } from './lichessOpeningExplorerAuth';
+
 const OPENING_BOOK_SUCCESS_CACHE_TTL_MS = 5 * 60 * 1000;
 const OPENING_BOOK_SUCCESS_CACHE_MAX_ENTRIES = 250;
 const OPENING_BOOK_REMOTE_MIN_INTERVAL_MS = 650;
@@ -48,6 +50,17 @@ let rateLimitedUntil = 0;
 export async function getOpeningBookMovesWithCache(
 	input: OpeningBookGetMovesInput,
 ): Promise<OpeningBookGetMovesResult> {
+	const accessToken = await resolveLichessOpeningBookAccessToken();
+
+	if (!accessToken) {
+		return mapLichessOpeningExplorerErrorToOpeningBookResult(
+			new LichessOpeningExplorerClientError(
+				'AUTH_REQUIRED',
+				'Lichess token is required to use the Opening Book.',
+			),
+		);
+	}
+
 	const normalizedInput = normalizeOpeningBookCacheInput(input);
 	const cacheKey = buildOpeningBookCacheKey(normalizedInput);
 	const cachedResult = readSuccessCache(cacheKey);
@@ -64,9 +77,11 @@ export async function getOpeningBookMovesWithCache(
 		return pendingRequest;
 	}
 
-	const request = loadAndCacheOpeningBookMoves(normalizedInput, cacheKey).finally(() => {
-		pendingRequests.delete(cacheKey);
-	});
+	const request = loadAndCacheOpeningBookMoves(normalizedInput, cacheKey, accessToken).finally(
+		() => {
+			pendingRequests.delete(cacheKey);
+		},
+	);
 
 	pendingRequests.set(cacheKey, request);
 
@@ -86,9 +101,12 @@ function normalizeOpeningBookCacheInput(
 async function loadAndCacheOpeningBookMoves(
 	input: Required<OpeningBookGetMovesInput>,
 	cacheKey: string,
+	accessToken: string,
 ): Promise<OpeningBookGetMovesResult> {
 	try {
-		const response = await runRemoteRequestWithLimit(() => fetchLichessOpeningExplorer(input));
+		const response = await runRemoteRequestWithLimit(() =>
+			fetchLichessOpeningExplorer(input, { accessToken }),
+		);
 		const result = mapLichessOpeningExplorerResponseToOpeningBookResult(input, response);
 
 		writeSuccessCache(cacheKey, result);
@@ -98,7 +116,6 @@ async function loadAndCacheOpeningBookMoves(
 		return mapLichessOpeningExplorerErrorToOpeningBookResult(error);
 	}
 }
-
 function readSuccessCache(cacheKey: string): OpeningBookGetMovesSuccess | null {
 	const entry = successCache.get(cacheKey);
 

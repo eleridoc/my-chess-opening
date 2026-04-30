@@ -74,7 +74,8 @@ export type LichessOpeningExplorerClientErrorCode =
 	| 'TIMEOUT'
 	| 'RATE_LIMITED'
 	| 'REMOTE_ERROR'
-	| 'UNEXPECTED_RESPONSE';
+	| 'UNEXPECTED_RESPONSE'
+	| 'SECURE_STORAGE_UNAVAILABLE';
 
 export class LichessOpeningExplorerClientError extends Error {
 	constructor(
@@ -100,9 +101,7 @@ export async function fetchLichessOpeningExplorer(
 ): Promise<LichessOpeningExplorerResponse> {
 	const url = buildLichessOpeningExplorerUrl(input, options);
 	const timeoutMs = normalizeTimeoutMs(options.timeoutMs);
-	const accessToken = normalizeAccessToken(
-		options.accessToken ?? resolveLichessOpeningExplorerAccessToken(),
-	);
+	const accessToken = normalizeAccessToken(options.accessToken);
 
 	console.debug(
 		`[OpeningBook] Fetching ${url} (${accessToken ? 'token configured' : 'no token configured'})`,

@@ -5,4 +5,4 @@
  * - This file is updated by `npm run sync:version -- x.y.z`.
  * - Do not edit manually.
  */
-export const APP_VERSION = '1.14.8';
+export const APP_VERSION = '1.14.9';

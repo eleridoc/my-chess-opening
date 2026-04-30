@@ -143,6 +143,7 @@ export type OpeningBookErrorCode =
 	| 'TIMEOUT'
 	| 'RATE_LIMITED'
 	| 'REMOTE_ERROR'
+	| 'SECURE_STORAGE_UNAVAILABLE'
 	| 'UNEXPECTED_ERROR';
 
 /**
@@ -164,6 +165,48 @@ export type OpeningBookGetMovesResult =
 	| { ok: false; error: OpeningBookError };
 
 /**
+ * Public Lichess token configuration status exposed to the renderer.
+ *
+ * Security:
+ * - The actual token is never exposed to Angular.
+ * - `updatedAt` is stored as an ISO 8601 string.
+ */
+export interface OpeningBookLichessAuthStatus {
+	/** Whether a token is currently configured and readable. */
+	configured: boolean;
+
+	/** Whether Electron secure storage is available on this machine. */
+	storageAvailable: boolean;
+
+	/** Last token update date, stored as ISO 8601, when available. */
+	updatedAt: string | null;
+
+	/** Optional user-facing status message. */
+	message: string | null;
+}
+
+export type OpeningBookLichessAuthStatusResult =
+	| { ok: true; status: OpeningBookLichessAuthStatus }
+	| { ok: false; error: OpeningBookError };
+
+export interface OpeningBookSaveLichessTokenInput {
+	/** Raw token pasted by the user. It must stay in Electron only. */
+	token: string;
+}
+
+export type OpeningBookSaveLichessTokenResult =
+	| { ok: true; status: OpeningBookLichessAuthStatus }
+	| { ok: false; error: OpeningBookError };
+
+export type OpeningBookClearLichessTokenResult =
+	| { ok: true; status: OpeningBookLichessAuthStatus }
+	| { ok: false; error: OpeningBookError };
+
+export type OpeningBookTestLichessTokenResult =
+	| { ok: true; status: OpeningBookLichessAuthStatus }
+	| { ok: false; error: OpeningBookError };
+
+/**
  * Opening book domain API exposed over IPC.
  *
  * This interface will be mounted on `ElectronApi` when the IPC/preload bridge is
@@ -172,4 +215,18 @@ export type OpeningBookGetMovesResult =
 export interface OpeningBookApi {
 	/** Load external opening book moves for the current Explorer position. */
 	getMoves: (input: OpeningBookGetMovesInput) => Promise<OpeningBookGetMovesResult>;
+
+	/** Return the current Lichess token configuration status without exposing the token. */
+	getLichessAuthStatus: () => Promise<OpeningBookLichessAuthStatusResult>;
+
+	/** Save a user-provided Lichess personal access token in Electron secure storage. */
+	saveLichessToken: (
+		input: OpeningBookSaveLichessTokenInput,
+	) => Promise<OpeningBookSaveLichessTokenResult>;
+
+	/** Remove the stored Lichess token. */
+	clearLichessToken: () => Promise<OpeningBookClearLichessTokenResult>;
+
+	/** Validate the stored Lichess token with a small Opening Explorer request. */
+	testLichessToken: () => Promise<OpeningBookTestLichessTokenResult>;
 }

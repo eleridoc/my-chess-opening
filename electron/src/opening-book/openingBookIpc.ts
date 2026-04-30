@@ -6,6 +6,13 @@ import type {
 	OpeningBookSource,
 } from 'my-chess-opening-core';
 
+import {
+	clearLichessOpeningBookToken,
+	getLichessOpeningBookAuthStatus,
+	saveLichessOpeningBookToken,
+	testLichessOpeningBookToken,
+} from './lichessOpeningExplorerAuth';
+
 import { LichessOpeningExplorerClientError } from './lichessOpeningExplorerClient';
 import { getOpeningBookMovesWithCache } from './openingBookQueryService';
 import { mapLichessOpeningExplorerErrorToOpeningBookResult } from './openingBookMapper';
@@ -32,6 +39,24 @@ export function registerOpeningBookIpc(): void {
 			}
 		},
 	);
+
+	ipcMain.handle('opening-book:getLichessAuthStatus', async () => {
+		return await getLichessOpeningBookAuthStatus();
+	});
+
+	ipcMain.handle('opening-book:saveLichessToken', async (_event, input?: { token?: unknown }) => {
+		return await saveLichessOpeningBookToken(
+			typeof input?.token === 'string' ? input.token : '',
+		);
+	});
+
+	ipcMain.handle('opening-book:clearLichessToken', async () => {
+		return await clearLichessOpeningBookToken();
+	});
+
+	ipcMain.handle('opening-book:testLichessToken', async () => {
+		return await testLichessOpeningBookToken();
+	});
 }
 
 /**

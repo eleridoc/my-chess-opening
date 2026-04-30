@@ -112,6 +112,12 @@ export type {
 	OpeningBookError,
 	OpeningBookGetMovesResult,
 	OpeningBookApi,
+	OpeningBookLichessAuthStatus,
+	OpeningBookLichessAuthStatusResult,
+	OpeningBookSaveLichessTokenInput,
+	OpeningBookSaveLichessTokenResult,
+	OpeningBookClearLichessTokenResult,
+	OpeningBookTestLichessTokenResult,
 } from './opening-book/types';
 
 // -----------------------------------------------------------------------------

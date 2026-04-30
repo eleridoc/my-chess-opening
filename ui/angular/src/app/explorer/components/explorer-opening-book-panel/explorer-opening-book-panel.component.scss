@@ -236,6 +236,11 @@ app-section-loader {
 }
 
 .explorer-opening-book-panel__error {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 12px;
+
 	border: 1px solid rgba(244, 67, 54, 0.28);
 	background: rgba(244, 67, 54, 0.08);
 	color: inherit;
@@ -244,6 +249,9 @@ app-section-loader {
 	font-size: 13px;
 }
 
+.explorer-opening-book-panel__error p {
+	margin: 0;
+}
 @media (max-width: 1500px) {
 	.explorer-opening-book-panel__head,
 	.explorer-opening-book-panel__row,

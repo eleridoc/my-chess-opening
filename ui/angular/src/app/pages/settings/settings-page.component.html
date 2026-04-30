@@ -1,1 +1,163 @@
-<p>settings-page works!</p>
+<section class="settings-page">
+	<header class="settings-page__header">
+		<div>
+			<h1 class="settings-page__title">Settings</h1>
+			<p class="settings-page__subtitle">
+				Configure local application preferences and external integrations.
+			</p>
+		</div>
+	</header>
+
+	<div id="lichess" class="app-card-flat settings-card">
+		<div class="app-card-flat-top settings-card__header">
+			<div>
+				<h2 class="settings-card__title">
+					<mat-icon aria-hidden="true">extension</mat-icon>
+					<span>Lichess integration</span>
+				</h2>
+				<p class="settings-card__subtitle">Used by the Explorer Opening Book tab.</p>
+			</div>
+
+			<div class="settings-card__status" *ngIf="status() as s">
+				<span
+					class="settings-card__status-pill"
+					[class.settings-card__status-pill--ok]="s.configured"
+					[class.settings-card__status-pill--warning]="!s.configured"
+				>
+					{{ s.configured ? 'Configured' : 'Not configured' }}
+				</span>
+			</div>
+		</div>
+
+		<div class="app-card-flat-content settings-card__content">
+			<app-section-loader [loading]="loading()" label="Loading Lichess settings…" [mask]="true">
+				<div class="settings-card__grid">
+					<section class="settings-card__section">
+						<h3>How to create the token</h3>
+
+						<p>
+							My Chess Opening only uses this token to authenticate requests to the Lichess Opening
+							Explorer API.
+						</p>
+
+						<ol class="settings-card__steps">
+							<li>Open the Lichess personal access token creation page.</li>
+							<li>Create a token name such as <strong>My Chess Opening</strong>.</li>
+							<li>
+								<strong>Do not check any permission box.</strong>
+								The Opening Book does not need account actions.
+							</li>
+							<li>Copy the generated token and paste it below.</li>
+						</ol>
+
+						<p class="settings-card__security-note">
+							Leaving all permissions unchecked limits the risk if the token is leaked: it should
+							not authorize account actions such as playing games, managing challenges, messages,
+							preferences, or studies.
+						</p>
+
+						<div class="settings-card__actions">
+							<button
+								mat-stroked-button
+								class="mat-stroked-button-d-5"
+								type="button"
+								(click)="openLichessTokenPage($event)"
+							>
+								<mat-icon aria-hidden="true">open_in_new</mat-icon>
+								<span>Create token on Lichess</span>
+							</button>
+
+							<button
+								mat-button
+								class="mat-flat-button-d-5"
+								type="button"
+								(click)="openLichessTokenManagement($event)"
+							>
+								<mat-icon aria-hidden="true">manage_accounts</mat-icon>
+								<span>Manage tokens</span>
+							</button>
+						</div>
+					</section>
+
+					<section class="settings-card__section">
+						<h3>Token configuration</h3>
+
+						<div class="settings-card__state" *ngIf="status() as s">
+							<p *ngIf="!s.storageAvailable" class="settings-card__error">
+								Secure storage is not available on this system.
+							</p>
+
+							<p *ngIf="s.storageAvailable && s.configured">A Lichess token is saved locally.</p>
+
+							<p *ngIf="s.storageAvailable && !s.configured">
+								No Lichess token is currently saved.
+							</p>
+
+							<p *ngIf="s.updatedAt" class="settings-card__muted">Last update: {{ s.updatedAt }}</p>
+
+							<p *ngIf="s.message" class="settings-card__warning">
+								{{ s.message }}
+							</p>
+						</div>
+
+						<mat-form-field appearance="outline" class="settings-card__token-field">
+							<mat-label>Lichess personal access token</mat-label>
+							<input
+								matInput
+								type="password"
+								[(ngModel)]="tokenInput"
+								autocomplete="off"
+								spellcheck="false"
+								placeholder="Paste your token here"
+							/>
+						</mat-form-field>
+
+						<p class="settings-card__muted">
+							The token is stored by Electron in secure local storage and is never exposed back to
+							the Angular UI.
+						</p>
+
+						<div class="settings-card__actions">
+							<button
+								mat-flat-button
+								class="mat-flat-button-d-5"
+								type="button"
+								(click)="saveToken()"
+								[disabled]="actionInProgress()"
+							>
+								<mat-icon aria-hidden="true">save</mat-icon>
+								<span>Save token</span>
+							</button>
+
+							<button
+								mat-stroked-button
+								class="mat-stroked-button-d-5"
+								type="button"
+								(click)="testToken()"
+								[disabled]="actionInProgress() || !status()?.configured"
+							>
+								<mat-icon aria-hidden="true">verified</mat-icon>
+								<span>Test token</span>
+							</button>
+
+							<button
+								mat-button
+								class="mat-flat-button-d-5"
+								type="button"
+								(click)="clearToken()"
+								[disabled]="actionInProgress() || !status()?.configured"
+							>
+								<mat-icon aria-hidden="true">delete</mat-icon>
+								<span>Remove token</span>
+							</button>
+						</div>
+
+						<p class="settings-card__error" *ngIf="error() as e">
+							{{ e }}
+						</p>
+					</section>
+				</div>
+			</app-section-loader>
+		</div>
+	</div>
+</section>

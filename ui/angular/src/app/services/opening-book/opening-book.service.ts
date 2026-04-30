@@ -1,6 +1,14 @@
 import { Injectable } from '@angular/core';
 
-import type { OpeningBookGetMovesInput, OpeningBookGetMovesResult } from 'my-chess-opening-core';
+import type {
+	OpeningBookClearLichessTokenResult,
+	OpeningBookGetMovesInput,
+	OpeningBookGetMovesResult,
+	OpeningBookLichessAuthStatusResult,
+	OpeningBookSaveLichessTokenInput,
+	OpeningBookSaveLichessTokenResult,
+	OpeningBookTestLichessTokenResult,
+} from 'my-chess-opening-core';
 
 /**
  * Thin Angular wrapper around Electron IPC for the Explorer external Opening Book.
@@ -21,5 +29,39 @@ export class OpeningBookService {
 		}
 
 		return window.electron.openingBook.getMoves(input);
+	}
+
+	async getLichessAuthStatus(): Promise<OpeningBookLichessAuthStatusResult> {
+		if (!window.electron?.openingBook?.getLichessAuthStatus) {
+			throw new Error('Electron openingBook auth API is not available');
+		}
+
+		return window.electron.openingBook.getLichessAuthStatus();
+	}
+
+	async saveLichessToken(
+		input: OpeningBookSaveLichessTokenInput,
+	): Promise<OpeningBookSaveLichessTokenResult> {
+		if (!window.electron?.openingBook?.saveLichessToken) {
+			throw new Error('Electron openingBook auth API is not available');
+		}
+
+		return window.electron.openingBook.saveLichessToken(input);
+	}
+
+	async clearLichessToken(): Promise<OpeningBookClearLichessTokenResult> {
+		if (!window.electron?.openingBook?.clearLichessToken) {
+			throw new Error('Electron openingBook auth API is not available');
+		}
+
+		return window.electron.openingBook.clearLichessToken();
+	}
+
+	async testLichessToken(): Promise<OpeningBookTestLichessTokenResult> {
+		if (!window.electron?.openingBook?.testLichessToken) {
+			throw new Error('Electron openingBook auth API is not available');
+		}
+
+		return window.electron.openingBook.testLichessToken();
 	}
 }
