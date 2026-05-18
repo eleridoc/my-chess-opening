@@ -26,6 +26,13 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 - Added shared Analysis / Stockfish IPC contracts in `core`.
 - Added the `analysis` domain to the typed Electron API surface.
 - Prepared preload IPC methods for future single-game Stockfish analysis from the Explorer.
+- Added Prisma models for persisted Stockfish game analyses.
+- Added move-by-move analysis storage with before/after evaluations, best move, depth and principal variation metadata.
+- Added analysis status and mode enums to prepare single-game analysis from the Explorer.
+- Added native Stockfish engine asset layout for Linux x64 and Windows x64.
+- Added Electron-side Stockfish executable path resolution for development and packaged builds.
+- Added `MCO_STOCKFISH_EXECUTABLE_PATH` environment override for local engine testing.
+- Added runtime diagnostics for the bundled engines directory.
 
 ### Changed
 
