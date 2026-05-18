@@ -34,6 +34,13 @@ import type {
 	OpeningBookSaveLichessTokenResult,
 	OpeningBookClearLichessTokenResult,
 	OpeningBookTestLichessTokenResult,
+	AnalysisEngineStatus,
+	AnalysisSettings,
+	AnalyzeGameInput,
+	AnalyzeGameResult,
+	GetGameAnalysisInput,
+	GetGameAnalysisResult,
+	CancelCurrentAnalysisResult,
 } from 'my-chess-opening-core';
 
 /**
@@ -75,6 +82,11 @@ const CHANNELS = {
 	OPENING_BOOK_SAVE_LICHESS_TOKEN: 'opening-book:saveLichessToken',
 	OPENING_BOOK_CLEAR_LICHESS_TOKEN: 'opening-book:clearLichessToken',
 	OPENING_BOOK_TEST_LICHESS_TOKEN: 'opening-book:testLichessToken',
+	ANALYSIS_GET_ENGINE_STATUS: 'analysis:getEngineStatus',
+	ANALYSIS_GET_SETTINGS: 'analysis:getSettings',
+	ANALYSIS_ANALYZE_GAME: 'analysis:analyzeGame',
+	ANALYSIS_GET_LATEST_GAME_ANALYSIS: 'analysis:getLatestGameAnalysis',
+	ANALYSIS_CANCEL_CURRENT_ANALYSIS: 'analysis:cancelCurrentAnalysis',
 } as const;
 
 /**
@@ -211,6 +223,21 @@ const api: ElectronApi = {
 
 		testLichessToken: () =>
 			invoke<OpeningBookTestLichessTokenResult>(CHANNELS.OPENING_BOOK_TEST_LICHESS_TOKEN),
+	},
+
+	analysis: {
+		getEngineStatus: () => invoke<AnalysisEngineStatus>(CHANNELS.ANALYSIS_GET_ENGINE_STATUS),
+
+		getSettings: () => invoke<AnalysisSettings>(CHANNELS.ANALYSIS_GET_SETTINGS),
+
+		analyzeGame: (input: AnalyzeGameInput) =>
+			invoke<AnalyzeGameResult>(CHANNELS.ANALYSIS_ANALYZE_GAME, input),
+
+		getLatestGameAnalysis: (input: GetGameAnalysisInput) =>
+			invoke<GetGameAnalysisResult>(CHANNELS.ANALYSIS_GET_LATEST_GAME_ANALYSIS, input),
+
+		cancelCurrentAnalysis: () =>
+			invoke<CancelCurrentAnalysisResult>(CHANNELS.ANALYSIS_CANCEL_CURRENT_ANALYSIS),
 	},
 };
 

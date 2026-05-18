@@ -120,6 +120,25 @@ export type {
 	OpeningBookTestLichessTokenResult,
 } from './opening-book/types';
 
+export type {
+	AnalysisEngineStatus,
+	AnalysisMode,
+	AnalysisSettings,
+	GameAnalysisStatus,
+	AnalysisErrorCode,
+	AnalysisError,
+	AnalysisEvaluation,
+	AnalyzeGameInput,
+	GetGameAnalysisInput,
+	GameMoveAnalysisRow,
+	GameAnalysisSummary,
+	GameAnalysisDetails,
+	AnalyzeGameResult,
+	GetGameAnalysisResult,
+	CancelCurrentAnalysisResult,
+	AnalysisApi,
+} from './analysis/types';
+
 // -----------------------------------------------------------------------------
 // Compose ElectronApi from domain APIs
 // -----------------------------------------------------------------------------
@@ -133,6 +152,7 @@ import type { ExportApi } from './export/types';
 import type { DashboardApi } from './dashboard/types';
 import type { MyNextMovesApi } from './my-next-moves/types';
 import type { OpeningBookApi } from './opening-book/types';
+import type { AnalysisApi } from './analysis/types';
 
 /**
  * Small system-level IPC helpers that are not tied to a single domain.
@@ -193,6 +213,9 @@ export interface ElectronApi {
 
 	/** Explorer external Opening Book APIs (Lichess database / Masters). */
 	openingBook: OpeningBookApi;
+
+	/** Explorer game analysis APIs powered by Stockfish. */
+	analysis: AnalysisApi;
 
 	/** Miscellaneous system-level helpers. */
 	system: SystemApi;

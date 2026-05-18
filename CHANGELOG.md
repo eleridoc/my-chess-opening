@@ -19,6 +19,22 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 
 - (placeholder)
 
+## [1.15]
+
+### Added
+
+- Added shared Analysis / Stockfish IPC contracts in `core`.
+- Added the `analysis` domain to the typed Electron API surface.
+- Prepared preload IPC methods for future single-game Stockfish analysis from the Explorer.
+
+### Changed
+
+- (placeholder)
+
+### Fixed
+
+- (placeholder)
+
 ## [1.14.11] 2026-04-30
 
 ### Added
