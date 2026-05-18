@@ -5,6 +5,8 @@ import { coreIsReady } from 'my-chess-opening-core';
 import { initializeDatabase } from './db/database';
 import { disconnectPrismaClient, prisma } from './db/prisma';
 
+import { ensureAnalysisSettingsFile } from './analysis';
+
 import {
 	configureRuntimePaths,
 	ensureRuntimeDirectories,
@@ -258,6 +260,7 @@ function logRuntimePaths(): void {
 	console.info('[RUNTIME] userDataDir:', paths.userDataDir);
 	console.info('[RUNTIME] logsDir:', paths.logsDir);
 	console.info('[RUNTIME] databaseDir:', paths.databaseDir);
+	console.info('[RUNTIME] settingsDir:', paths.settingsDir);
 	console.info('[RUNTIME] assetsDir:', paths.assetsDir);
 	console.info('[RUNTIME] enginesDir:', paths.enginesDir);
 	console.info('[RUNTIME] rendererDistDir:', paths.rendererDistDir);
@@ -338,6 +341,7 @@ app.whenReady().then(async () => {
 
 	ensureRuntimeDirectories();
 	logRuntimePaths();
+	ensureAnalysisSettingsFile();
 
 	if (shouldUseLocalRenderer()) {
 		registerLocalRendererProtocol();

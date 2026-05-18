@@ -8,6 +8,7 @@ const DEFAULT_DEV_RUNTIME_DIR_NAME = '.runtime';
 const APP_RUNTIME_DIR_NAME = 'my-chess-opening';
 const DATABASE_DIR_NAME = 'data';
 const DATABASE_FILE_NAME = 'my-chess-opening.sqlite';
+const SETTINGS_DIR_NAME = 'settings';
 const ENGINES_DIR_NAME = 'engines';
 
 /**
@@ -133,6 +134,15 @@ export function getDatabaseDir(): string {
 }
 
 /**
+ * Resolve the directory used for local app settings.
+ *
+ * Settings stored here are user-specific and are not bundled with the app.
+ */
+export function getSettingsDir(): string {
+	return path.join(getUserDataDir(), SETTINGS_DIR_NAME);
+}
+
+/**
  * Future production SQLite database path.
  *
  * V1.11.1 only centralizes the path. Prisma will be wired to this path in V1.11.2.
@@ -217,6 +227,7 @@ export interface RuntimePathsSnapshot {
 	logsDir: string;
 	databaseDir: string;
 	databaseFilePath: string;
+	settingsDir: string;
 	assetsDir: string;
 	enginesDir: string;
 	rendererDistDir: string;
@@ -238,6 +249,7 @@ export function getRuntimePathsSnapshot(): RuntimePathsSnapshot {
 		logsDir: getLogsDir(),
 		databaseDir: getDatabaseDir(),
 		databaseFilePath: getDatabaseFilePath(),
+		settingsDir: getSettingsDir(),
 		assetsDir: getAssetsDir(),
 		enginesDir: getEnginesDir(),
 		rendererDistDir: getRendererDistDir(),

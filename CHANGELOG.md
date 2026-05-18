@@ -38,6 +38,9 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 - Added an Electron-side Stockfish UCI client.
 - Added UCI parsers for engine identity, search info, scores, principal variation and best move lines.
 - Added FEN evaluation helpers to normalize Stockfish scores from White's point of view.
+- Added local Stockfish analysis settings stored in the Electron runtime settings directory.
+- Added default Stockfish analysis settings for fixed-time single-game analysis.
+- Added settings normalization and JSON snapshot serialization for future persisted analyses.
 
 ### Changed
 
