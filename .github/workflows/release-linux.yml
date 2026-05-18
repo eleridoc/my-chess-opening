@@ -66,6 +66,9 @@ jobs:
             - name: Install dependencies
               run: npm ci
 
+            - name: Install Linux Stockfish engine
+              run: npm run stockfish:install:linux
+
             - name: Build production artifacts
               run: npm run build:prod
 
@@ -101,6 +104,9 @@ jobs:
 
             - name: Install dependencies
               run: npm ci
+
+            - name: Install Windows Stockfish engine
+              run: npm run stockfish:install:windows
 
             - name: Build production artifacts
               run: npm run build:prod

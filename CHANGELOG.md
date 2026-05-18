@@ -33,10 +33,13 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 - Added Electron-side Stockfish executable path resolution for development and packaged builds.
 - Added `MCO_STOCKFISH_EXECUTABLE_PATH` environment override for local engine testing.
 - Added runtime diagnostics for the bundled engines directory.
+- Added a Stockfish install script to download native engine binaries locally and in CI.
+- Added package scripts to install the required Stockfish binary before Linux and Windows packaging.
 
 ### Changed
 
-- (placeholder)
+- Removed native Stockfish binaries from Git tracking and kept them as generated local/CI assets.
+- Updated the release workflow to install platform-specific Stockfish binaries before packaging.
 
 ### Fixed
 

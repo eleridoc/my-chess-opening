@@ -1,61 +1,65 @@
 {
-  "name": "my-chess-opening",
-  "version": "1.15.3",
-  "license": "GPL-3.0-only",
-  "private": true,
-  "workspaces": [
-    "core",
-    "electron",
-    "ui/*"
-  ],
-  "scripts": {
-    "dev:ui:angular": "npm -w ui/angular start",
-    "dev:electron": "npm -w electron run start:dev",
-    "build": "npm run build:all",
-    "build:all": "npm run build:core && npm run build:electron && npm run build:ui:angular",
-    "build:prod": "npm run clean:dist && npm run build:core && npm run build:electron && npm run build:ui:angular:prod",
-    "build:core": "npm -w core run build",
-    "build:electron": "npm -w electron run build",
-    "build:ui:angular": "npm -w ui/angular run build",
-    "build:ui:angular:prod": "npm -w ui/angular run build:prod",
-    "preview:prod": "npm run build:prod && npm -w electron run preview:prod",
-    "preview:prod:compiled": "npm -w electron run preview:prod",
-    "clean": "npm run clean:dist",
-    "clean:dist": "node tools/clean-dist.mjs",
-    "clean:runtime": "node tools/clean-runtime.mjs",
-    "format": "prettier --write \"**/*.{ts,js,tsx,jsx,html,scss,json,md}\"",
-    "prisma:reset": "npm -w electron run prisma:reset",
-    "prisma:migrate": "npm -w electron run prisma:migrate --",
-    "prisma:migrate:open": "npm run prisma:migrate -- && npm run prisma:generate && npm run prisma:studio",
-    "prisma:generate": "npm -w electron run prisma:generate",
-    "prisma:studio": "npm -w electron run prisma:studio",
-    "eco:update": "tsx tools/eco/update-lichess-chess-openings.ts",
-    "sync:version": "node tools/sync-versions.mjs",
-    "package:linux": "npm run build:prod && electron-builder --linux AppImage deb --publish never && npm run checksums:release",
-    "package:linux:compiled": "electron-builder --linux AppImage deb --publish never && npm run checksums:release",
-    "package:linux:ci": "npm run build:prod && electron-builder --linux AppImage deb --publish never",
-    "package:windows": "npm run build:prod && electron-builder --win nsis portable --x64 --publish never && npm run checksums:release",
-    "package:windows:compiled": "electron-builder --win nsis portable --x64 --publish never && npm run checksums:release",
-    "package:windows:ci": "npm run build:prod && electron-builder --win nsis portable --x64 --publish never",
-    "checksums:release": "node tools/generate-checksums.mjs"
-  },
-  "keywords": [],
-  "author": {
-    "name": "Eleridoc",
-    "email": "eleridoc@gmail.com",
-    "url": "https://github.com/eleridoc"
-  },
-  "description": "Open-source desktop app to import, store, and explore chess games.",
-  "main": "electron/dist/main.js",
-  "dependencies": {
-    "@types/node": "^24.10.1",
-    "typescript": "^5.9.3"
-  },
-  "devDependencies": {
-    "baseline-browser-mapping": "^2.9.19",
-    "cross-env": "^10.1.0",
-    "electron-builder": "^26.8.1",
-    "prettier": "^3.7.3",
-    "tsx": "^4.21.0"
-  }
+	"name": "my-chess-opening",
+	"version": "1.15.3",
+	"license": "GPL-3.0-only",
+	"private": true,
+	"workspaces": [
+		"core",
+		"electron",
+		"ui/*"
+	],
+	"scripts": {
+		"dev:ui:angular": "npm -w ui/angular start",
+		"dev:electron": "npm -w electron run start:dev",
+		"build": "npm run build:all",
+		"build:all": "npm run build:core && npm run build:electron && npm run build:ui:angular",
+		"build:prod": "npm run clean:dist && npm run build:core && npm run build:electron && npm run build:ui:angular:prod",
+		"build:core": "npm -w core run build",
+		"build:electron": "npm -w electron run build",
+		"build:ui:angular": "npm -w ui/angular run build",
+		"build:ui:angular:prod": "npm -w ui/angular run build:prod",
+		"preview:prod": "npm run build:prod && npm -w electron run preview:prod",
+		"preview:prod:compiled": "npm -w electron run preview:prod",
+		"clean": "npm run clean:dist",
+		"clean:dist": "node tools/clean-dist.mjs",
+		"clean:runtime": "node tools/clean-runtime.mjs",
+		"stockfish:install": "node tools/download-stockfish.mjs",
+		"stockfish:install:linux": "node tools/download-stockfish.mjs --target=linux-x64",
+		"stockfish:install:windows": "node tools/download-stockfish.mjs --target=win-x64",
+		"stockfish:install:all": "node tools/download-stockfish.mjs --all",
+		"format": "prettier --write \"**/*.{ts,js,tsx,jsx,html,scss,json,md}\"",
+		"prisma:reset": "npm -w electron run prisma:reset",
+		"prisma:migrate": "npm -w electron run prisma:migrate --",
+		"prisma:migrate:open": "npm run prisma:migrate -- && npm run prisma:generate && npm run prisma:studio",
+		"prisma:generate": "npm -w electron run prisma:generate",
+		"prisma:studio": "npm -w electron run prisma:studio",
+		"eco:update": "tsx tools/eco/update-lichess-chess-openings.ts",
+		"sync:version": "node tools/sync-versions.mjs",
+		"package:linux": "npm run stockfish:install:linux && npm run build:prod && electron-builder --linux AppImage deb --publish never && npm run checksums:release",
+		"package:linux:compiled": "npm run stockfish:install:linux && electron-builder --linux AppImage deb --publish never && npm run checksums:release",
+		"package:linux:ci": "npm run stockfish:install:linux && npm run build:prod && electron-builder --linux AppImage deb --publish never",
+		"package:windows": "npm run stockfish:install:windows && npm run build:prod && electron-builder --win nsis portable --x64 --publish never && npm run checksums:release",
+		"package:windows:compiled": "npm run stockfish:install:windows && electron-builder --win nsis portable --x64 --publish never && npm run checksums:release",
+		"package:windows:ci": "npm run stockfish:install:windows && npm run build:prod && electron-builder --win nsis portable --x64 --publish never",
+		"checksums:release": "node tools/generate-checksums.mjs"
+	},
+	"keywords": [],
+	"author": {
+		"name": "Eleridoc",
+		"email": "eleridoc@gmail.com",
+		"url": "https://github.com/eleridoc"
+	},
+	"description": "Open-source desktop app to import, store, and explore chess games.",
+	"main": "electron/dist/main.js",
+	"dependencies": {
+		"@types/node": "^24.10.1",
+		"typescript": "^5.9.3"
+	},
+	"devDependencies": {
+		"baseline-browser-mapping": "^2.9.19",
+		"cross-env": "^10.1.0",
+		"electron-builder": "^26.8.1",
+		"prettier": "^3.7.3",
+		"tsx": "^4.21.0"
+	}
 }
