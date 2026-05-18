@@ -44,6 +44,25 @@ enum ImportLogLevel {
   ERROR
 }
 
+//
+// Stockfish / game analysis persistence.
+//
+// V1.15 starts with single-game analysis from the Explorer.
+// Batch analysis and position-level cache can be added later on top of these models.
+//
+enum AnalysisStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum AnalysisMode {
+  MOVETIME
+  DEPTH
+}
+
 model AccountConfig {
   id        String       @id @default(cuid())
   createdAt DateTime     @default(now())
@@ -113,6 +132,7 @@ model Game {
 
   players GamePlayer[]
   moves   GameMove[]
+  analyses GameAnalysis[]
 
   // Players snapshot (objective, from PGN)
   whiteUsername   String
@@ -194,6 +214,110 @@ model GameMove {
   @@index([gameId, positionHash])
   @@index([positionHashBefore])
   @@index([positionHashBefore, uci])
+}
+
+model GameAnalysis {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  gameId String
+  game   Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  status AnalysisStatus @default(PENDING)
+
+  // Engine identity used for this analysis.
+  engineName    String
+  engineVersion String?
+
+  // Settings snapshot used for this analysis.
+  // The app-level settings may change later, so each analysis keeps its own copy.
+  analysisMode       AnalysisMode
+  depth              Int?
+  movetimeMs         Int?
+  threads            Int
+  hashMb             Int
+  multiPv            Int          @default(1)
+  configSnapshotJson String
+
+  // Progress counters.
+  totalPlies    Int @default(0)
+  analyzedPlies Int @default(0)
+
+  // Lifecycle timestamps.
+  startedAt   DateTime?
+  completedAt DateTime?
+  failedAt    DateTime?
+  cancelledAt DateTime?
+
+  // Failure / cancellation details.
+  errorMessage String?
+
+  moves GameMoveAnalysis[]
+
+  @@index([gameId, createdAt])
+  @@index([gameId, status])
+  @@index([status, createdAt])
+}
+
+model GameMoveAnalysis {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  gameAnalysisId String
+  gameAnalysis   GameAnalysis @relation(fields: [gameAnalysisId], references: [id], onDelete: Cascade)
+
+  // Redundant but useful for direct filtering and future reports.
+  gameId String
+
+  // 1,2,3... half-moves / ply.
+  ply Int
+
+  // Full move number displayed to the user.
+  moveNumber Int
+
+  // Color that played this move.
+  playedBy PlayerColor
+
+  // Position before and after the played move.
+  fenBefore String
+  fenAfter  String
+
+  // Future position-level cache support.
+  // These hashes should use the same normalized 4-field FEN rule as GameMove.
+  positionHashBefore String?
+  positionHashAfter  String?
+
+  // Played move.
+  moveSan String
+  moveUci String?
+
+  // Engine best move for the position before the played move.
+  bestMoveUci String?
+
+  // Evaluation before the played move, from White's point of view.
+  evalBeforeCp   Int?
+  evalBeforeMate Int?
+
+  // Evaluation after the played move, from White's point of view.
+  evalAfterCp   Int?
+  evalAfterMate Int?
+
+  // Engine metadata for this row.
+  depthReached Int?
+  timeMs       Int?
+
+  // Stored as JSON string because SQLite does not support scalar lists.
+  // Example: ["e2e4", "e7e5", "g1f3"]
+  principalVariationUciJson String?
+
+  @@unique([gameAnalysisId, ply])
+  @@index([gameAnalysisId])
+  @@index([gameId, ply])
+  @@index([gameId])
+  @@index([positionHashBefore])
+  @@index([positionHashAfter])
 }
 
 model ImportRun {
