@@ -34,6 +34,7 @@ import { registerExportIpc } from './export/exportIpc';
 import { registerDashboardIpc } from './dashboard/dashboardIpc';
 import { registerMyNextMovesIpc } from './my-next-moves/myNextMovesIpc';
 import { registerOpeningBookIpc } from './opening-book/openingBookIpc';
+import { registerAnalysisIpc } from './analysis/analysisIpc';
 
 import type { ImportEvent } from 'my-chess-opening-core';
 
@@ -381,6 +382,7 @@ app.whenReady().then(async () => {
 	registerDashboardIpc();
 	registerMyNextMovesIpc();
 	registerOpeningBookIpc();
+	registerAnalysisIpc();
 	createWindow();
 
 	// Ensure DB is reachable once (creates a first Prisma round-trip).

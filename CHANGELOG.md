@@ -45,6 +45,8 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 - Added persisted move-by-move Stockfish analysis creation for database games.
 - Added reusable analysis lookup for completed analyses using the same settings snapshot.
 - Added backend cancellation support for the currently running game analysis.
+- Added Electron IPC handlers for Stockfish engine status, settings, single-game analysis, latest analysis lookup and cancellation.
+- Added Angular `AnalysisService` as a typed renderer wrapper around the Analysis IPC API.
 
 ### Changed
 
