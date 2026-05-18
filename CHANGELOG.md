@@ -41,6 +41,10 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 - Added local Stockfish analysis settings stored in the Electron runtime settings directory.
 - Added default Stockfish analysis settings for fixed-time single-game analysis.
 - Added settings normalization and JSON snapshot serialization for future persisted analyses.
+- Added an Electron game analysis service to analyze one imported game with Stockfish.
+- Added persisted move-by-move Stockfish analysis creation for database games.
+- Added reusable analysis lookup for completed analyses using the same settings snapshot.
+- Added backend cancellation support for the currently running game analysis.
 
 ### Changed
 

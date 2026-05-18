@@ -9,3 +9,18 @@ export {
 	saveAnalysisSettings,
 	serializeAnalysisSettingsSnapshot,
 } from './analysisSettings';
+
+export { GameAnalysisServiceError, toGameAnalysisServiceError } from './analysisErrors';
+
+export {
+	analyzeGameById,
+	cancelCurrentGameAnalysis,
+	getLatestGameAnalysisByGameId,
+} from './gameAnalysisService';
+
+export { mapGameAnalysisToDetails } from './gameAnalysisMapper';
+
+export type {
+	GameAnalysisRecordForMapping,
+	GameMoveAnalysisRecordForMapping,
+} from './gameAnalysisMapper';
