@@ -35,6 +35,9 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 - Added runtime diagnostics for the bundled engines directory.
 - Added a Stockfish install script to download native engine binaries locally and in CI.
 - Added package scripts to install the required Stockfish binary before Linux and Windows packaging.
+- Added an Electron-side Stockfish UCI client.
+- Added UCI parsers for engine identity, search info, scores, principal variation and best move lines.
+- Added FEN evaluation helpers to normalize Stockfish scores from White's point of view.
 
 ### Changed
 
