@@ -50,6 +50,8 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 - Added the first Explorer Analysis tab for Stockfish single-game analysis.
 - Added UI controls to inspect Stockfish status, active settings and latest game analysis.
 - Added UI actions to start, re-run and cancel Stockfish analysis for the current database game.
+- Added move-by-move Stockfish analysis results in the Explorer Analysis tab.
+- Added before/after evaluations, evaluation swing, best move, depth, time and principal variation display.
 
 ### Changed
 
