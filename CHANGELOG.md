@@ -47,6 +47,9 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 - Added backend cancellation support for the currently running game analysis.
 - Added Electron IPC handlers for Stockfish engine status, settings, single-game analysis, latest analysis lookup and cancellation.
 - Added Angular `AnalysisService` as a typed renderer wrapper around the Analysis IPC API.
+- Added the first Explorer Analysis tab for Stockfish single-game analysis.
+- Added UI controls to inspect Stockfish status, active settings and latest game analysis.
+- Added UI actions to start, re-run and cancel Stockfish analysis for the current database game.
 
 ### Changed
 

@@ -1,0 +1,302 @@
+:host {
+	display: flex;
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow: hidden;
+}
+
+.explorer-analysis-panel {
+	flex: 1 1 auto;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+.explorer-analysis-panel__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.explorer-analysis-panel__title {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+}
+
+.explorer-analysis-panel__title mat-icon {
+	font-size: 19px;
+	width: 19px;
+	height: 19px;
+}
+
+.explorer-analysis-panel__actions,
+.explorer-analysis-panel__section-actions {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.explorer-analysis-panel__content {
+	flex: 1 1 auto;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+app-section-loader {
+	display: flex;
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow: hidden;
+}
+
+.explorer-analysis-panel__body {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow-y: auto;
+	overflow-x: hidden;
+	padding-right: 4px;
+}
+
+.explorer-analysis-panel__section {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	border: 1px solid var(--app-explorer-table-border);
+	border-radius: 12px;
+	background: color-mix(in srgb, var(--app-bg-elevated) 84%, transparent);
+	padding: 12px;
+}
+
+.explorer-analysis-panel__section h3 {
+	margin: 0;
+	font-size: 13px;
+	font-weight: 700;
+	letter-spacing: 0.01em;
+}
+
+.explorer-analysis-panel__section-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.explorer-analysis-panel__kv-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 8px;
+}
+
+.explorer-analysis-panel__kv,
+.explorer-analysis-panel__settings-item {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	min-width: 0;
+	border: 1px solid var(--app-explorer-table-row-border);
+	border-radius: 10px;
+	padding: 8px 10px;
+	background: var(--app-explorer-table-row-even-bg);
+}
+
+.explorer-analysis-panel__kv-label,
+.explorer-analysis-panel__settings-item span {
+	font-size: 11px;
+	font-weight: 600;
+	opacity: 0.68;
+}
+
+.explorer-analysis-panel__kv-value,
+.explorer-analysis-panel__settings-item strong {
+	font-size: 12px;
+	font-weight: 700;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.explorer-analysis-panel__engine {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	border-radius: 12px;
+	padding: 10px;
+	border: 1px solid var(--app-explorer-table-row-border);
+	background: var(--app-explorer-table-row-even-bg);
+}
+
+.explorer-analysis-panel__engine mat-icon {
+	flex: 0 0 auto;
+	margin-top: 1px;
+}
+
+.explorer-analysis-panel__engine strong {
+	display: block;
+	font-size: 13px;
+	margin-bottom: 3px;
+}
+
+.explorer-analysis-panel__engine p {
+	margin: 0;
+	font-size: 12px;
+	line-height: 1.35;
+	opacity: 0.78;
+}
+
+.explorer-analysis-panel__engine--ok mat-icon {
+	color: var(--app-success);
+}
+
+.explorer-analysis-panel__engine--error mat-icon,
+.explorer-analysis-panel__error mat-icon {
+	color: var(--app-danger);
+}
+
+.explorer-analysis-panel__settings {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 8px;
+}
+
+.explorer-analysis-panel__summary {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	border: 1px solid var(--app-explorer-table-border);
+	border-radius: 12px;
+	padding: 12px;
+	background: var(--app-explorer-table-row-odd-bg);
+}
+
+.explorer-analysis-panel__summary-top {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.explorer-analysis-panel__summary-engine {
+	font-size: 12px;
+	font-weight: 600;
+	opacity: 0.76;
+}
+
+.explorer-analysis-panel__status {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 999px;
+	padding: 4px 9px;
+	font-size: 11px;
+	font-weight: 800;
+	border: 1px solid transparent;
+}
+
+.explorer-analysis-panel__status--pending,
+.explorer-analysis-panel__status--running {
+	background: rgba(255, 193, 7, 0.12);
+	border-color: rgba(255, 193, 7, 0.35);
+	color: color-mix(in srgb, #ffc107 78%, var(--app-text));
+}
+
+.explorer-analysis-panel__status--completed {
+	background: rgba(76, 175, 80, 0.12);
+	border-color: rgba(76, 175, 80, 0.35);
+	color: var(--app-success);
+}
+
+.explorer-analysis-panel__status--failed,
+.explorer-analysis-panel__status--cancelled {
+	background: rgba(244, 67, 54, 0.1);
+	border-color: rgba(244, 67, 54, 0.3);
+	color: var(--app-danger);
+}
+
+.explorer-analysis-panel__progress {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.explorer-analysis-panel__progress-label {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	font-size: 12px;
+}
+
+.explorer-analysis-panel__progress-label span {
+	opacity: 0.72;
+}
+
+.explorer-analysis-panel__error,
+.explorer-analysis-panel__empty {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	border-radius: 12px;
+	padding: 12px;
+	font-size: 13px;
+	line-height: 1.4;
+}
+
+.explorer-analysis-panel__error {
+	border: 1px solid rgba(244, 67, 54, 0.28);
+	background: rgba(244, 67, 54, 0.08);
+}
+
+.explorer-analysis-panel__error--inline {
+	padding: 9px 10px;
+	font-size: 12px;
+}
+
+.explorer-analysis-panel__empty {
+	border: 1px dashed var(--app-explorer-table-border);
+	background: color-mix(in srgb, var(--app-bg-elevated) 72%, transparent);
+	opacity: 0.88;
+}
+
+.explorer-analysis-panel__empty--compact {
+	padding: 10px;
+}
+
+.explorer-analysis-panel__empty strong {
+	display: block;
+	margin-bottom: 3px;
+}
+
+.explorer-analysis-panel__empty p {
+	margin: 0;
+	opacity: 0.76;
+}
+
+.explorer-analysis-panel__placeholder {
+	padding: 10px;
+	font-size: 13px;
+	font-style: italic;
+	opacity: 0.72;
+}
+
+@media (max-width: 1280px) {
+	.explorer-analysis-panel__settings {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.explorer-analysis-panel__kv-grid {
+		grid-template-columns: 1fr;
+	}
+}

@@ -37,6 +37,7 @@ import {
 import { ExplorerNavigationShortcutsDirective } from './explorer-navigation-shortcuts.directive';
 import { ExplorerMyNextMovesPanelComponent } from '../../explorer/components/explorer-my-next-moves-panel/explorer-my-next-moves-panel.component';
 import { ExplorerOpeningBookPanelComponent } from '../../explorer/components/explorer-opening-book-panel/explorer-opening-book-panel.component';
+import { ExplorerAnalysisPanelComponent } from '../../explorer/components/explorer-analysis-panel/explorer-analysis-panel.component';
 import { ExplorerBoardArrowsService } from '../../explorer/services/explorer-board-arrows.service';
 import { ExplorerPositionExportDialogService } from '../../explorer/services/explorer-position-export-dialog.service';
 
@@ -61,6 +62,7 @@ type ResetReason = 'DB_LOAD' | 'PGN_IMPORT' | 'FEN_IMPORT';
 		MatTooltipModule,
 		ExplorerMyNextMovesPanelComponent,
 		ExplorerOpeningBookPanelComponent,
+		ExplorerAnalysisPanelComponent,
 	],
 	templateUrl: './explorer-page.component.html',
 	styleUrl: './explorer-page.component.scss',
@@ -161,7 +163,7 @@ export class ExplorerPageComponent implements AfterViewInit {
 
 	/** Switch board arrows to the feature represented by the selected left tab. */
 	onLeftTabIndexChanged(index: number): void {
-		this.boardArrows.setActiveSource(index === 1 ? 'opening-book' : 'my-next-moves');
+		this.boardArrows.setActiveSource(index === 0 ? 'opening-book' : 'my-next-moves');
 	}
 
 	// --- Controls actions (delegated from BoardControlsComponent) ---

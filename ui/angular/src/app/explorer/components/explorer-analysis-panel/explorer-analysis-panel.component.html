@@ -1,0 +1,246 @@
+<div class="app-card-flat explorer-analysis-panel">
+	<div class="app-card-flat-top explorer-analysis-panel__header">
+		<div class="explorer-analysis-panel__title">
+			<mat-icon aria-hidden="true">analytics</mat-icon>
+			<span>Analysis</span>
+		</div>
+
+		<div class="explorer-analysis-panel__actions">
+			<button
+				mat-stroked-button
+				class="mat-stroked-button-d-5"
+				type="button"
+				(click)="refresh()"
+				[disabled]="panelLoading()"
+				matTooltip="Refresh Stockfish status and latest analysis"
+			>
+				<mat-icon aria-hidden="true">refresh</mat-icon>
+				<span>Refresh</span>
+			</button>
+		</div>
+	</div>
+
+	<div class="app-card-flat-content-fit explorer-analysis-panel__content">
+		<app-section-loader [loading]="panelLoading()" [label]="loaderLabel()" [mask]="true">
+			<div class="explorer-analysis-panel__body">
+				@if (!hasCurrentDbGame()) {
+					<div class="explorer-analysis-panel__empty">
+						<mat-icon aria-hidden="true">info</mat-icon>
+						<div>
+							<strong>No database game loaded.</strong>
+							<p>
+								Stockfish analysis is currently available for games loaded from the database. Open a
+								game from the Games page to analyze it here.
+							</p>
+						</div>
+					</div>
+				} @else {
+					<section class="explorer-analysis-panel__section">
+						<h3>Current game</h3>
+
+						<div class="explorer-analysis-panel__kv-grid">
+							<div class="explorer-analysis-panel__kv">
+								<span class="explorer-analysis-panel__kv-label">Game ID</span>
+								<span class="explorer-analysis-panel__kv-value">
+									{{ shortGameId(currentDbGameId() ?? '') }}
+								</span>
+							</div>
+
+							<div class="explorer-analysis-panel__kv">
+								<span class="explorer-analysis-panel__kv-label">Source</span>
+								<span class="explorer-analysis-panel__kv-value">Database</span>
+							</div>
+						</div>
+					</section>
+
+					<section class="explorer-analysis-panel__section">
+						<h3>Stockfish</h3>
+
+						@if (engineStatus(); as engine) {
+							<div
+								class="explorer-analysis-panel__engine"
+								[class.explorer-analysis-panel__engine--ok]="engine.available"
+								[class.explorer-analysis-panel__engine--error]="!engine.available"
+							>
+								<mat-icon aria-hidden="true">
+									{{ engine.available ? 'check_circle' : 'error' }}
+								</mat-icon>
+
+								<div>
+									<strong>
+										{{ engine.engineName }}
+										@if (engine.engineVersion) {
+											<span>{{ engine.engineVersion }}</span>
+										}
+									</strong>
+
+									<p>{{ engine.message }}</p>
+								</div>
+							</div>
+						} @else {
+							<div class="explorer-analysis-panel__placeholder">
+								Stockfish status is not loaded yet.
+							</div>
+						}
+
+						@if (settings(); as activeSettings) {
+							<div class="explorer-analysis-panel__settings">
+								<div class="explorer-analysis-panel__settings-item">
+									<span>Mode</span>
+									<strong>{{ formatSettingsMode(activeSettings) }}</strong>
+								</div>
+
+								<div class="explorer-analysis-panel__settings-item">
+									<span>Threads</span>
+									<strong>{{ activeSettings.threads }}</strong>
+								</div>
+
+								<div class="explorer-analysis-panel__settings-item">
+									<span>Hash</span>
+									<strong>{{ activeSettings.hashMb }} MB</strong>
+								</div>
+
+								<div class="explorer-analysis-panel__settings-item">
+									<span>MultiPV</span>
+									<strong>{{ activeSettings.multiPv }}</strong>
+								</div>
+							</div>
+						}
+					</section>
+
+					<section class="explorer-analysis-panel__section">
+						<div class="explorer-analysis-panel__section-header">
+							<h3>Game analysis</h3>
+
+							<div class="explorer-analysis-panel__section-actions">
+								@if (!isAnalyzing()) {
+									<button
+										mat-flat-button
+										class="mat-flat-button-d-5"
+										type="button"
+										(click)="startAnalysis(false)"
+										[disabled]="!canStartAnalysis()"
+									>
+										<mat-icon aria-hidden="true">play_arrow</mat-icon>
+										<span>Analyze</span>
+									</button>
+
+									<button
+										mat-stroked-button
+										class="mat-stroked-button-d-5"
+										type="button"
+										(click)="startAnalysis(true)"
+										[disabled]="!canStartAnalysis()"
+										matTooltip="Run a new analysis even if one already exists"
+									>
+										<mat-icon aria-hidden="true">restart_alt</mat-icon>
+										<span>Re-analyze</span>
+									</button>
+								} @else {
+									<button
+										mat-stroked-button
+										class="mat-stroked-button-d-5"
+										type="button"
+										(click)="cancelAnalysis()"
+										[disabled]="isCancelling()"
+									>
+										<mat-icon aria-hidden="true">stop</mat-icon>
+										<span>{{ isCancelling() ? 'Cancelling…' : 'Cancel' }}</span>
+									</button>
+								}
+							</div>
+						</div>
+
+						@if (loadError(); as error) {
+							<div class="explorer-analysis-panel__error">
+								<mat-icon aria-hidden="true">warning</mat-icon>
+								<span>{{ error }}</span>
+							</div>
+						}
+
+						@if (latestAnalysis(); as analysis) {
+							<div class="explorer-analysis-panel__summary">
+								<div class="explorer-analysis-panel__summary-top">
+									<span
+										class="explorer-analysis-panel__status"
+										[ngClass]="statusClass(analysis.summary.status)"
+									>
+										{{ statusLabel(analysis.summary.status) }}
+									</span>
+
+									<span class="explorer-analysis-panel__summary-engine">
+										{{ analysis.summary.engineName }}
+										@if (analysis.summary.engineVersion) {
+											· {{ analysis.summary.engineVersion }}
+										}
+									</span>
+								</div>
+
+								<div class="explorer-analysis-panel__progress">
+									<div class="explorer-analysis-panel__progress-label">
+										<span>Progress</span>
+										<strong>
+											{{ analysis.summary.analyzedPlies }} / {{ analysis.summary.totalPlies }} plies
+										</strong>
+									</div>
+
+									<mat-progress-bar
+										mode="determinate"
+										[value]="analysisProgressPercent()"
+									></mat-progress-bar>
+								</div>
+
+								<div class="explorer-analysis-panel__kv-grid">
+									<div class="explorer-analysis-panel__kv">
+										<span class="explorer-analysis-panel__kv-label">Created</span>
+										<span class="explorer-analysis-panel__kv-value">
+											{{ analysis.summary.createdAtIso | appIsoDateTime }}
+										</span>
+									</div>
+
+									<div class="explorer-analysis-panel__kv">
+										<span class="explorer-analysis-panel__kv-label">Started</span>
+										<span class="explorer-analysis-panel__kv-value">
+											{{ analysis.summary.startedAtIso | appIsoDateTime }}
+										</span>
+									</div>
+
+									<div class="explorer-analysis-panel__kv">
+										<span class="explorer-analysis-panel__kv-label">Completed</span>
+										<span class="explorer-analysis-panel__kv-value">
+											{{ analysis.summary.completedAtIso | appIsoDateTime }}
+										</span>
+									</div>
+
+									<div class="explorer-analysis-panel__kv">
+										<span class="explorer-analysis-panel__kv-label">Rows</span>
+										<span class="explorer-analysis-panel__kv-value">
+											{{ analysis.moves.length }}
+										</span>
+									</div>
+								</div>
+
+								@if (analysis.summary.errorMessage) {
+									<div
+										class="explorer-analysis-panel__error explorer-analysis-panel__error--inline"
+									>
+										<mat-icon aria-hidden="true">report</mat-icon>
+										<span>{{ analysis.summary.errorMessage }}</span>
+									</div>
+								}
+							</div>
+						} @else {
+							<div class="explorer-analysis-panel__empty explorer-analysis-panel__empty--compact">
+								<mat-icon aria-hidden="true">query_stats</mat-icon>
+								<div>
+									<strong>No Stockfish analysis yet.</strong>
+									<p>Start an analysis to store the first result for this game.</p>
+								</div>
+							</div>
+						}
+					</section>
+				}
+			</div>
+		</app-section-loader>
+	</div>
+</div>
