@@ -228,6 +228,91 @@
 										<span>{{ analysis.summary.errorMessage }}</span>
 									</div>
 								}
+
+								@if (analysisMoves().length > 0) {
+									<div class="explorer-analysis-panel__moves-inline">
+										<div class="explorer-analysis-panel__moves-header">
+											<h4>Move-by-move results</h4>
+
+											<span class="explorer-analysis-panel__hint">
+												Evaluations are from White's point of view.
+											</span>
+										</div>
+
+										<div class="explorer-analysis-panel__moves-table-wrap">
+											<table class="explorer-analysis-panel__moves-table">
+												<thead>
+													<tr>
+														<th>Move</th>
+														<th>Before</th>
+														<th>After</th>
+														<th>Δ</th>
+														<th>Best</th>
+														<th>Depth</th>
+														<th>Time</th>
+														<th>PV</th>
+													</tr>
+												</thead>
+
+												<tbody>
+													@for (move of analysisMoves(); track move.id) {
+														<tr>
+															<td class="explorer-analysis-panel__move-cell">
+																<span>{{ formatMoveLabel(move) }}</span>
+																@if (move.moveUci) {
+																	<small>{{ move.moveUci }}</small>
+																}
+															</td>
+
+															<td>
+																<span
+																	class="explorer-analysis-panel__eval"
+																	[ngClass]="evaluationClass(move.evalBefore)"
+																>
+																	{{ formatEvaluation(move.evalBefore) }}
+																</span>
+															</td>
+
+															<td>
+																<span
+																	class="explorer-analysis-panel__eval"
+																	[ngClass]="evaluationClass(move.evalAfter)"
+																>
+																	{{ formatEvaluation(move.evalAfter) }}
+																</span>
+															</td>
+
+															<td>
+																<span
+																	class="explorer-analysis-panel__eval"
+																	[ngClass]="evaluationSwingClass(move)"
+																	matTooltip="Evaluation change from White's point of view"
+																>
+																	{{ formatEvaluationSwing(move) }}
+																</span>
+															</td>
+
+															<td class="explorer-analysis-panel__mono">
+																{{ formatBestMove(move) }}
+															</td>
+
+															<td>{{ formatDepth(move) }}</td>
+
+															<td>{{ formatTime(move) }}</td>
+
+															<td
+																class="explorer-analysis-panel__pv"
+																[matTooltip]="formatPrincipalVariation(move)"
+															>
+																{{ formatPrincipalVariation(move) }}
+															</td>
+														</tr>
+													}
+												</tbody>
+											</table>
+										</div>
+									</div>
+								}
 							</div>
 						} @else {
 							<div class="explorer-analysis-panel__empty explorer-analysis-panel__empty--compact">
