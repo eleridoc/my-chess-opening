@@ -8,6 +8,7 @@ const DEFAULT_DEV_RUNTIME_DIR_NAME = '.runtime';
 const APP_RUNTIME_DIR_NAME = 'my-chess-opening';
 const DATABASE_DIR_NAME = 'data';
 const DATABASE_FILE_NAME = 'my-chess-opening.sqlite';
+const ENGINES_DIR_NAME = 'engines';
 
 /**
  * Return the current Electron runtime mode.
@@ -182,6 +183,19 @@ export function getAssetsDir(): string {
 }
 
 /**
+ * Resolve the absolute path to bundled native engines.
+ *
+ * Development:
+ * - `electron/assets/engines`
+ *
+ * Packaged app:
+ * - `resources/assets/engines`
+ */
+export function getEnginesDir(): string {
+	return path.join(getAssetsDir(), ENGINES_DIR_NAME);
+}
+
+/**
  * Resolve the Angular production build directory used by Electron.
  *
  * Development/local preview:
@@ -204,6 +218,7 @@ export interface RuntimePathsSnapshot {
 	databaseDir: string;
 	databaseFilePath: string;
 	assetsDir: string;
+	enginesDir: string;
 	rendererDistDir: string;
 	prismaSchemaPath: string;
 	prismaMigrationsDir: string;
@@ -224,6 +239,7 @@ export function getRuntimePathsSnapshot(): RuntimePathsSnapshot {
 		databaseDir: getDatabaseDir(),
 		databaseFilePath: getDatabaseFilePath(),
 		assetsDir: getAssetsDir(),
+		enginesDir: getEnginesDir(),
 		rendererDistDir: getRendererDistDir(),
 		prismaSchemaPath: getPrismaSchemaPath(),
 		prismaMigrationsDir: getPrismaMigrationsDir(),

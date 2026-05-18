@@ -87,3 +87,10 @@ electron/.env
 electron/.env.*
 !.env.example
 !electron/.env.example
+
+# Extracted AppImage content
+squashfs-root/
+
+# Native engine binaries are installed locally and must not be committed.
+electron/assets/engines/stockfish/linux-x64/stockfish
+electron/assets/engines/stockfish/win-x64/stockfish.exe

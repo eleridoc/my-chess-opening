@@ -259,6 +259,7 @@ function logRuntimePaths(): void {
 	console.info('[RUNTIME] logsDir:', paths.logsDir);
 	console.info('[RUNTIME] databaseDir:', paths.databaseDir);
 	console.info('[RUNTIME] assetsDir:', paths.assetsDir);
+	console.info('[RUNTIME] enginesDir:', paths.enginesDir);
 	console.info('[RUNTIME] rendererDistDir:', paths.rendererDistDir);
 }
 
