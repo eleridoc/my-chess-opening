@@ -1,0 +1,29 @@
+@if (evaluationChart.hasData) {
+	<div class="explorer-evaluation-curve">
+		<div class="explorer-evaluation-curve__header">
+			<h4>Evaluation curve</h4>
+
+			<div class="explorer-evaluation-curve__legend">
+				<span class="explorer-evaluation-curve__legend-item">
+					<span class="explorer-evaluation-curve__dot explorer-evaluation-curve__dot--white"></span>
+					Above 0 = White
+				</span>
+
+				<span class="explorer-evaluation-curve__legend-item">
+					<span class="explorer-evaluation-curve__dot explorer-evaluation-curve__dot--black"></span>
+					Below 0 = Black
+				</span>
+			</div>
+		</div>
+
+		<div class="explorer-evaluation-curve__chart-wrap">
+			<div
+				echarts
+				class="explorer-evaluation-curve__chart"
+				role="img"
+				[attr.aria-label]="evaluationChart.ariaLabel"
+				[options]="evaluationChart.options"
+			></div>
+		</div>
+	</div>
+}

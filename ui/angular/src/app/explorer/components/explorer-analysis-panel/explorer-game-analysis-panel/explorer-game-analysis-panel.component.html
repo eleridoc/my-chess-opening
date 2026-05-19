@@ -1,0 +1,171 @@
+<section class="explorer-game-analysis-panel">
+	<div class="explorer-game-analysis-panel__section-header">
+		<h3>Game analysis</h3>
+
+		<div class="explorer-game-analysis-panel__section-actions">
+			@if (!isAnalyzing) {
+				<button
+					mat-flat-button
+					class="mat-flat-button-d-5"
+					type="button"
+					(click)="emitStartAnalysis(false)"
+					[disabled]="!canStartAnalysis"
+				>
+					<mat-icon aria-hidden="true">play_arrow</mat-icon>
+					<span>Analyze</span>
+				</button>
+
+				<button
+					mat-stroked-button
+					class="mat-stroked-button-d-5"
+					type="button"
+					(click)="emitStartAnalysis(true)"
+					[disabled]="!canStartAnalysis"
+					matTooltip="Run a new analysis even if one already exists"
+				>
+					<mat-icon aria-hidden="true">restart_alt</mat-icon>
+					<span>Re-analyze</span>
+				</button>
+			} @else {
+				<button
+					mat-stroked-button
+					class="mat-stroked-button-d-5"
+					type="button"
+					(click)="emitCancelAnalysis()"
+					[disabled]="isCancelling"
+				>
+					<mat-icon aria-hidden="true">stop</mat-icon>
+					<span>{{ isCancelling ? 'Cancelling…' : 'Cancel' }}</span>
+				</button>
+			}
+		</div>
+	</div>
+
+	@if (loadError; as error) {
+		<div class="explorer-game-analysis-panel__error">
+			<mat-icon aria-hidden="true">warning</mat-icon>
+			<span>{{ error }}</span>
+		</div>
+	}
+
+	@if (analysis; as currentAnalysis) {
+		<div class="explorer-game-analysis-panel__summary">
+			<div class="explorer-game-analysis-panel__summary-top">
+				<span
+					class="explorer-game-analysis-panel__status"
+					[ngClass]="statusClass(currentAnalysis.summary.status)"
+				>
+					{{ statusLabel(currentAnalysis.summary.status) }}
+				</span>
+
+				<span class="explorer-game-analysis-panel__summary-engine">
+					{{ currentAnalysis.summary.engineName }}
+					@if (currentAnalysis.summary.engineVersion) {
+						· {{ currentAnalysis.summary.engineVersion }}
+					}
+				</span>
+			</div>
+
+			<div class="explorer-game-analysis-panel__progress">
+				<div class="explorer-game-analysis-panel__progress-label">
+					<span>Progress</span>
+					<strong>
+						{{ currentAnalysis.summary.analyzedPlies }} /
+						{{ currentAnalysis.summary.totalPlies }} plies
+					</strong>
+				</div>
+
+				<mat-progress-bar mode="determinate" [value]="analysisProgressPercent"></mat-progress-bar>
+			</div>
+
+			@if (quickStats; as stats) {
+				<div class="explorer-game-analysis-panel__quick-stats">
+					<div class="explorer-game-analysis-panel__quick-stat">
+						<span>Analyzed moves</span>
+						<strong>{{ stats.analyzedMoves }}</strong>
+					</div>
+
+					<div class="explorer-game-analysis-panel__quick-stat">
+						<span>Avg depth</span>
+						<strong>{{ formatAverageDepth(stats.averageDepth) }}</strong>
+					</div>
+
+					<div class="explorer-game-analysis-panel__quick-stat">
+						<span>Avg time</span>
+						<strong>{{ formatAverageTime(stats.averageTimeMs) }}</strong>
+					</div>
+
+					<div class="explorer-game-analysis-panel__quick-stat">
+						<span>Best matches</span>
+						<strong>{{ formatBestMoveMatches(stats) }}</strong>
+					</div>
+
+					<div class="explorer-game-analysis-panel__quick-stat">
+						<span>Avg loss</span>
+						<strong>{{ formatCentipawnLoss(stats.averageCentipawnLoss) }}</strong>
+					</div>
+
+					<div class="explorer-game-analysis-panel__quick-stat">
+						<span>Largest loss</span>
+						<strong>{{ formatCentipawnLoss(stats.largestCentipawnLoss) }}</strong>
+
+						@if (stats.largestCentipawnLossMoveLabel) {
+							<small>{{ stats.largestCentipawnLossMoveLabel }}</small>
+						}
+					</div>
+				</div>
+			}
+
+			<app-explorer-evaluation-curve [moves]="analysisMoves" />
+
+			<div class="explorer-game-analysis-panel__kv-grid">
+				<div class="explorer-game-analysis-panel__kv">
+					<span class="explorer-game-analysis-panel__kv-label">Created</span>
+					<span class="explorer-game-analysis-panel__kv-value">
+						{{ currentAnalysis.summary.createdAtIso | appIsoDateTime }}
+					</span>
+				</div>
+
+				<div class="explorer-game-analysis-panel__kv">
+					<span class="explorer-game-analysis-panel__kv-label">Started</span>
+					<span class="explorer-game-analysis-panel__kv-value">
+						{{ currentAnalysis.summary.startedAtIso | appIsoDateTime }}
+					</span>
+				</div>
+
+				<div class="explorer-game-analysis-panel__kv">
+					<span class="explorer-game-analysis-panel__kv-label">Completed</span>
+					<span class="explorer-game-analysis-panel__kv-value">
+						{{ currentAnalysis.summary.completedAtIso | appIsoDateTime }}
+					</span>
+				</div>
+
+				<div class="explorer-game-analysis-panel__kv">
+					<span class="explorer-game-analysis-panel__kv-label">Rows</span>
+					<span class="explorer-game-analysis-panel__kv-value">
+						{{ currentAnalysis.moves.length }}
+					</span>
+				</div>
+			</div>
+
+			@if (currentAnalysis.summary.errorMessage) {
+				<div
+					class="explorer-game-analysis-panel__error explorer-game-analysis-panel__error--inline"
+				>
+					<mat-icon aria-hidden="true">report</mat-icon>
+					<span>{{ currentAnalysis.summary.errorMessage }}</span>
+				</div>
+			}
+
+			<app-explorer-move-analysis-table [moves]="analysisMoves" />
+		</div>
+	} @else {
+		<div class="explorer-game-analysis-panel__empty explorer-game-analysis-panel__empty--compact">
+			<mat-icon aria-hidden="true">query_stats</mat-icon>
+			<div>
+				<strong>No Stockfish analysis yet.</strong>
+				<p>Start an analysis to store the first result for this game.</p>
+			</div>
+		</div>
+	}
+</section>

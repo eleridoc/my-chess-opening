@@ -1,0 +1,75 @@
+:host {
+	display: block;
+}
+
+.explorer-evaluation-curve {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	border-top: 1px solid var(--app-explorer-table-border);
+	padding-top: 10px;
+}
+
+.explorer-evaluation-curve__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.explorer-evaluation-curve__header h4 {
+	margin: 0;
+	font-size: 12px;
+	font-weight: 800;
+	letter-spacing: 0.01em;
+}
+
+.explorer-evaluation-curve__legend {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	font-size: 10px;
+	font-weight: 700;
+	opacity: 0.82;
+}
+
+.explorer-evaluation-curve__legend-item {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	white-space: nowrap;
+}
+
+.explorer-evaluation-curve__dot {
+	display: inline-block;
+	width: 8px;
+	height: 8px;
+	border-radius: 999px;
+}
+
+.explorer-evaluation-curve__dot--white {
+	background: var(--app-success);
+}
+
+.explorer-evaluation-curve__dot--black {
+	background: var(--app-danger);
+}
+
+.explorer-evaluation-curve__chart-wrap {
+	min-width: 0;
+	overflow: hidden;
+	border: 1px solid var(--app-explorer-table-border);
+	border-radius: 10px;
+	background: var(--app-explorer-table-row-even-bg);
+}
+
+/**
+ * ngx-echarts requires an explicit height on the host element.
+ * The directive renders a responsive canvas inside this container.
+ */
+.explorer-evaluation-curve__chart {
+	display: block;
+	width: 100%;
+	height: 190px;
+}

@@ -52,11 +52,15 @@ and this project follows **Semantic Versioning** (https://semver.org/).
 - Added UI actions to start, re-run and cancel Stockfish analysis for the current database game.
 - Added move-by-move Stockfish analysis results in the Explorer Analysis tab.
 - Added before/after evaluations, evaluation swing, best move, depth, time and principal variation display.
+- Added quick Stockfish analysis indicators in the Explorer Analysis tab.
+- Added average depth, average analysis time, best move match rate, average centipawn loss and largest centipawn loss indicators.
 
 ### Changed
 
 - Removed native Stockfish binaries from Git tracking and kept them as generated local/CI assets.
 - Updated the release workflow to install platform-specific Stockfish binaries before packaging.
+- Split the Explorer Analysis panel into dedicated overview, summary, evaluation curve and move analysis table components.
+- Moved shared Explorer Analysis formatting helpers into a dedicated utility file.
 
 ### Fixed
 

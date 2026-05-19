@@ -10,33 +10,30 @@ import {
 
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 import type {
 	AnalysisEngineStatus,
-	AnalysisEvaluation,
 	AnalysisSettings,
 	GameAnalysisDetails,
-	GameAnalysisStatus,
-	GameMoveAnalysisRow,
 } from 'my-chess-opening-core';
 
 import { AnalysisService } from '../../../services/analysis/analysis.service';
-import { IsoDateTimePipe } from '../../../shared/dates/pipes';
 import { SectionLoaderComponent } from '../../../shared/loading/section-loader/section-loader.component';
 import { NotificationService } from '../../../shared/notifications/notification.service';
 import { ExplorerFacade } from '../../facade/explorer.facade';
+import { ExplorerAnalysisOverviewComponent } from './explorer-analysis-overview/explorer-analysis-overview.component';
+import { ExplorerGameAnalysisPanelComponent } from './explorer-game-analysis-panel/explorer-game-analysis-panel.component';
 
 /**
- * Explorer Stockfish analysis panel.
+ * Explorer Stockfish analysis container.
  *
- * V1.15.9 scope:
- * - show engine status
- * - show active Stockfish settings
- * - show latest analysis summary for the current DB game
+ * Responsibilities:
+ * - load engine metadata
+ * - load latest analysis for the current DB game
  * - start / re-run / cancel one game analysis
- * - show move-by-move Stockfish analysis rows
+ *
+ * Rendering details are split into dedicated child components.
  */
 @Component({
 	selector: 'app-explorer-analysis-panel',
@@ -45,10 +42,10 @@ import { ExplorerFacade } from '../../facade/explorer.facade';
 		CommonModule,
 		MatButtonModule,
 		MatIconModule,
-		MatProgressBarModule,
 		MatTooltipModule,
 		SectionLoaderComponent,
-		IsoDateTimePipe,
+		ExplorerAnalysisOverviewComponent,
+		ExplorerGameAnalysisPanelComponent,
 	],
 	templateUrl: './explorer-analysis-panel.component.html',
 	styleUrl: './explorer-analysis-panel.component.scss',
@@ -98,22 +95,6 @@ export class ExplorerAnalysisPanelComponent {
 	readonly canStartAnalysis = computed(
 		() => this.hasCurrentDbGame() && this.isEngineAvailable() && !this.isAnalyzing(),
 	);
-
-	readonly analysisProgressPercent = computed(() => {
-		const analysis = this.latestAnalysis();
-
-		if (!analysis || analysis.summary.totalPlies <= 0) {
-			return 0;
-		}
-
-		return Math.round((analysis.summary.analyzedPlies / analysis.summary.totalPlies) * 100);
-	});
-
-	readonly analysisMoves = computed(() =>
-		(this.latestAnalysis()?.moves ?? []).slice().sort((a, b) => a.ply - b.ply),
-	);
-
-	readonly hasAnalysisMoves = computed(() => this.analysisMoves().length > 0);
 
 	constructor() {
 		queueMicrotask(() => {
@@ -220,142 +201,6 @@ export class ExplorerAnalysisPanelComponent {
 		} finally {
 			this.isCancelling.set(false);
 		}
-	}
-
-	statusLabel(status: GameAnalysisStatus): string {
-		switch (status) {
-			case 'PENDING':
-				return 'Pending';
-			case 'RUNNING':
-				return 'Running';
-			case 'COMPLETED':
-				return 'Completed';
-			case 'FAILED':
-				return 'Failed';
-			case 'CANCELLED':
-				return 'Cancelled';
-			default:
-				return status;
-		}
-	}
-
-	statusClass(status: GameAnalysisStatus): string {
-		return `explorer-analysis-panel__status--${status.toLowerCase()}`;
-	}
-
-	formatSettingsMode(settings: AnalysisSettings): string {
-		if (settings.mode === 'depth') {
-			return `Depth ${settings.depth}`;
-		}
-
-		return `${settings.movetimeMs} ms / position`;
-	}
-
-	shortGameId(gameId: string): string {
-		return gameId.length > 12 ? `${gameId.slice(0, 12)}…` : gameId;
-	}
-
-	formatMoveLabel(move: GameMoveAnalysisRow): string {
-		const separator = move.playedBy === 'white' ? '.' : '...';
-
-		return `${move.moveNumber}${separator} ${move.moveSan}`;
-	}
-
-	formatEvaluation(evaluation: AnalysisEvaluation | null): string {
-		if (!evaluation) {
-			return '—';
-		}
-
-		if (evaluation.mate !== null) {
-			return `M${this.formatSignedInteger(evaluation.mate)}`;
-		}
-
-		if (evaluation.cp !== null) {
-			return this.formatCentipawns(evaluation.cp);
-		}
-
-		return '—';
-	}
-
-	evaluationClass(evaluation: AnalysisEvaluation | null): string {
-		if (!evaluation) {
-			return 'explorer-analysis-panel__eval--empty';
-		}
-
-		const score = evaluation.cp ?? evaluation.mate;
-
-		if (score === null || score === 0) {
-			return 'explorer-analysis-panel__eval--neutral';
-		}
-
-		return score > 0
-			? 'explorer-analysis-panel__eval--white'
-			: 'explorer-analysis-panel__eval--black';
-	}
-
-	formatEvaluationSwing(move: GameMoveAnalysisRow): string {
-		const before = move.evalBefore?.cp;
-		const after = move.evalAfter?.cp;
-
-		if (before === null || before === undefined || after === null || after === undefined) {
-			return '—';
-		}
-
-		return this.formatCentipawns(after - before);
-	}
-
-	evaluationSwingClass(move: GameMoveAnalysisRow): string {
-		const before = move.evalBefore?.cp;
-		const after = move.evalAfter?.cp;
-
-		if (before === null || before === undefined || after === null || after === undefined) {
-			return 'explorer-analysis-panel__eval--empty';
-		}
-
-		const swing = after - before;
-
-		if (swing === 0) {
-			return 'explorer-analysis-panel__eval--neutral';
-		}
-
-		return swing > 0
-			? 'explorer-analysis-panel__eval--white'
-			: 'explorer-analysis-panel__eval--black';
-	}
-
-	formatBestMove(move: GameMoveAnalysisRow): string {
-		return move.bestMoveUci ?? '—';
-	}
-
-	formatDepth(move: GameMoveAnalysisRow): string {
-		return move.depthReached === null ? '—' : String(move.depthReached);
-	}
-
-	formatTime(move: GameMoveAnalysisRow): string {
-		return move.timeMs === null ? '—' : `${move.timeMs} ms`;
-	}
-
-	formatPrincipalVariation(move: GameMoveAnalysisRow): string {
-		if (move.principalVariationUci.length === 0) {
-			return '—';
-		}
-
-		const maxDisplayedMoves = 8;
-		const displayedMoves = move.principalVariationUci.slice(0, maxDisplayedMoves);
-		const suffix = move.principalVariationUci.length > maxDisplayedMoves ? ' …' : '';
-
-		return `${displayedMoves.join(' ')}${suffix}`;
-	}
-
-	private formatCentipawns(cp: number): string {
-		const pawns = cp / 100;
-		const prefix = pawns > 0 ? '+' : '';
-
-		return `${prefix}${pawns.toFixed(2)}`;
-	}
-
-	private formatSignedInteger(value: number): string {
-		return value > 0 ? `+${value}` : String(value);
 	}
 
 	private async loadEngineMetadata(): Promise<void> {

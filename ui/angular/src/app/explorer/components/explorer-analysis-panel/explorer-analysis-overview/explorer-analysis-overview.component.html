@@ -1,0 +1,70 @@
+<section class="explorer-analysis-overview__section">
+	<h3>Current game</h3>
+
+	<div class="explorer-analysis-overview__kv-grid">
+		<div class="explorer-analysis-overview__kv">
+			<span class="explorer-analysis-overview__kv-label">Game ID</span>
+			<span class="explorer-analysis-overview__kv-value">
+				{{ shortGameId(currentDbGameId ?? '') }}
+			</span>
+		</div>
+
+		<div class="explorer-analysis-overview__kv">
+			<span class="explorer-analysis-overview__kv-label">Source</span>
+			<span class="explorer-analysis-overview__kv-value">Database</span>
+		</div>
+	</div>
+</section>
+
+<section class="explorer-analysis-overview__section">
+	<h3>Stockfish</h3>
+
+	@if (engineStatus; as engine) {
+		<div
+			class="explorer-analysis-overview__engine"
+			[class.explorer-analysis-overview__engine--ok]="engine.available"
+			[class.explorer-analysis-overview__engine--error]="!engine.available"
+		>
+			<mat-icon aria-hidden="true">
+				{{ engine.available ? 'check_circle' : 'error' }}
+			</mat-icon>
+
+			<div>
+				<strong>
+					{{ engine.engineName }}
+					@if (engine.engineVersion) {
+						<span>{{ engine.engineVersion }}</span>
+					}
+				</strong>
+
+				<p>{{ engine.message }}</p>
+			</div>
+		</div>
+	} @else {
+		<div class="explorer-analysis-overview__placeholder">Stockfish status is not loaded yet.</div>
+	}
+
+	@if (settings; as activeSettings) {
+		<div class="explorer-analysis-overview__settings">
+			<div class="explorer-analysis-overview__settings-item">
+				<span>Mode</span>
+				<strong>{{ formatSettingsMode(activeSettings) }}</strong>
+			</div>
+
+			<div class="explorer-analysis-overview__settings-item">
+				<span>Threads</span>
+				<strong>{{ activeSettings.threads }}</strong>
+			</div>
+
+			<div class="explorer-analysis-overview__settings-item">
+				<span>Hash</span>
+				<strong>{{ activeSettings.hashMb }} MB</strong>
+			</div>
+
+			<div class="explorer-analysis-overview__settings-item">
+				<span>MultiPV</span>
+				<strong>{{ activeSettings.multiPv }}</strong>
+			</div>
+		</div>
+	}
+</section>

@@ -1,0 +1,115 @@
+:host {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.explorer-analysis-overview__section {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	border: 1px solid var(--app-explorer-table-border);
+	border-radius: 12px;
+	background: color-mix(in srgb, var(--app-bg-elevated) 84%, transparent);
+	padding: 12px;
+}
+
+.explorer-analysis-overview__section h3 {
+	margin: 0;
+	font-size: 13px;
+	font-weight: 700;
+	letter-spacing: 0.01em;
+}
+
+.explorer-analysis-overview__kv-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 8px;
+}
+
+.explorer-analysis-overview__kv,
+.explorer-analysis-overview__settings-item {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	min-width: 0;
+	border: 1px solid var(--app-explorer-table-row-border);
+	border-radius: 10px;
+	padding: 8px 10px;
+	background: var(--app-explorer-table-row-even-bg);
+}
+
+.explorer-analysis-overview__kv-label,
+.explorer-analysis-overview__settings-item span {
+	font-size: 11px;
+	font-weight: 600;
+	opacity: 0.68;
+}
+
+.explorer-analysis-overview__kv-value,
+.explorer-analysis-overview__settings-item strong {
+	font-size: 12px;
+	font-weight: 700;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.explorer-analysis-overview__engine {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	border-radius: 12px;
+	padding: 10px;
+	border: 1px solid var(--app-explorer-table-row-border);
+	background: var(--app-explorer-table-row-even-bg);
+}
+
+.explorer-analysis-overview__engine mat-icon {
+	flex: 0 0 auto;
+	margin-top: 1px;
+}
+
+.explorer-analysis-overview__engine strong {
+	display: block;
+	font-size: 13px;
+	margin-bottom: 3px;
+}
+
+.explorer-analysis-overview__engine p {
+	margin: 0;
+	font-size: 12px;
+	line-height: 1.35;
+	opacity: 0.78;
+}
+
+.explorer-analysis-overview__engine--ok mat-icon {
+	color: var(--app-success);
+}
+
+.explorer-analysis-overview__engine--error mat-icon {
+	color: var(--app-danger);
+}
+
+.explorer-analysis-overview__settings {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 8px;
+}
+
+.explorer-analysis-overview__placeholder {
+	padding: 10px;
+	font-size: 13px;
+	font-style: italic;
+	opacity: 0.72;
+}
+
+@media (max-width: 1280px) {
+	.explorer-analysis-overview__settings {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.explorer-analysis-overview__kv-grid {
+		grid-template-columns: 1fr;
+	}
+}
