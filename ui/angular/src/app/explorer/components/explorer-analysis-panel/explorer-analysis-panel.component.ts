@@ -11,6 +11,7 @@ import {
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
 import type {
 	AnalysisEngineStatus,
@@ -22,8 +23,12 @@ import { AnalysisService } from '../../../services/analysis/analysis.service';
 import { SectionLoaderComponent } from '../../../shared/loading/section-loader/section-loader.component';
 import { NotificationService } from '../../../shared/notifications/notification.service';
 import { ExplorerFacade } from '../../facade/explorer.facade';
-import { ExplorerAnalysisOverviewComponent } from './explorer-analysis-overview/explorer-analysis-overview.component';
 import { ExplorerGameAnalysisPanelComponent } from './explorer-game-analysis-panel/explorer-game-analysis-panel.component';
+
+import {
+	ExplorerAnalysisOverviewDialogComponent,
+	type ExplorerAnalysisOverviewDialogData,
+} from './explorer-analysis-overview-dialog/explorer-analysis-overview-dialog.component';
 
 /**
  * Explorer Stockfish analysis container.
@@ -44,7 +49,7 @@ import { ExplorerGameAnalysisPanelComponent } from './explorer-game-analysis-pan
 		MatIconModule,
 		MatTooltipModule,
 		SectionLoaderComponent,
-		ExplorerAnalysisOverviewComponent,
+		MatDialogModule,
 		ExplorerGameAnalysisPanelComponent,
 	],
 	templateUrl: './explorer-analysis-panel.component.html',
@@ -55,6 +60,7 @@ export class ExplorerAnalysisPanelComponent {
 	private readonly facade = inject(ExplorerFacade);
 	private readonly analysisService = inject(AnalysisService);
 	private readonly notify = inject(NotificationService);
+	private readonly dialog = inject(MatDialog);
 
 	private latestLoadSeq = 0;
 	private cancelRequested = false;
@@ -203,6 +209,27 @@ export class ExplorerAnalysisPanelComponent {
 		}
 	}
 
+	openAnalysisInformation(): void {
+		if (!this.hasCurrentDbGame()) {
+			return;
+		}
+
+		const data: ExplorerAnalysisOverviewDialogData = {
+			currentDbGameId: this.currentDbGameId(),
+			engineStatus: this.engineStatus(),
+			settings: this.settings(),
+			latestAnalysis: this.latestAnalysis(),
+		};
+
+		this.dialog.open(ExplorerAnalysisOverviewDialogComponent, {
+			data,
+			width: '760px',
+			maxWidth: 'calc(100vw - 32px)',
+			panelClass: 'app-confirm-dialog-panel',
+			backdropClass: 'app-confirm-dialog-backdrop',
+			autoFocus: false,
+		});
+	}
 	private async loadEngineMetadata(): Promise<void> {
 		this.isLoadingEngine.set(true);
 

@@ -1,0 +1,119 @@
+<h2 mat-dialog-title class="explorer-analysis-overview-dialog__title">
+	<mat-icon aria-hidden="true">info</mat-icon>
+	<span>Analysis information</span>
+</h2>
+
+<div mat-dialog-content class="explorer-analysis-overview-dialog__content">
+	<app-explorer-analysis-overview
+		[currentDbGameId]="data.currentDbGameId"
+		[engineStatus]="data.engineStatus"
+		[settings]="data.settings"
+	/>
+
+	@if (data.latestAnalysis; as currentAnalysis) {
+		<section class="explorer-analysis-overview-dialog__analysis-section">
+			<h3>Analysis details</h3>
+
+			<div class="explorer-analysis-overview-dialog__progress">
+				<div class="explorer-analysis-overview-dialog__progress-label">
+					<span>Progress</span>
+					<strong>
+						{{ currentAnalysis.summary.analyzedPlies }} /
+						{{ currentAnalysis.summary.totalPlies }} plies
+					</strong>
+				</div>
+
+				<mat-progress-bar mode="determinate" [value]="analysisProgressPercent"></mat-progress-bar>
+			</div>
+
+			@if (quickStats; as stats) {
+				<div class="explorer-analysis-overview-dialog__quick-stats">
+					<div class="explorer-analysis-overview-dialog__quick-stat">
+						<span>Analyzed moves</span>
+						<strong>{{ stats.analyzedMoves }}</strong>
+					</div>
+
+					<div class="explorer-analysis-overview-dialog__quick-stat">
+						<span>Avg depth</span>
+						<strong>{{ formatAverageDepth(stats.averageDepth) }}</strong>
+					</div>
+
+					<div class="explorer-analysis-overview-dialog__quick-stat">
+						<span>Avg time</span>
+						<strong>{{ formatAverageTime(stats.averageTimeMs) }}</strong>
+					</div>
+
+					<div class="explorer-analysis-overview-dialog__quick-stat">
+						<span>Best matches</span>
+						<strong>{{ formatBestMoveMatches(stats) }}</strong>
+					</div>
+
+					<div class="explorer-analysis-overview-dialog__quick-stat">
+						<span>Avg loss</span>
+						<strong>{{ formatCentipawnLoss(stats.averageCentipawnLoss) }}</strong>
+					</div>
+
+					<div class="explorer-analysis-overview-dialog__quick-stat">
+						<span>Largest loss</span>
+						<strong>{{ formatCentipawnLoss(stats.largestCentipawnLoss) }}</strong>
+
+						@if (stats.largestCentipawnLossMoveLabel) {
+							<small>{{ stats.largestCentipawnLossMoveLabel }}</small>
+						}
+					</div>
+				</div>
+			}
+
+			<div class="explorer-analysis-overview-dialog__kv-grid">
+				<div class="explorer-analysis-overview-dialog__kv">
+					<span class="explorer-analysis-overview-dialog__kv-label">Created</span>
+					<span class="explorer-analysis-overview-dialog__kv-value">
+						{{ currentAnalysis.summary.createdAtIso | appIsoDateTime }}
+					</span>
+				</div>
+
+				<div class="explorer-analysis-overview-dialog__kv">
+					<span class="explorer-analysis-overview-dialog__kv-label">Started</span>
+					<span class="explorer-analysis-overview-dialog__kv-value">
+						{{ currentAnalysis.summary.startedAtIso | appIsoDateTime }}
+					</span>
+				</div>
+
+				<div class="explorer-analysis-overview-dialog__kv">
+					<span class="explorer-analysis-overview-dialog__kv-label">Completed</span>
+					<span class="explorer-analysis-overview-dialog__kv-value">
+						{{ currentAnalysis.summary.completedAtIso | appIsoDateTime }}
+					</span>
+				</div>
+
+				<div class="explorer-analysis-overview-dialog__kv">
+					<span class="explorer-analysis-overview-dialog__kv-label">Rows</span>
+					<span class="explorer-analysis-overview-dialog__kv-value">
+						{{ currentAnalysis.moves.length }}
+					</span>
+				</div>
+			</div>
+		</section>
+	} @else {
+		<section class="explorer-analysis-overview-dialog__analysis-section">
+			<h3>Analysis details</h3>
+
+			<div class="explorer-analysis-overview-dialog__placeholder">
+				No stored Stockfish analysis yet.
+			</div>
+		</section>
+	}
+</div>
+
+<div mat-dialog-actions align="end" class="explorer-analysis-overview-dialog__actions">
+	<button
+		mat-flat-button
+		color="primary"
+		class="mat-flat-button-d-5"
+		type="button"
+		(click)="close()"
+	>
+		<mat-icon aria-hidden="true">check</mat-icon>
+		<span>Close</span>
+	</button>
+</div>

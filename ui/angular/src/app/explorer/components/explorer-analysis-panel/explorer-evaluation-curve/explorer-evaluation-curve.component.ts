@@ -44,8 +44,8 @@ const EMPTY_EVALUATION_CHART: EvaluationChartViewModel = {
 	ariaLabel: 'No Stockfish evaluation chart available',
 };
 
-const EVALUATION_CHART_MAX_ABS_SCORE = 6;
-const EVALUATION_CHART_MATE_SCORE = 6;
+const EVALUATION_CHART_MAX_ABS_SCORE = 10;
+const EVALUATION_CHART_MATE_SCORE = 10;
 
 /**
  * Displays the Stockfish evaluation curve from White's point of view.
@@ -72,7 +72,8 @@ export class ExplorerEvaluationCurveComponent {
 		return {
 			hasData: true,
 			options: this.buildEvaluationChartOptions(points),
-			ariaLabel: 'Stockfish evaluation curve from White advantage to Black advantage',
+			ariaLabel:
+				'Stockfish evaluation curve with black area above the curve and white area below it',
 		};
 	}
 
@@ -165,6 +166,8 @@ export class ExplorerEvaluationCurveComponent {
 
 	private buildEvaluationChartOptions(points: EvaluationChartPoint[]): EChartsCoreOption {
 		const primaryColor = this.cssVar('--app-primary', '#abc7ff');
+		const whiteAreaColor = '#f4f4f4';
+		const blackAreaColor = '#111111';
 		const whiteAdvantageColor = this.cssVar('--app-success', '#4caf50');
 		const blackAdvantageColor = this.cssVar('--app-danger', '#f44336');
 		const textColor = this.cssVar('--app-text', '#f5f7fb');
@@ -172,7 +175,7 @@ export class ExplorerEvaluationCurveComponent {
 		const dividerColor = this.cssVar('--app-divider', '#2f3542');
 		const surfaceColor = this.cssVar('--app-bg-plus-1', '#171b24');
 
-		const bounds = this.buildEvaluationChartBounds(points);
+		const bounds = this.buildEvaluationChartBounds();
 		const labels = points.map((point) => point.label);
 
 		return {
@@ -180,6 +183,8 @@ export class ExplorerEvaluationCurveComponent {
 			animation: true,
 			animationDuration: 300,
 			grid: {
+				show: true,
+				backgroundColor: blackAreaColor,
 				left: 34,
 				right: 14,
 				top: 18,
@@ -263,12 +268,19 @@ export class ExplorerEvaluationCurveComponent {
 				{
 					name: 'Evaluation',
 					type: 'line',
-					smooth: true,
+					smooth: false,
 					showSymbol: points.length <= 80,
 					symbolSize: 5,
+					clip: true,
+					z: 10,
 					lineStyle: {
 						width: 2,
 						color: primaryColor,
+					},
+					areaStyle: {
+						color: whiteAreaColor,
+						opacity: 1,
+						origin: 'start',
 					},
 					itemStyle: {
 						color: (params: unknown) => {
@@ -315,16 +327,10 @@ export class ExplorerEvaluationCurveComponent {
 		};
 	}
 
-	private buildEvaluationChartBounds(points: EvaluationChartPoint[]): { min: number; max: number } {
-		const scores = points.map((point) => point.score);
-		const minScore = Math.min(0, ...scores);
-		const maxScore = Math.max(0, ...scores);
-		const range = maxScore - minScore;
-		const padding = range > 0 ? Math.max(0.4, range * 0.15) : 1;
-
+	private buildEvaluationChartBounds(): { min: number; max: number } {
 		return {
-			min: Math.max(-EVALUATION_CHART_MAX_ABS_SCORE, Number((minScore - padding).toFixed(1))),
-			max: Math.min(EVALUATION_CHART_MAX_ABS_SCORE, Number((maxScore + padding).toFixed(1))),
+			min: -EVALUATION_CHART_MAX_ABS_SCORE,
+			max: EVALUATION_CHART_MAX_ABS_SCORE,
 		};
 	}
 

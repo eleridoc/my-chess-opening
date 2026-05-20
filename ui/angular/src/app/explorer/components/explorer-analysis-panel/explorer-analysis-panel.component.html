@@ -10,6 +10,18 @@
 				mat-stroked-button
 				class="mat-stroked-button-d-5"
 				type="button"
+				(click)="openAnalysisInformation()"
+				[disabled]="!hasCurrentDbGame()"
+				matTooltip="Show current game and Stockfish information"
+			>
+				<mat-icon aria-hidden="true">info</mat-icon>
+				<span>Information</span>
+			</button>
+
+			<button
+				mat-stroked-button
+				class="mat-stroked-button-d-5"
+				type="button"
 				(click)="refresh()"
 				[disabled]="panelLoading()"
 				matTooltip="Refresh Stockfish status and latest analysis"
@@ -35,12 +47,6 @@
 						</div>
 					</div>
 				} @else {
-					<app-explorer-analysis-overview
-						[currentDbGameId]="currentDbGameId()"
-						[engineStatus]="engineStatus()"
-						[settings]="settings()"
-					/>
-
 					<app-explorer-game-analysis-panel
 						[analysis]="latestAnalysis()"
 						[loadError]="loadError()"

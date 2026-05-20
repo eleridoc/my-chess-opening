@@ -1,0 +1,126 @@
+.explorer-analysis-overview-dialog__title {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.explorer-analysis-overview-dialog__title mat-icon {
+	font-size: 21px;
+	width: 21px;
+	height: 21px;
+}
+
+.explorer-analysis-overview-dialog__content {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	min-width: 560px;
+	max-width: 820px;
+	max-height: min(70vh, 720px);
+	overflow: auto;
+}
+
+.explorer-analysis-overview-dialog__actions {
+	padding-top: 8px;
+}
+
+.explorer-analysis-overview-dialog__analysis-section {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	border: 1px solid var(--app-explorer-table-border);
+	border-radius: 12px;
+	background: color-mix(in srgb, var(--app-bg-elevated) 84%, transparent);
+	padding: 12px;
+}
+
+.explorer-analysis-overview-dialog__analysis-section h3 {
+	margin: 0;
+	font-size: 13px;
+	font-weight: 700;
+	letter-spacing: 0.01em;
+}
+
+.explorer-analysis-overview-dialog__progress {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.explorer-analysis-overview-dialog__progress-label {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	font-size: 12px;
+}
+
+.explorer-analysis-overview-dialog__progress-label span {
+	opacity: 0.72;
+}
+
+.explorer-analysis-overview-dialog__quick-stats,
+.explorer-analysis-overview-dialog__kv-grid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 8px;
+}
+
+.explorer-analysis-overview-dialog__kv-grid {
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.explorer-analysis-overview-dialog__quick-stat,
+.explorer-analysis-overview-dialog__kv {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	min-width: 0;
+	border: 1px solid var(--app-explorer-table-row-border);
+	border-radius: 10px;
+	padding: 8px 10px;
+	background: var(--app-explorer-table-row-even-bg);
+}
+
+.explorer-analysis-overview-dialog__quick-stat span,
+.explorer-analysis-overview-dialog__kv-label {
+	font-size: 11px;
+	font-weight: 600;
+	opacity: 0.68;
+}
+
+.explorer-analysis-overview-dialog__quick-stat strong,
+.explorer-analysis-overview-dialog__kv-value {
+	font-size: 12px;
+	font-weight: 800;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.explorer-analysis-overview-dialog__quick-stat small {
+	font-size: 10px;
+	font-weight: 600;
+	opacity: 0.62;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.explorer-analysis-overview-dialog__placeholder {
+	padding: 10px;
+	font-size: 13px;
+	font-style: italic;
+	opacity: 0.72;
+}
+
+@media (max-width: 760px) {
+	.explorer-analysis-overview-dialog__content {
+		min-width: 0;
+	}
+
+	.explorer-analysis-overview-dialog__quick-stats,
+	.explorer-analysis-overview-dialog__kv-grid {
+		grid-template-columns: 1fr;
+	}
+}
