@@ -30,6 +30,7 @@ interface EvaluationChartPoint {
 	moveLabel: string;
 	evaluationLabel: string;
 	score: number;
+	ply: number;
 }
 
 interface EvaluationChartViewModel {
@@ -61,6 +62,7 @@ const EVALUATION_CHART_MATE_SCORE = 10;
 })
 export class ExplorerEvaluationCurveComponent {
 	@Input() moves: GameMoveAnalysisRow[] = [];
+	@Input() currentPly: number | null = null;
 
 	get evaluationChart(): EvaluationChartViewModel {
 		const points = this.buildEvaluationChartPoints(this.moves);
@@ -93,6 +95,7 @@ export class ExplorerEvaluationCurveComponent {
 				moveLabel: 'Start',
 				evaluationLabel: formatEvaluation(firstMove.evalBefore),
 				score: initialScore,
+				ply: 0,
 			});
 		}
 
@@ -110,6 +113,7 @@ export class ExplorerEvaluationCurveComponent {
 				moveLabel,
 				evaluationLabel: formatEvaluation(move.evalAfter),
 				score,
+				ply: move.ply,
 			});
 		}
 
@@ -168,6 +172,7 @@ export class ExplorerEvaluationCurveComponent {
 		const primaryColor = this.cssVar('--app-primary', '#abc7ff');
 		const whiteAreaColor = '#f4f4f4';
 		const blackAreaColor = '#111111';
+		const currentPositionLineColor = this.cssVar('--app-success', '#22c55e');
 		const whiteAdvantageColor = this.cssVar('--app-success', '#4caf50');
 		const blackAdvantageColor = this.cssVar('--app-danger', '#f44336');
 		const textColor = this.cssVar('--app-text', '#f5f7fb');
@@ -177,6 +182,24 @@ export class ExplorerEvaluationCurveComponent {
 
 		const bounds = this.buildEvaluationChartBounds();
 		const labels = points.map((point) => point.label);
+		const currentPositionPoint = this.findCurrentPositionChartPoint(points, this.currentPly);
+
+		const markLineData: Array<Record<string, unknown>> = [
+			{
+				yAxis: 0,
+				label: {
+					show: true,
+					position: 'end',
+					formatter: '0',
+					color: mutedTextColor,
+				},
+				lineStyle: {
+					color: dividerColor,
+					width: 1,
+					type: 'dashed',
+				},
+			},
+		];
 
 		return {
 			backgroundColor: 'transparent',
@@ -299,22 +322,7 @@ export class ExplorerEvaluationCurveComponent {
 					markLine: {
 						silent: true,
 						symbol: 'none',
-						label: {
-							show: true,
-							position: 'end',
-							formatter: '0',
-							color: mutedTextColor,
-						},
-						lineStyle: {
-							color: dividerColor,
-							width: 1,
-							type: 'dashed',
-						},
-						data: [
-							{
-								yAxis: 0,
-							},
-						],
+						data: markLineData,
 					},
 					data: points.map((point) => ({
 						value: point.score,
@@ -323,8 +331,53 @@ export class ExplorerEvaluationCurveComponent {
 						score: point.score,
 					})),
 				},
+				{
+					name: 'Current position',
+					type: 'line',
+					silent: true,
+					symbol: 'none',
+					animation: false,
+					z: 30,
+					lineStyle: {
+						color: currentPositionLineColor,
+						width: 3,
+						type: 'solid',
+						opacity: 1,
+					},
+					emphasis: {
+						disabled: true,
+					},
+					data: currentPositionPoint
+						? [
+								[currentPositionPoint.label, bounds.min],
+								[currentPositionPoint.label, bounds.max],
+							]
+						: [],
+				},
 			],
 		};
+	}
+
+	private findCurrentPositionChartPoint(
+		points: EvaluationChartPoint[],
+		currentPly: number | null,
+	): EvaluationChartPoint | null {
+		if (currentPly === null || points.length === 0) {
+			return null;
+		}
+
+		const safePly = Math.max(0, Math.floor(currentPly));
+		let currentPoint: EvaluationChartPoint | null = null;
+
+		for (const point of points) {
+			if (point.ply > safePly) {
+				break;
+			}
+
+			currentPoint = point;
+		}
+
+		return currentPoint;
 	}
 
 	private buildEvaluationChartBounds(): { min: number; max: number } {
@@ -335,7 +388,9 @@ export class ExplorerEvaluationCurveComponent {
 	}
 
 	private formatEvaluationChartTooltip(params: unknown): string {
-		const firstParam = Array.isArray(params) ? params[0] : params;
+		const firstParam = Array.isArray(params)
+			? params.find((item) => this.isRecord(item) && item['seriesName'] === 'Evaluation')
+			: params;
 
 		if (!this.isRecord(firstParam)) {
 			return '';

@@ -8,6 +8,12 @@ import {
 	signal,
 } from '@angular/core';
 
+import type {
+	ExplorerMoveListRow,
+	ExplorerMoveToken,
+	ExplorerVariationLine,
+} from 'my-chess-opening-core/explorer';
+
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -100,6 +106,15 @@ export class ExplorerAnalysisPanelComponent {
 
 	readonly canStartAnalysis = computed(
 		() => this.hasCurrentDbGame() && this.isEngineAvailable() && !this.isAnalyzing(),
+	);
+
+	readonly currentAnalysisPly = computed(() =>
+		this.resolveCurrentAnalysisPly(
+			this.facade.currentNodeId(),
+			this.facade.ply(),
+			this.facade.moveListRows(),
+			this.facade.variationsByNodeId(),
+		),
 	);
 
 	constructor() {
@@ -230,6 +245,97 @@ export class ExplorerAnalysisPanelComponent {
 			autoFocus: false,
 		});
 	}
+
+	private resolveCurrentAnalysisPly(
+		currentNodeId: string,
+		currentPly: number,
+		rows: ExplorerMoveListRow[],
+		variationsByNodeId: Record<string, ExplorerVariationLine[]>,
+	): number {
+		const mainlineTokens = this.getMainlineTokens(rows);
+		const mainlineMatch = mainlineTokens.find((token) => token.nodeId === currentNodeId);
+
+		if (mainlineMatch) {
+			return mainlineMatch.ply;
+		}
+
+		if (currentPly <= 0) {
+			return 0;
+		}
+
+		const variationOwnerNodeId = this.findTopLevelVariationOwnerNodeId(
+			currentNodeId,
+			variationsByNodeId,
+			new Set<string>(),
+		);
+
+		if (!variationOwnerNodeId) {
+			return Math.min(currentPly, this.getLastKnownMainlinePly(mainlineTokens));
+		}
+
+		const ownerMainlineToken = mainlineTokens.find(
+			(token) => token.nodeId === variationOwnerNodeId,
+		);
+
+		if (ownerMainlineToken) {
+			return ownerMainlineToken.ply;
+		}
+
+		return 0;
+	}
+
+	private getMainlineTokens(rows: ExplorerMoveListRow[]): ExplorerMoveToken[] {
+		const tokens: ExplorerMoveToken[] = [];
+
+		for (const row of rows) {
+			if (row.white) {
+				tokens.push(row.white);
+			}
+
+			if (row.black) {
+				tokens.push(row.black);
+			}
+		}
+
+		return tokens;
+	}
+
+	private getLastKnownMainlinePly(tokens: ExplorerMoveToken[]): number {
+		return tokens.length > 0 ? tokens[tokens.length - 1].ply : 0;
+	}
+
+	private findTopLevelVariationOwnerNodeId(
+		nodeId: string,
+		variationsByNodeId: Record<string, ExplorerVariationLine[]>,
+		visitedNodeIds: Set<string>,
+	): string | null {
+		if (visitedNodeIds.has(nodeId)) {
+			return null;
+		}
+
+		visitedNodeIds.add(nodeId);
+
+		for (const [ownerNodeId, lines] of Object.entries(variationsByNodeId)) {
+			const containsNode = lines.some((line) =>
+				line.tokens.some((token) => token.nodeId === nodeId),
+			);
+
+			if (!containsNode) {
+				continue;
+			}
+
+			const upstreamOwnerNodeId = this.findTopLevelVariationOwnerNodeId(
+				ownerNodeId,
+				variationsByNodeId,
+				visitedNodeIds,
+			);
+
+			return upstreamOwnerNodeId ?? ownerNodeId;
+		}
+
+		return null;
+	}
+
 	private async loadEngineMetadata(): Promise<void> {
 		this.isLoadingEngine.set(true);
 

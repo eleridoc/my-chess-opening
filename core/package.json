@@ -1,6 +1,6 @@
 {
   "name": "my-chess-opening-core",
-  "version": "1.15.11",
+  "version": "1.15.12",
   "license": "GPL-3.0-only",
   "private": true,
   "main": "dist/index.js",

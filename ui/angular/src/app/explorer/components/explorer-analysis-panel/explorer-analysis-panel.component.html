@@ -49,6 +49,7 @@
 				} @else {
 					<app-explorer-game-analysis-panel
 						[analysis]="latestAnalysis()"
+						[currentPly]="currentAnalysisPly()"
 						[loadError]="loadError()"
 						[canStartAnalysis]="canStartAnalysis()"
 						[isAnalyzing]="isAnalyzing()"

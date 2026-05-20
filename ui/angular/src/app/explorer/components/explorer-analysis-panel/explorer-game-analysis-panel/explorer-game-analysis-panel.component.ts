@@ -35,6 +35,7 @@ import { ExplorerMoveAnalysisTableComponent } from '../explorer-move-analysis-ta
 })
 export class ExplorerGameAnalysisPanelComponent {
 	@Input() analysis: GameAnalysisDetails | null = null;
+	@Input() currentPly: number | null = null;
 	@Input() loadError: string | null = null;
 	@Input() canStartAnalysis = false;
 	@Input() isAnalyzing = false;
